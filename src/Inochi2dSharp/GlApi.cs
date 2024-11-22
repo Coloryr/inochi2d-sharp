@@ -8,18 +8,34 @@ namespace Inochi2dSharp;
 
 public abstract class GlApi
 {
+    public const uint GL_POINTS = 0x0000;
+    public const uint GL_LINES = 0x0001;
     public const uint GL_ZERO = 0;
     public const uint GL_ONE = 1;
     public const uint GL_TRIANGLES = 0x0004;
+    public const uint GL_UNPACK_ALIGNMENT = 0x0CF5;
+    public const uint GL_PACK_ALIGNMENT = 0x0D05;
+    public const uint GL_TEXTURE_BORDER_COLOR = 0x1004;
+    public const uint GL_UNSIGNED_BYTE = 0x1401;
     public const uint GL_FLOAT = 0x1406;
+    public const uint GL_RED = 0x1903;
+    public const uint GL_RGB = 0x1907;
+    public const uint GL_RGBA = 0x1908;
     public const uint GL_NEAREST = 0x2600;
     public const uint GL_LINEAR = 0x2601;
+    public const uint GL_LINEAR_MIPMAP_LINEAR = 0x2703;
+    public const uint GL_TEXTURE_MAG_FILTER = 0x2800;
+    public const uint GL_TEXTURE_MIN_FILTER = 0x2801;
+    public const uint GL_TEXTURE_WRAP_S = 0x2802;
+    public const uint GL_TEXTURE_WRAP_T = 0x2803;
+    public const uint GL_REPEAT = 0x2901;
     public const uint GL_ONE_MINUS_SRC_COLOR = 0x0301;
     public const uint GL_SRC_ALPHA = 0x0302;
     public const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
     public const uint GL_DST_ALPHA = 0x0304;
     public const uint GL_DST_COLOR = 0x0306;
     public const uint GL_ONE_MINUS_DST_COLOR = 0x0307;
+    public const uint GL_LINE_SMOOTH = 0x0B20;
     public const uint GL_CULL_FACE = 0x0B44;
     public const uint GL_DEPTH_TEST = 0x0B71;
     public const uint GL_BLEND = 0x0BE2;
@@ -29,13 +45,21 @@ public abstract class GlApi
     public const uint GL_FUNC_ADD = 0x8006;
     public const uint GL_MAX = 0x8008;
     public const uint GL_FUNC_REVERSE_SUBTRACT = 0x800B;
+    public const uint GL_CLAMP_TO_BORDER = 0x812D;
     public const uint GL_DEPTH_STENCIL_ATTACHMENT = 0x821A;
+    public const uint GL_RG = 0x8227;
+    public const uint GL_MIRRORED_REPEAT = 0x8370;
     public const uint GL_TEXTURE0 = 0x84C0;
     public const uint GL_TEXTURE1 = 0x84C1;
     public const uint GL_TEXTURE2 = 0x84C2;
+    public const uint GL_DEPTH_STENCIL = 0x84F9;
+    public const uint GL_UNSIGNED_INT_24_8 = 0x84FA;
+    public const uint GL_TEXTURE_MAX_ANISOTROPY = 0x84FE;
+    public const uint GL_MAX_TEXTURE_MAX_ANISOTROPY = 0x84FF;
     public const uint GL_STATIC_DRAW = 0x88E4;
     public const uint GL_DYNAMIC_DRAW = 0x88E8;
     public const uint GL_ARRAY_BUFFER = 0x8892;
+    public const uint GL_DEPTH24_STENCIL8 = 0x88F0;
     public const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
     public const uint GL_FRAGMENT_SHADER = 0x8B30;
     public const uint GL_VERTEX_SHADER = 0x8B31;
@@ -152,4 +176,38 @@ public abstract class GlApi
     public abstract void GenerateMipmap(uint target);
     public abstract void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, uint mask, uint filter);
     public abstract void TexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels);
+    public abstract void TexParameterI(uint target, uint pname, uint arg);
+    public abstract void GetTexImage(uint target, int level, uint format, uint type, nint pixels);
+    public abstract void PointSize(float size);
+    public abstract void LineWidth(float width);
+    public abstract void DeleteTexture(uint textures);
+    public abstract void TexParameterI(uint target, uint pname, ref uint arg);
+    /// <summary>
+    /// TexParameterf
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="pname"></param>
+    /// <param name="param"></param>
+    public abstract void TexParameter(uint target, uint pname, float param);
+    /// <summary>
+    /// PixelStorei
+    /// </summary>
+    /// <param name="pname"></param>
+    /// <param name="param"></param>
+    public abstract void PixelStore(uint pname, int param);
+    /// <summary>
+    /// GetFloatv
+    /// </summary>
+    /// <param name="pname"></param>
+    /// <param name="index"></param>
+    /// <param name="res"></param>
+    public abstract void GetFloat(uint pname, out float res);
+    /// <summary>
+    /// TexParameterfv
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="pname"></param>
+    /// <param name="arg"></param>
+    public abstract void TexParameter(uint target, uint pname, float[] arg);
+    public abstract void TexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, nint pixels);
 }

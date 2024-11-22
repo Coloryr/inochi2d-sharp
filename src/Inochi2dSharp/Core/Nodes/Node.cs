@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Inochi2dSharp.Core.Nodes.MeshGroups;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,19 +22,25 @@ public class Node
 {
     public Puppet Puppet
     { 
-        get => Parent != null ? Parent.Puppet : _puppet;
+        get => _parent != null ? _parent.Puppet : _puppet;
         set => _puppet = value;
     }
 
     private Puppet _puppet;
 
     /// <summary>
-    /// Gets the parent of this node
+    /// The parent of this node
     /// </summary>
-    public Node? Parent { get; private set; }
+    public Node? Parent 
+    { 
+        get => _parent;
+        set => insertInto(value, OFFSET_END);
+    }
+
+    private Node? _parent;
 
     /// <summary>
-    /// Gets a list of this node's children
+    /// A list of this node's children
     /// </summary>
     public List<Node> Children { get; private set; } = [];
     /// <summary>
@@ -42,7 +49,7 @@ public class Node
     public uint UUID { get; private set; }
 
     /// <summary>
-    /// Gets the relative Z sorting
+    /// The relative Z sorting
     /// </summary>
     public float RelZSort
     {
@@ -50,7 +57,7 @@ public class Node
     }
 
     /// <summary>
-    /// Gets the basis zSort offset.
+    /// The basis zSort offset.
     /// </summary>
     public float ZSortBase
     { 
@@ -67,7 +74,7 @@ public class Node
     }
 
     /// <summary>
-    /// the Z sorting without parameter offsets
+    /// The Z sorting without parameter offsets
     /// </summary>
     public float ZSortNoOffset
     { 
@@ -116,14 +123,16 @@ public class Node
     /// </summary>
     protected float offsetSort = 0f;
 
-    protected unsafe Matrix4x4* oneTimeTransform = null;
+    protected Matrix4x4? oneTimeTransform;
 
     public MatrixHolder? overrideTransformMatrix = null;
 
+    public delegate (Vector2[]?, Matrix4x4?) ProcessFilter(Vector2[] a, Vector2[]b, ref Matrix4x4 c);
+
     //Matrix4x4*
-    public unsafe Func<Vector2[], Vector2[], IntPtr, (Vector2[], IntPtr)>? preProcessFilter = null;
+    public ProcessFilter? preProcessFilter = null;
     //Matrix4x4*
-    public unsafe Func<Vector2[], Vector2[], IntPtr, (Vector2[], IntPtr)>? postProcessFilter = null;
+    public ProcessFilter? postProcessFilter = null;
 
     /// <summary>
     /// Whether the node is enabled for rendering
@@ -200,7 +209,7 @@ public class Node
         Parent?.ResetMask();
     }
 
-    protected virtual void SerializeSelf(JObject obj, bool recursive)
+    protected virtual void SerializeSelf(JObject obj, bool recursive = true)
     {
         obj.Add("uuid", UUID);
         obj.Add("name", name);
@@ -229,7 +238,7 @@ public class Node
         }
     }
 
-    protected unsafe void PreProcess()
+    protected unsafe virtual void PreProcess()
     {
         if (preProcessed)
             return;
@@ -240,8 +249,8 @@ public class Node
             var matrix = Parent != null ? Parent.Transform().Matrix : Matrix4x4.Identity;
             var temp = localTransform.Translation;
             var temp1 = offsetTransform.Translation;
-            var filterResult = preProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], new(&matrix));
-            if (filterResult.Item1.Length > 0)
+            var filterResult = preProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], ref matrix);
+            if (filterResult.Item1?.Length > 0)
             {
                 offsetTransform.Translation = new(filterResult.Item1[0], offsetTransform.Translation.Z);
                 transformChanged();
@@ -260,8 +269,8 @@ public class Node
             var matrix = Parent != null ? Parent.Transform().Matrix : Matrix4x4.Identity;
             var temp = localTransform.Translation;
             var temp1 = offsetTransform.Translation;
-            var filterResult = postProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], new(&matrix));
-            if (filterResult.Item1.Length > 0)
+            var filterResult = postProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], ref matrix);
+            if (filterResult.Item1?.Length > 0)
             {
                 offsetTransform.Translation = new(filterResult.Item1[0], offsetTransform.Translation.Z);
                 transformChanged();
@@ -436,8 +445,9 @@ public class Node
     /// </summary>
     public void clearChildren()
     {
-        foreach (var child in Children) {
-            child.Parent = null;
+        foreach (var child in Children) 
+        {
+            child._parent = null;
         }
         this.Children = [];
     }
@@ -451,19 +461,9 @@ public class Node
         child.Parent = this;
     }
 
-
-    /// <summary>
-    /// Sets the parent of this node
-    /// </summary>
-    /// <param name="node"></param>
-    public void parent(Node node)
-    {
-        insertInto(node, OFFSET_END);
-    }
-
     public int getIndexInParent()
     {
-        return Parent!.Children.IndexOf(this);
+        return _parent!.Children.IndexOf(this);
     }
 
     public int getIndexInNode(Node n)
@@ -474,30 +474,30 @@ public class Node
     public int OFFSET_START = int.MinValue;
     public int OFFSET_END = int.MaxValue;
 
-    public void insertInto(Node node, int offset)
+    public void insertInto(Node? node, int offset)
     {
         NodePath = "";
         // Remove ourselves from our current parent if we are
         // the child of one already.
-        if (Parent != null)
+        if (_parent != null)
         {
             // Try to find ourselves in our parent
             // note idx will be -1 if we can't be found
-            var idx = Parent.Children.IndexOf(this);
-            if (idx >= 0)
+            var idx = _parent.Children.IndexOf(this);
+            if (idx < 0)
             {
                 throw new Exception("Invalid parent-child relationship!");
             }
 
             // Remove ourselves
-            Parent.Children.RemoveAt(idx);
+            _parent.Children.RemoveAt(idx);
         }
 
         // If we want to become parentless we need to handle that
         // seperately, as null parents have no children to update
         if (node is null)
         {
-            Parent = null;
+            _parent = null;
             return;
         }
 
@@ -507,16 +507,16 @@ public class Node
         // Update position
         if (offset == OFFSET_START)
         {
-            Parent.Children.Insert(0, this);
+            _parent.Children.Insert(0, this);
         }
-        else if (offset == OFFSET_END || offset >= Parent.Children.Count
+        else if (offset == OFFSET_END || offset >= _parent.Children.Count
             )
         {
-            Parent.Children.Add(this);
+            _parent.Children.Add(this);
         }
         else
         {
-            Parent.Children.Insert(offset, this);
+            _parent.Children.Insert(offset, this);
         }
         Puppet?.rescanNodes();
     }
@@ -679,7 +679,7 @@ public class Node
     /// <summary>
     /// Draws this node and it's subnodes
     /// </summary>
-    public void draw()
+    public virtual void draw()
     {
         if (!RenderEnabled) return;
 
@@ -897,8 +897,8 @@ public class Node
 
         if (countPuppet)
         {
-            var temp = Puppet.transform.matrix * new Vector4(combined.X, combined.Y, 0, 1);
-            var temp1 = Puppet.transform.matrix * new Vector4(combined.Z, combined.W, 0, 1);
+            var temp = Puppet.transform.Matrix.Multiply(new Vector4(combined.X, combined.Y, 0, 1));
+            var temp1 = Puppet.transform.Matrix.Multiply(new Vector4(combined.Z, combined.W, 0, 1));
             return new(temp.X, temp.Y, temp1.X, temp1.Y);
         }
         else
@@ -931,63 +931,64 @@ public class Node
     public void drawOrientation()
     {
         var trans = Transform().Matrix;
-        inDbgLineWidth(4);
+        CoreHelper.inDbgLineWidth(4);
 
         // X
-        inDbgSetBuffer([vec3(0, 0, 0), vec3(32, 0, 0)], [0, 1]);
-        inDbgDrawLines(vec4(1, 0, 0, 0.7), trans);
+        CoreHelper.inDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(32, 0, 0)], [0, 1]);
+        CoreHelper.inDbgDrawLines(new Vector4(1, 0, 0, 0.7f), trans);
 
         // Y
-        inDbgSetBuffer([vec3(0, 0, 0), vec3(0, -32, 0)], [0, 1]);
-        inDbgDrawLines(vec4(0, 1, 0, 0.7), trans);
+        CoreHelper.inDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(0, -32, 0)], [0, 1]);
+        CoreHelper.inDbgDrawLines(new Vector4(0, 1, 0, 0.7f), trans);
 
         // Z
-        inDbgSetBuffer([vec3(0, 0, 0), vec3(0, 0, -32)], [0, 1]);
-        inDbgDrawLines(vec4(0, 0, 1, 0.7), trans);
+        CoreHelper.inDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(0, 0, -32)], [0, 1]);
+        CoreHelper.inDbgDrawLines(new Vector4(0, 0, 1, 0.7f), trans);
 
-        inDbgLineWidth(1);
+        CoreHelper.inDbgLineWidth(1);
     }
 
     /// <summary>
     /// Draws bounds
     /// </summary>
-    public void drawBounds()
+    public unsafe void drawBounds()
     {
-        vec4 bounds = this.getCombinedBounds;
+        var bounds = getCombinedBounds();
 
-        float width = bounds.z - bounds.x;
-        float height = bounds.w - bounds.y;
-        inDbgSetBuffer([
-            vec3(bounds.x, bounds.y, 0),
-            vec3(bounds.x + width, bounds.y, 0),
+        float width = bounds.Z - bounds.X;
+        float height = bounds.W - bounds.Y;
+        CoreHelper.inDbgSetBuffer([
+            new Vector3(bounds.X, bounds.Y, 0),
+            new Vector3(bounds.X + width, bounds.Y, 0),
 
-            vec3(bounds.x + width, bounds.y, 0),
-            vec3(bounds.x + width, bounds.y+height, 0),
+            new Vector3(bounds.X + width, bounds.Y, 0),
+            new Vector3(bounds.X + width, bounds.Y+height, 0),
 
-            vec3(bounds.x + width, bounds.y+height, 0),
-            vec3(bounds.x, bounds.y+height, 0),
+            new Vector3(bounds.X + width, bounds.Y+height, 0),
+            new Vector3(bounds.X, bounds.Y+height, 0),
 
-            vec3(bounds.x, bounds.y+height, 0),
-            vec3(bounds.x, bounds.y, 0),
+            new Vector3(bounds.X, bounds.Y+height, 0),
+            new Vector3(bounds.X, bounds.Y, 0),
         ]);
-        inDbgLineWidth(3);
-        if (oneTimeTransform! is null)
-            inDbgDrawLines(vec4(.5, .5, .5, 1), (*oneTimeTransform));
+        CoreHelper.inDbgLineWidth(3);
+        if (oneTimeTransform != null)
+            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), oneTimeTransform.Value);
         else
-            inDbgDrawLines(vec4(.5, .5, .5, 1));
-        inDbgLineWidth(1);
+            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
+        CoreHelper.inDbgLineWidth(1);
     }
 
-    public void setOneTimeTransform(mat4* transform)
+    public void setOneTimeTransform(Matrix4x4 transform)
     {
         oneTimeTransform = transform;
 
-        foreach (c; children) {
+        foreach (var c in Children) 
+        {
             c.setOneTimeTransform(transform);
         }
     }
 
-    public unsafe mat4* getOneTimeTransform()
+    public unsafe Matrix4x4? getOneTimeTransform()
     {
         return oneTimeTransform;
     }
@@ -1003,10 +1004,10 @@ public class Node
         {
             node.postProcessFilter = null;
             node.preProcessFilter = null;
-            auto group = cast(MeshGroup)node;
-            if (group is null)
+            if (node is not MeshGroup)
             {
-                foreach (child; node.children) {
+                foreach (var child in node.Children)
+                {
                     unsetGroup(child);
                 }
             }
@@ -1014,27 +1015,30 @@ public class Node
 
         unsetGroup(this);
 
-        if (parent! is null)
+        if (parent != null)
             setRelativeTo(parent);
-        insertInto(parent, pOffset);
-        auto c = this;
-        for (auto p = parent; p! is null; p = p.parent, c = c.parent)
+        insertInto(parent, (int)pOffset);
+        Node? c = this;
+        for (var p = parent; p != null; p = p.Parent, c = c.Parent)
         {
             p.setupChild(c);
         }
     }
 
-    public void setupChild(Node child) { }
-
-    public mat4 getDynamicMatrix()
+    public virtual void setupChild(Node? child) 
     {
-        if (overrideTransformMatrix! is null)
+        
+    }
+
+    public Matrix4x4 getDynamicMatrix()
+    {
+        if (overrideTransformMatrix != null)
         {
             return overrideTransformMatrix.Matrix;
         }
         else
         {
-            return transform.matrix;
+            return Transform().Matrix;
         }
     }
 }

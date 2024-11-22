@@ -95,6 +95,29 @@ public struct Matrix3x3
         );
     }
 
+    public readonly Matrix3x3 Transpose()
+    {
+        return new Matrix3x3(
+            M11, M21, M31,
+            M12, M22, M32,
+            M13, M23, M33
+        );
+    }
+
+    public readonly double Determinant()
+    {
+        return M11 * (M22 * M33 - M23 * M32)
+             - M12 * (M21 * M33 - M23 * M31)
+             + M13 * (M21 * M32 - M22 * M31);
+    }
+
+    public readonly override string ToString()
+    {
+        return $"[{M11}, {M12}, {M13}]\n" +
+               $"[{M21}, {M22}, {M23}]\n" +
+               $"[{M31}, {M32}, {M33}]";
+    }
+
     public static Matrix3x3 operator +(Matrix3x3 a, Matrix3x3 b)
     {
         return new Matrix3x3(
@@ -130,26 +153,12 @@ public struct Matrix3x3
         );
     }
 
-    public readonly Matrix3x3 Transpose()
+    public static Vector3 operator *(Matrix3x3 a, Vector3 b)
     {
-        return new Matrix3x3(
-            M11, M21, M31,
-            M12, M22, M32,
-            M13, M23, M33
-        );
+        float x = a.M11 * b.X + a.M12 * b.Y + a.M13 * b.Z;
+        float y = a.M21 * b.X + a.M22 * b.Y + a.M23 * b.Z;
+        float z = a.M31 * b.X + a.M32 * b.Y + a.M33 * b.Z;
+        return new Vector3(x, y, z);
     }
 
-    public readonly double Determinant()
-    {
-        return M11 * (M22 * M33 - M23 * M32)
-             - M12 * (M21 * M33 - M23 * M31)
-             + M13 * (M21 * M32 - M22 * M31);
-    }
-
-    public readonly override string ToString()
-    {
-        return $"[{M11}, {M12}, {M13}]\n" +
-               $"[{M21}, {M22}, {M23}]\n" +
-               $"[{M31}, {M32}, {M33}]";
-    }
 }

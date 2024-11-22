@@ -54,4 +54,34 @@ public static class MathHelper
         float uB = ((p2.X - p1.X) * (p1.Y - p3.Y) - (p2.Y - p1.Y) * (p1.X - p3.X)) / demoninator;
         return (uA > 0 + epsilon && uA < 1 - epsilon && uB > 0 + epsilon && uB < 1 - epsilon);
     }
+
+    public static Matrix4x4 Copy(this Matrix4x4 matrix)
+    {
+        var temp = new Matrix4x4();
+        for (int a = 0; a < 4; a++)
+        {
+            for (int b = 0; b < 4; b++)
+            {
+                temp[a, b] = matrix[a, b];
+            }
+        }
+        return temp;
+    }
+
+    /// <summary>
+    /// 扩展方法用于矩阵左乘向量。
+    /// </summary>
+    /// <param name="matrix">4x4矩阵</param>
+    /// <param name="vector">4维向量</param>
+    /// <returns>变换后的4维向量</returns>
+    public static Vector4 Multiply(this Matrix4x4 matrix, Vector4 vector)
+    {
+        // 手动实现矩阵左乘向量
+        return new Vector4(
+            matrix.M11 * vector.X + matrix.M12 * vector.Y + matrix.M13 * vector.Z + matrix.M14 * vector.W,
+            matrix.M21 * vector.X + matrix.M22 * vector.Y + matrix.M23 * vector.Z + matrix.M24 * vector.W,
+            matrix.M31 * vector.X + matrix.M32 * vector.Y + matrix.M33 * vector.Z + matrix.M34 * vector.W,
+            matrix.M41 * vector.X + matrix.M42 * vector.Y + matrix.M43 * vector.Z + matrix.M44 * vector.W
+        );
+    }
 }

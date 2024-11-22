@@ -81,7 +81,7 @@ public abstract class Drawable : Node
     /// <param name="data"></param>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    public Drawable(MeshData data, uint uuid, Node? parent = null) : base(uuid, parent) 
+    public Drawable(MeshData data, uint uuid, Node? parent = null) : base(uuid, parent)
     {
         this.data = data;
         this.deformStack = new DeformationStack(this);
@@ -99,17 +99,12 @@ public abstract class Drawable : Node
         updateVertices();
     }
 
-    public List<Vector2> vertices()
-    {
-        return data.Vertices;
-    }
-
     private unsafe void updateIndices()
     {
         CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, ibo);
         var temp = data.Indices.ToArray();
-        fixed(void* ptr = temp)
-             {
+        fixed (void* ptr = temp)
+        {
             CoreHelper.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, temp.Length * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
     }
@@ -177,20 +172,29 @@ public abstract class Drawable : Node
         serializer.Add("mesh", obj);
     }
 
-    protected override void Deserialize(JObject data)
+    protected override void Deserialize(JObject obj)
     {
-        base.Deserialize(data);
-        if (auto exc = data["mesh"].deserializeValue(this.data)) return exc;
+        base.Deserialize(obj);
+        var temp = obj["mesh"];
+        if (temp is not JObject obj1)
+        {
+            return;
+        }
 
-        this.vertices = this.data.vertices.dup;
+        data = new();
+        data.Deserialize(obj1);
+
+        data.Vertices = [.. data.Vertices];
 
         // Update indices and vertices
-        this.updateIndices();
-        this.updateVertices();
-        return null;
+        updateIndices();
+        updateVertices();
     }
 
-    protected void onDeformPushed(ref Deformation deform) { }
+    protected void onDeformPushed(ref Deformation deform)
+    {
+
+    }
 
     protected override void preProcess()
     {
@@ -213,7 +217,7 @@ public abstract class Drawable : Node
         }
     }
 
-   protected  override void postProcess()
+    protected override void postProcess()
     {
         if (postProcessed)
             return;
@@ -267,9 +271,9 @@ public abstract class Drawable : Node
     public override void update()
     {
         preProcess();
-        deformStack.update();
+        deformStack.Update();
         base.update();
-        this.updateDeform();
+        updateDeform();
     }
 
     /// <summary>
@@ -286,8 +290,8 @@ public abstract class Drawable : Node
     public void drawOneDirect(bool forMasking) { }
 
     public override string typeId()
-    { 
-        return "Drawable"; 
+    {
+        return "Drawable";
     }
 
     /// <summary>
@@ -396,10 +400,11 @@ public abstract class Drawable : Node
         }
     }
 
-    /**
-        Returns the mesh data for this Part.
-    */
-    final ref MeshData getMesh()
+    /// <summary>
+    /// Returns the mesh data for this Part.
+    /// </summary>
+    /// <returns></returns>
+    public MeshData getMesh()
     {
         return this.data;
     }
@@ -407,7 +412,7 @@ public abstract class Drawable : Node
     /**
         Changes this mesh's data
     */
-    void rebuffer(ref MeshData data)
+    public virtual void rebuffer(MeshData data)
     {
         this.data = data;
         this.updateIndices();
@@ -468,3 +473,4 @@ version(InDoesRender)
             glStencilMask(0x00);
         }
     }
+}

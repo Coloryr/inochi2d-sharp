@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 
 namespace Inochi2dSharp.Core.Nodes;
 
+[AttributeUsage(AttributeTargets.Class)]
+public class TypeIdAttribute(string id) : Attribute
+{
+    public string Id { get; } = id;
+}
+
 public static class NodeHelper
 {
     public const uint InInvalidUUID = uint.MaxValue;
 
     private static readonly List<uint> s_takenUUIDs = [];
-
-    static NodeHelper()
-    {
-        //RegisterNodeType<>();
-    }
 
     /// <summary>
     /// Creates a new UUID for a node
@@ -80,10 +81,4 @@ public static class NodeHelper
     {
         return s_typeFactories.ContainsKey(id);
     }
-}
-
-[AttributeUsage(AttributeTargets.Class)]
-public class TypeIdAttribute(string id) : Attribute
-{
-    public string Id { get; } = id;
 }

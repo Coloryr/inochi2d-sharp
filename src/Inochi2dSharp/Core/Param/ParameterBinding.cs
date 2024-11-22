@@ -109,7 +109,7 @@ public abstract class ParameterBinding
     /// Returns isSet_
     /// </summary>
     /// <returns></returns>
-    public abstract ref bool[][] getIsSet();
+    public abstract bool[][] getIsSet();
 
     /// <summary>
     /// Gets how many breakpoints this binding is set to
@@ -171,16 +171,10 @@ public abstract class ParameterBinding
     public abstract bool isCompatibleWithNode(Node other);
 
     /// <summary>
-    /// Gets the interpolation mode
+    /// The interpolation mode
     /// </summary>
     /// <returns></returns>
-    public abstract InterpolateMode interpolateMode();
-
-    /// <summary>
-    /// Sets the interpolation mode
-    /// </summary>
-    /// <param name="mode"></param>
-    public abstract void interpolateMode(InterpolateMode mode);
+    public abstract InterpolateMode interpolateMode { get; set; }
 
     /// <summary>
     /// Serialize

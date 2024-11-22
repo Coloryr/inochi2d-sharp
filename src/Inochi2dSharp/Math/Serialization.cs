@@ -69,10 +69,11 @@ public static class Serialization
         return [.. list];
     }
 
-    public static JToken ToToken(this float[][] floats)
+
+    public static JToken ToToken<T>(this T[][] items)
     {
         var list = new JArray();
-        foreach (var item in floats)
+        foreach (var item in items)
         {
             var list1 = new JArray(item);
             list.Add(list1);
@@ -81,16 +82,12 @@ public static class Serialization
         return list;
     }
 
-    public static float[][] ToFloatArray(this JToken token)
+    public static T[][] ToArray<T>(this JArray token)
     {
-        if (token is not JArray array)
+        var list = new List<List<T>>();
+        foreach (var item in token)
         {
-            return [];
-        }
-        var list = new List<List<float>>();
-        foreach (var item in array)
-        {
-            list.Add(item.ToObject<List<float>>() ?? []);
+            list.Add(item.ToObject<List<T>>() ?? []);
         }
 
         return list.Select(item => item.ToArray()).ToArray();

@@ -381,5 +381,94 @@ void main() {
     outAlbedo = final;
 }
 """;
+    public const string inCompositeVert =
+"""
+#version 330
 
+out vec2 texUVs;
+
+vec2 verts[6] = vec2[](
+    vec2(-1, -1),
+    vec2(-1, 1),
+    vec2(1, -1),
+
+    vec2(1, -1),
+    vec2(-1, 1),
+    vec2(1, 1)
+);
+
+vec2 uvs[6] = vec2[](
+    vec2(0, 0),
+    vec2(0, 1),
+    vec2(1, 0),
+
+    vec2(1, 0),
+    vec2(0, 1),
+    vec2(1, 1)
+);
+
+void main() {
+    gl_Position = vec4(verts[gl_VertexID], 0, 1);
+    texUVs = uvs[gl_VertexID];
+}
+""";
+    public const string inCompositeFrag =
+"""
+#version 330
+in vec2 texUVs;
+
+layout(location = 0) out vec4 outAlbedo;
+layout(location = 1) out vec4 outEmissive;
+layout(location = 2) out vec4 outBump;
+
+uniform sampler2D albedo;
+uniform sampler2D emissive;
+uniform sampler2D bumpmap;
+
+uniform float opacity;
+uniform vec3 multColor;
+uniform vec3 screenColor;
+
+vec4 screen(vec3 tcol, float a) {
+    return vec4(vec3(1.0) - ((vec3(1.0)-tcol) * (vec3(1.0)-(screenColor*a))), a);
+}
+
+void main() {
+    // Sample texture
+    vec4 texColor = texture(albedo, texUVs);
+    vec4 emiColor = texture(emissive, texUVs);
+    vec4 bmpColor = texture(bumpmap, texUVs);
+
+    vec4 mult = vec4(multColor.xyz, 1);
+
+    // Out color math
+    vec4 albedoOut = screen(texColor.xyz, texColor.a) * mult;
+    vec4 emissionOut = screen(emiColor.xyz, texColor.a) * mult;
+
+    // Albedo
+    outAlbedo = albedoOut * opacity;
+
+    // Emissive
+    outEmissive = emissionOut;
+
+    // Bumpmap
+    outBump = bmpColor;
+}
+""";
+    public const string inCompositeMaskFrag =
+"""
+#version 330
+in vec2 texUVs;
+out vec4 outColor;
+
+uniform sampler2D tex;
+uniform float threshold;
+uniform float opacity;
+
+void main() {
+    vec4 color = texture(tex, texUVs) * vec4(1, 1, 1, opacity);
+    if (color.a <= threshold) discard;
+    outColor = vec4(1, 1, 1, 1);
+}
+""";
 }

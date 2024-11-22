@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Shaders;
+using SkiaSharp;
 
 namespace Inochi2dSharp.Core;
 
@@ -73,10 +74,12 @@ public static class CoreHelper
     public static int mvpId;
     public static int colorId;
 
-
     private static bool inDbgDrawMeshOutlines = false;
     private static bool inDbgDrawMeshVertexPoints = false;
     private static bool inDbgDrawMeshOrientation = false;
+
+    private static List<Texture> textureBindings = [];
+    private static bool started = false;
 
     public static void renderScene(Vector4 area, PostProcessingShader shaderToUse, uint albedo, uint emissive, uint bump)
     {
@@ -480,22 +483,22 @@ public static class CoreHelper
 
         // Render Framebuffer
         gl.BindTexture(GlApi.GL_TEXTURE_2D, fAlbedo);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, null);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, fEmissive);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_FLOAT, null);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_FLOAT, 0);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, fBump);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, null);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, fStencil);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, null);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);
 
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, fBuffer);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, fAlbedo, 0);
@@ -505,22 +508,22 @@ public static class CoreHelper
 
         // Composite framebuffer
         gl.BindTexture(GlApi.GL_TEXTURE_2D, cfAlbedo);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, null);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, cfEmissive);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_FLOAT, null);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_FLOAT, 0);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, cfBump);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, null);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, cfStencil);
-        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, null);
+        gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);
 
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, cfBuffer);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, cfAlbedo, 0);
@@ -557,25 +560,31 @@ public static class CoreHelper
     /// Dumps viewport data to texture stream
     /// </summary>
     /// <param name="dumpTo"></param>
-    public static void inDumpViewport(byte[] dumpTo)
+    public unsafe static void inDumpViewport(byte[] dumpTo)
     {
-        import std.exception: enforce;
-        enforce(dumpTo.length >= inViewportDataLength(), "Invalid data destination length for inDumpViewport");
-        glBindTexture(GL_TEXTURE_2D, fAlbedo);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, dumpTo.ptr);
+        if (dumpTo.Length >= inViewportDataLength())
+        {
+            throw new Exception("Invalid data destination length for inDumpViewport");
+        }
+        gl.BindTexture(GlApi.GL_TEXTURE_2D, fAlbedo);
+        fixed (void* ptr = dumpTo)
+        {
+            gl.GetTexImage(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, new nint(ptr));
+        }
 
         // We need to flip it because OpenGL renders stuff with a different coordinate system
-        ubyte[] tmpLine = new ubyte[inViewportWidth * 4];
-        size_t ri = 0;
-        foreach_reverse(i; inViewportHeight / 2..inViewportHeight) {
-            size_t lineSize = inViewportWidth * 4;
-            size_t oldLineStart = (lineSize * ri);
-            size_t newLineStart = (lineSize * i);
-            import core.stdc.string : memcpy;
+        byte[] tmpLine = new byte[inViewportWidth * 4];
+        int ri = 0;
+        for (int i = inViewportHeight / 2; i < inViewportHeight; i++)
+        {
+            int lineSize = inViewportWidth * 4;
+            int oldLineStart = lineSize * ri;
+            int newLineStart = lineSize * i;
 
-            memcpy(tmpLine.ptr, dumpTo.ptr + oldLineStart, lineSize);
-            memcpy(dumpTo.ptr + oldLineStart, dumpTo.ptr + newLineStart, lineSize);
-            memcpy(dumpTo.ptr + newLineStart, tmpLine.ptr, lineSize);
+            // Copy the line data
+            Array.Copy(dumpTo, oldLineStart, tmpLine, 0, lineSize);
+            Array.Copy(dumpTo, newLineStart, dumpTo, oldLineStart, lineSize);
+            Array.Copy(tmpLine, 0, dumpTo, newLineStart, lineSize);
 
             ri++;
         }
@@ -645,97 +654,253 @@ public static class CoreHelper
         }
     }
 
-    /**
-    Size of debug points
-*/
-    void inDbgPointsSize(float size)
+    /// <summary>
+    /// Size of debug points
+    /// </summary>
+    /// <param name="size"></param>
+    public static void inDbgPointsSize(float size)
     {
-        glPointSize(size);
+        gl.PointSize(size);
     }
 
-    /**
-        Size of debug points
-*/
-    void inDbgLineWidth(float size)
+    /// <summary>
+    ///  Size of debug points
+    /// </summary>
+    /// <param name="size"></param>
+    public static void inDbgLineWidth(float size)
     {
-        glLineWidth(size);
+        gl.LineWidth(size);
     }
 
-    /**
-        Draws points with specified color
-*/
-    void inDbgSetBuffer(vec3[] points)
+    /// <summary>
+    /// Draws points with specified color
+    /// </summary>
+    /// <param name="points"></param>
+    public static void inDbgSetBuffer(Vector3[] points)
     {
         inUpdateDbgVerts(points);
     }
 
-    /**
-        Sets buffer to buffer owned by an other OpenGL object
-*/
-    void inDbgSetBuffer(GLuint vbo, GLuint ibo, int count)
+    /// <summary>
+    ///  Sets buffer to buffer owned by an other OpenGL object
+    /// </summary>
+    /// <param name="vbo"></param>
+    /// <param name="ibo"></param>
+    /// <param name="count"></param>
+    public static void inDbgSetBuffer(uint vbo, uint ibo, int count)
     {
-        glBindVertexArray(dbgVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        gl.BindVertexArray(dbgVAO);
+        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, vbo);
         cVBO = vbo;
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, ibo);
         indiceCount = count;
     }
 
-    /**
-        Draws points with specified color
-*/
-    void inDbgSetBuffer(vec3[] points, ushort[] indices)
+    /// <summary>
+    /// Draws points with specified color
+    /// </summary>
+    /// <param name="points"></param>
+    /// <param name="indices"></param>
+    public static void inDbgSetBuffer(Vector3[] points, ushort[] indices)
     {
         inUpdateDbgVerts(points, indices);
     }
 
-    /**
-        Draws current stored vertices as points with specified color
-*/
-    void inDbgDrawPoints(vec4 color, mat4 transform = mat4.identity)
+    public static void inDbgDrawPoints(Vector4 color)
     {
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-
-        glBindVertexArray(dbgVAO);
-
-        dbgShaderPoint.use();
-        dbgShaderPoint.setUniform(mvpId, inGetCamera().matrix * transform);
-        dbgShaderPoint.setUniform(colorId, color);
-
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, cVBO);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, null);
-
-        glDrawElements(GL_POINTS, indiceCount, GL_UNSIGNED_SHORT, null);
-        glDisableVertexAttribArray(0);
-
-        glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+        inDbgDrawPoints(color, Matrix4x4.Identity);
     }
 
-    /**
-        Draws current stored vertices as lines with specified color
-*/
-    void inDbgDrawLines(vec4 color, mat4 transform = mat4.identity)
+    /// <summary>
+    /// Draws current stored vertices as points with specified color
+    /// </summary>
+    /// <param name="color"></param>
+    /// <param name="transform"></param>
+    public static void inDbgDrawPoints(Vector4 color, Matrix4x4 transform)
     {
-        glEnable(GL_LINE_SMOOTH);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+        gl.BlendEquation(GlApi.GL_FUNC_ADD);
+        gl.BlendFuncSeparate(GlApi.GL_SRC_ALPHA, GlApi.GL_ONE_MINUS_SRC_ALPHA, GlApi.GL_ONE, GlApi.GL_ONE);
 
-        glBindVertexArray(dbgVAO);
+        gl.BindVertexArray(dbgVAO);
+
+        dbgShaderPoint.use();
+        dbgShaderPoint.setUniform(mvpId, inCamera.Matrix() * transform);
+        dbgShaderPoint.setUniform(colorId, color);
+
+        gl.EnableVertexAttribArray(0);
+        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, cVBO);
+        gl.VertexAttribPointer(0, 3, GlApi.GL_FLOAT, false, 0, 0);
+
+        gl.DrawElements(GlApi.GL_POINTS, indiceCount, GlApi.GL_UNSIGNED_SHORT, 0);
+        gl.DisableVertexAttribArray(0);
+
+        gl.BlendFuncSeparate(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA, GlApi.GL_ONE, GlApi.GL_ONE);
+    }
+
+    public static void inDbgDrawLines(Vector4 color)
+    {
+        inDbgDrawLines(color, Matrix4x4.Identity);
+    }
+
+    /// <summary>
+    /// Draws current stored vertices as lines with specified color
+    /// </summary>
+    /// <param name="color"></param>
+    /// <param name="transform"></param>
+    public static void inDbgDrawLines(Vector4 color, Matrix4x4 transform)
+    {
+        gl.Enable(GlApi.GL_LINE_SMOOTH);
+        gl.BlendEquation(GlApi.GL_FUNC_ADD);
+        gl.BlendFuncSeparate(GlApi.GL_SRC_ALPHA, GlApi.GL_ONE_MINUS_SRC_ALPHA, GlApi.GL_ONE, GlApi.GL_ONE);
+
+        gl.BindVertexArray(dbgVAO);
 
         dbgShaderLine.use();
-        dbgShaderLine.setUniform(mvpId, inGetCamera().matrix * transform);
+        dbgShaderLine.setUniform(mvpId, inCamera.Matrix() * transform);
         dbgShaderLine.setUniform(colorId, color);
 
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, cVBO);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, null);
+        gl.EnableVertexAttribArray(0);
+        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, cVBO);
+        gl.VertexAttribPointer(0, 3, GlApi.GL_FLOAT, false, 0, 0);
 
-        glDrawElements(GL_LINES, indiceCount, GL_UNSIGNED_SHORT, null);
-        glDisableVertexAttribArray(0);
+        gl.DrawElements(GlApi.GL_LINES, indiceCount, GlApi.GL_UNSIGNED_SHORT, 0);
+        gl.DisableVertexAttribArray(0);
 
-        glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-        glDisable(GL_LINE_SMOOTH);
+        gl.BlendFuncSeparate(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA, GlApi.GL_ONE, GlApi.GL_ONE);
+        gl.Disable(GlApi.GL_LINE_SMOOTH);
+    }
+
+    public static int GetChannel(this SKBitmap bitmap)
+    {
+        var type = bitmap.ColorType;
+        if (type == SKColorType.Rgba8888 || type == SKColorType.Bgra8888)
+        {
+            return 4;
+        }
+
+        return 0;
+    }
+
+    public static float Clamp(float a, float b, float c)
+    {
+        return MathF.Min(MathF.Max(a, b), c);
+    }
+
+    /// <summary>
+    /// Gets the maximum level of anisotropy
+    /// </summary>
+    /// <returns></returns>
+    public static float IncGetMaxAnisotropy()
+    {
+        gl.GetFloat(GlApi.GL_MAX_TEXTURE_MAX_ANISOTROPY, out float max);
+        return max;
+    }
+
+    /// <summary>
+    /// Begins a texture loading pass
+    /// </summary>
+    /// <exception cref="Exception"></exception>
+    public static void inBeginTextureLoading()
+    {
+        if (started)
+        {
+            throw new Exception("Texture loading pass already started!");
+        }
+        started = true;
+    }
+
+    /// <summary>
+    /// Returns a texture from the internal texture list
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public static Texture inGetTextureFromId(uint id)
+    {
+        if (!started)
+        {
+            throw new Exception("Texture loading pass not started!");
+        }
+        return textureBindings[(int)id];
+    }
+
+    /// <summary>
+    /// Gets the latest texture from the internal texture list
+    /// </summary>
+    /// <returns></returns>
+    public static Texture inGetLatestTexture()
+    {
+        return textureBindings[^1];
+    }
+
+    /// <summary>
+    /// Adds binary texture
+    /// </summary>
+    /// <param name="data"></param>
+    public static void inAddTextureBinary(ShallowTexture data)
+    {
+        textureBindings.Add(new Texture(data));
+    }
+
+    /// <summary>
+    /// Ends a texture loading pass
+    /// </summary>
+    /// <param name="checkErrors"></param>
+    public static void inEndTextureLoading(bool checkErrors = true)
+    {
+        if (checkErrors && !started)
+        {
+            throw new Exception("Texture loading pass not started!");
+        }
+        started = false;
+        textureBindings.Clear();
+    }
+
+    public static void inTexPremultiply(byte[] data, int channels = 4)
+    {
+        if (channels < 4) return;
+
+        for (int i = 0; i < data.Length / channels; i++) 
+        {
+            var offsetPixel = i * channels;
+            data[offsetPixel + 0] = (byte)(data[offsetPixel + 0] * data[offsetPixel + 3] / 255);
+            data[offsetPixel + 1] = (byte)(data[offsetPixel + 1] * data[offsetPixel + 3] / 255);
+            data[offsetPixel + 2] = (byte)(data[offsetPixel + 2] * data[offsetPixel + 3] / 255);
+        }
+    }
+
+    public static void inTexUnPremuliply(IntPtr ptr, long size)
+    {
+        unsafe
+        {
+            byte* data = (byte*)ptr;
+            for (int i = 0; i < size / 4; i++)
+            {
+                if (data[(i * 4) + 3] == 0) continue;
+
+                data[(i * 4) + 0] = (byte)(data[(i * 4) + 0] * 255 / data[(i * 4) + 3]);
+                data[(i * 4) + 1] = (byte)(data[(i * 4) + 1] * 255 / data[(i * 4) + 3]);
+                data[(i * 4) + 2] = (byte)(data[(i * 4) + 2] * 255 / data[(i * 4) + 3]);
+            }
+        }
+    }
+
+    public static void Save(this SKBitmap bitmap, string file)
+    {
+        byte[] temp;
+        if (file.EndsWith(".png"))
+        {
+            temp = bitmap.Encode(SKEncodedImageFormat.Png, 100).AsSpan().ToArray();
+        }
+        else if (file.EndsWith(".jpg"))
+        {
+            temp = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100).AsSpan().ToArray();
+        }
+        else
+        {
+            temp = bitmap.Encode(SKEncodedImageFormat.Bmp, 100).AsSpan().ToArray();
+        }
+
+        File.WriteAllBytes(file, temp);
     }
 }
