@@ -84,4 +84,29 @@ public static class MathHelper
             matrix.M41 * vector.X + matrix.M42 * vector.Y + matrix.M43 * vector.Z + matrix.M44 * vector.W
         );
     }
+
+    public static float Hermite(float x, float tx, float y, float ty, float t)
+    {
+        float h1 = 2 * t * t * t - 3 * t * t + 1;
+        float h2 = -2 * t * t * t + 3 * t * t;
+        float h3 = t * t * t - 2 * t * t + t;
+        float h4 = t * t * t - t * t;
+
+        // Assuming T supports multiplication and addition with float
+        float dx = x, dtx = tx, dy = y, dty = ty;
+        return h1 * dx + h3 * dtx + h2 * dy + h4 * dty;
+    }
+
+    public static float Cubic(float p0, float p1, float p2, float p3, float t)
+    {
+        // Assuming T supports multiplication and addition with float
+        float dp0 = p0, dp1 = p1, dp2 = p2, dp3 = p3;
+
+        double a = -0.5 * dp0 + 1.5 * dp1 - 1.5 * dp2 + 0.5 * dp3;
+        double b = dp0 - 2.5 * dp1 + 2 * dp2 - 0.5 * dp3;
+        double c = -0.5 * dp0 + 0.5 * dp2;
+        double d = dp1;
+
+        return (float)(a * (t * t * t) + b * (t * t) + c * t + d);
+    }
 }

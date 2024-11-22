@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Inochi2dSharp.Core;
 
@@ -11,7 +12,8 @@ namespace Inochi2dSharp.Core;
 /// </summary>
 public record PuppetPhysics
 {
+    [JsonProperty("pixelsPerMeter")]
     public float pixelsPerMeter = 1000;
-
+    [JsonProperty("gravity")]
     public float gravity = 9.8f;
 }

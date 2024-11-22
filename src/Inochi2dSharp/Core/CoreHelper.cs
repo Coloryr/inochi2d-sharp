@@ -781,11 +781,6 @@ public static class CoreHelper
         return 0;
     }
 
-    public static float Clamp(float a, float b, float c)
-    {
-        return MathF.Min(MathF.Max(a, b), c);
-    }
-
     /// <summary>
     /// Gets the maximum level of anisotropy
     /// </summary>

@@ -6,12 +6,6 @@ using System.Threading.Tasks;
 
 namespace Inochi2dSharp.Core.Nodes;
 
-[AttributeUsage(AttributeTargets.Class)]
-public class TypeIdAttribute(string id) : Attribute
-{
-    public string Id { get; } = id;
-}
-
 public static class NodeHelper
 {
     public const uint InInvalidUUID = uint.MaxValue;

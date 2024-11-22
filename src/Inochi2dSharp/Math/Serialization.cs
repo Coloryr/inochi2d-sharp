@@ -54,7 +54,19 @@ public static class Serialization
         return list;
     }
 
-    public static List<float>[] ToFloatList(this JToken token)
+    public static JToken ToToken(this List<List<float>> floats)
+    {
+        var list = new JArray();
+        foreach (var item in floats)
+        {
+            var list1 = new JArray(item);
+            list.Add(list1);
+        }
+
+        return list;
+    }
+
+    public static List<List<float>> ToFloatList(this JToken token)
     {
         if (token is not JArray array)
         {
@@ -66,7 +78,7 @@ public static class Serialization
             list.Add(item.ToObject<List<float>>() ?? []);
         }
 
-        return [.. list];
+        return list;
     }
 
 

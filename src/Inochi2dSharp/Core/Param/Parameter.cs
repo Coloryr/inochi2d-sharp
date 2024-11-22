@@ -75,7 +75,7 @@ public class Parameter : IDisposable
     /// <summary>
     /// Position of the keypoints along each axis
     /// </summary>
-    public float[][] axisPoints = [[0, 1], [0, 1]];
+    public List<List<float>> axisPoints = [[0, 1], [0, 1]];
 
     /// <summary>
     /// Binding to targets
@@ -193,7 +193,7 @@ public class Parameter : IDisposable
         temp = data["axis_points"];
         if (temp is JArray array)
         {
-            axisPoints = array.ToArray<float>();
+            axisPoints = array.ToFloatList();
         }
 
         temp = data["defaults"];
@@ -253,8 +253,10 @@ public class Parameter : IDisposable
         value = defaults;
 
         var validBindingList = new List<ParameterBinding>();
-        foreach (var binding in bindings) {
-            if (puppet.findNode(binding.getNodeUUID())) {
+        foreach (var binding in bindings) 
+        {
+            if (puppet.find<Node>(binding.getNodeUUID()) != null) 
+            {
                 binding.finalize(puppet);
                 validBindingList.Add(binding);
             }
@@ -263,38 +265,42 @@ public class Parameter : IDisposable
         bindings = validBindingList;
     }
 
-    void findOffset(vec2 offset, out vec2u index, out vec2 outOffset)
+    public void findOffset(Vector2 offset, out Vector2Uint index, out Vector2 outOffset)
     {
-        void interpAxis(uint axis, float val, out uint index, out float offset)
+        index = new();
+        outOffset = new();
+        void interpAxis(int axis, float val, out uint index, out float offset)
         {
-            float[] pos = axisPoints[axis];
+            var pos = axisPoints[axis];
 
-            foreach (i; 0..pos.length - 1) {
-                if (pos[i + 1] > val || i == (pos.length - 2))
+            for (int i = 0; i < pos.Count - 1; i++)
+            {
+                if (pos[i + 1] > val || i == (pos.Count - 2))
                 {
-                    index = cast(uint)i;
+                    index = (uint)i;
                     offset = (val - pos[i]) / (pos[i + 1] - pos[i]);
                     return;
                 }
             }
+
+            index = 0;
+            offset = 0;
         }
 
-        interpAxis(0, offset.x, index.x, outOffset.x);
-        if (isVec2) interpAxis(1, offset.y, index.y, outOffset.y);
+        interpAxis(0, offset.X, out index.X, out outOffset.X);
+        if (isVec2) interpAxis(1, offset.Y, out index.Y, out outOffset.Y);
     }
 
-    void update()
+    public void update()
     {
-        vec2u index;
-        vec2 offset_;
-
         if (!active)
             return;
 
-        lastInternal = (value + iadd.csum()) * imul.avg();
+        lastInternal = (value + iadd.Csum()) * imul.Avg();
 
-        findOffset(this.mapValue(lastInternal), index, offset_);
-        foreach (binding; bindings) {
+        findOffset(this.mapValue(lastInternal), out var index, out var offset_);
+        foreach (var binding in bindings)
+        {
             binding.apply(index, offset_);
         }
 
@@ -303,7 +309,7 @@ public class Parameter : IDisposable
         imul.clear();
     }
 
-    void pushIOffset(vec2 offset, ParamMergeMode mode = ParamMergeMode.Passthrough, float weight = 1)
+    public void pushIOffset(Vector2 offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
     {
         if (mode == ParamMergeMode.Passthrough) mode = mergeMode;
         switch (mode)
@@ -312,62 +318,83 @@ public class Parameter : IDisposable
                 this.value = offset;
                 break;
             case ParamMergeMode.Additive:
-                iadd.add(offset, 1);
+                iadd.Add(offset, 1);
                 break;
             case ParamMergeMode.Multiplicative:
-                imul.add(offset, 1);
+                imul.Add(offset, 1);
                 break;
             case ParamMergeMode.Weighted:
-                imul.add(offset, weight);
+                imul.Add(offset, weight);
                 break;
             default: break;
         }
     }
 
-    void pushIOffsetAxis(int axis, float offset, ParamMergeMode mode = ParamMergeMode.Passthrough, float weight = 1)
+    public void pushIOffsetAxis(int axis, float offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
     {
         if (mode == ParamMergeMode.Passthrough) mode = mergeMode;
         switch (mode)
         {
             case ParamMergeMode.Forced:
-                this.value.vector[axis] = offset;
+                value[axis] = offset;
                 break;
             case ParamMergeMode.Additive:
-                iadd.add(axis, offset, 1);
+                iadd.Add(axis, offset, 1);
                 break;
             case ParamMergeMode.Multiplicative:
-                imul.add(axis, offset, 1);
+                imul.Add(axis, offset, 1);
                 break;
             case ParamMergeMode.Weighted:
-                imul.add(axis, offset, weight);
+                imul.Add(axis, offset, weight);
                 break;
             default: break;
         }
     }
 
-    /**
-        Get number of points for an axis
-    */
-    public uint axisPointCount(uint axis = 0)
+    /// <summary>
+    /// Get number of points for an axis
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <returns></returns>
+    public int axisPointCount(int axis = 0)
     {
-        return cast(uint)axisPoints[axis].length;
+        return axisPoints[axis].Count;
     }
 
-    /**
-        Move an axis point to a new offset
-    */
-    void moveAxisPoint(uint axis, uint oldidx, float newoff)
+    /// <summary>
+    /// Move an axis point to a new offset
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <param name="oldidx"></param>
+    /// <param name="newoff"></param>
+    public void moveAxisPoint(int axis, int oldidx, float newoff)
     {
-        assert(oldidx > 0 && oldidx < this.axisPointCount(axis) - 1, "invalid point index");
-        assert(newoff > 0 && newoff < 1, "offset out of bounds");
-        if (isVec2)
-            assert(axis <= 1, "bad axis");
-        else
-            assert(axis == 0, "bad axis");
+        if (oldidx <= 0 && oldidx >= this.axisPointCount(axis) - 1)
+        {
+            throw new Exception("invalid point index");  
+        }
+        if (newoff <= 0 && newoff >= 1)
+        {
+            throw new Exception("offset out of bounds");
+        }
+        if (isVec2 )
+        {
+            if (axis > 1)
+            {
+                throw new Exception("bad axis");
+            }
+        }
+        else 
+        {
+            if (axis != 0)
+            {
+                throw new Exception("bad axis");
+            } 
+        }
 
         // Find the index at which to insert
-        uint index;
-        for (index = 1; index < axisPoints[axis].length; index++)
+        int index;
+        for (index = 1; index < axisPoints[axis].Count; index++)
         {
             if (axisPoints[axis][index + 1] > newoff)
                 break;
@@ -378,173 +405,237 @@ public class Parameter : IDisposable
             // BUG: Apparently deleting the oldindex and replacing it with newindex causes a crash.
 
             // Insert it into the new position in the list
-            auto swap = axisPoints[oldidx];
-            axisPoints[axis] = axisPoints[axis].remove(oldidx);
-            axisPoints[axis].insertInPlace(index, swap);
-            debug writeln("after move ", this.axisPointCount(0));
+            float swap = axisPoints[axis][oldidx];
+            var tempList = new List<float>(axisPoints[axis]);
+            tempList.RemoveAt(oldidx);
+            tempList.Insert(index, swap);
+
+            axisPoints[axis] = [.. tempList];
+#if DEBUG
+            Console.WriteLine("after move ", axisPointCount(0));
+#endif
         }
 
         // Tell all bindings to reinterpolate
-        foreach (binding; bindings) {
+        foreach (var binding in bindings) 
+        {
             binding.moveKeypoints(axis, oldidx, index);
         }
     }
 
-    /**
-        Add a new axis point at the given offset
-    */
-    void insertAxisPoint(uint axis, float off)
+    /// <summary>
+    /// Add a new axis point at the given offset
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <param name="off"></param>
+    public void insertAxisPoint(int axis, float off)
     {
-        assert(off > 0 && off < 1, "offset out of bounds");
+        if (off <= 0 || off >= 1)
+        {
+            throw new Exception("offset out of bounds");
+        }
         if (isVec2)
-            assert(axis <= 1, "bad axis");
+        {
+            if (axis > 1)
+            {
+                throw new Exception("bad axis");
+            }
+        }
         else
-            assert(axis == 0, "bad axis");
+        {
+            if (axis != 0)
+            {
+                throw new Exception("bad axis");
+            }
+        }
 
         // Find the index at which to insert
-        uint index;
-        for (index = 1; index < axisPoints[axis].length; index++)
+        int index;
+        for (index = 1; index < axisPoints[axis].Count; index++)
         {
             if (axisPoints[axis][index] > off)
                 break;
         }
 
         // Insert it into the position list
-        axisPoints[axis].insertInPlace(index, off);
+        axisPoints[axis].Insert(index, off);
 
         // Tell all bindings to insert space into their arrays
-        foreach (binding; bindings) {
+        foreach (var binding in bindings)
+        {
             binding.insertKeypoints(axis, index);
         }
     }
 
-    /**
-        Delete a specified axis point by index
-    */
-    void deleteAxisPoint(uint axis, uint index)
+    /// <summary>
+    /// Delete a specified axis point by index
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <param name="index"></param>
+    public void deleteAxisPoint(int axis, int index)
     {
         if (isVec2)
-            assert(axis <= 1, "bad axis");
+        {
+            if (axis > 1)
+            {
+                throw new Exception("bad axis");
+            }
+        }
         else
-            assert(axis == 0, "bad axis");
+        {
+            if (axis != 0)
+            {
+                throw new Exception("bad axis");
+            }
+        }
 
-        assert(index > 0, "cannot delete axis point at 0");
-        assert(index < (axisPoints[axis].length - 1), "cannot delete axis point at 1");
+        if (index <= 0)
+        {
+            throw new Exception("cannot delete axis point at 0");
+        }
+        if (index >= (axisPoints[axis].Count - 1))
+        {
+            throw new Exception("cannot delete axis point at 1");
+        }
 
         // Remove the keypoint
-        axisPoints[axis] = axisPoints[axis].remove(index);
+        axisPoints[axis].RemoveAt(index);
 
         // Tell all bindings to remove it from their arrays
-        foreach (binding; bindings) {
+        foreach (var binding in bindings) 
+        {
             binding.deleteKeypoints(axis, index);
         }
     }
 
-    /**
-        Flip the mapping across an axis
-    */
-    void reverseAxis(uint axis)
+    /// <summary>
+    /// Flip the mapping across an axis
+    /// </summary>
+    /// <param name="axis"></param>
+    public void reverseAxis(int axis)
     {
-        axisPoints[axis].reverse();
-        foreach (ref i; axisPoints[axis]) {
-            i = 1 - i;
+        axisPoints[axis].Reverse();
+        for (var i=0;i<axisPoints[axis].Count;i++) 
+        {
+            axisPoints[axis][i] = 1 - axisPoints[axis][i];
         }
-        foreach (binding; bindings) {
+        foreach (var binding in bindings)
+        {
             binding.reverseAxis(axis);
         }
     }
 
-    /**
-        Get the offset (0..1) of a specified keypoint index
-    */
-    vec2 getKeypointOffset(vec2u index)
+    /// <summary>
+    /// Get the offset (0..1) of a specified keypoint index
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public Vector2 getKeypointOffset(Vector2Uint index)
     {
-        return vec2(axisPoints[0][index.x], axisPoints[1][index.y]);
+        return new(axisPoints[0][(int)index.X], axisPoints[1][(int)index.Y]);
     }
 
-    /**
-        Get the value at a specified keypoint index
-    */
-    vec2 getKeypointValue(vec2u index)
+    /// <summary>
+    /// Get the value at a specified keypoint index
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public Vector2 getKeypointValue(Vector2Uint index)
     {
         return unmapValue(getKeypointOffset(index));
     }
 
-    /**
-        Maps an input value to an offset (0.0->1.0)
-    */
-    vec2 mapValue(vec2 value)
+    /// <summary>
+    /// Maps an input value to an offset (0.0->1.0)
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public Vector2 mapValue(Vector2 value)
     {
-        vec2 range = max - min;
-        vec2 tmp = (value - min);
-        vec2 off = vec2(tmp.x / range.x, tmp.y / range.y);
+        var range = max - min;
+        var tmp = (value - min);
+        var off = new Vector2(tmp.X / range.X, tmp.Y / range.Y);
 
-        vec2 clamped = vec2(
-            clamp(off.x, 0, 1),
-            clamp(off.y, 0, 1),
+        var clamped = new Vector2(
+            float.Clamp(off.X, 0, 1),
+            float.Clamp(off.Y, 0, 1)
         );
         return clamped;
     }
 
-    /**
-        Maps an offset (0.0->1.0) to a value
-    */
-    vec2 unmapValue(vec2 offset)
+    /// <summary>
+    /// Maps an offset (0.0->1.0) to a value
+    /// </summary>
+    /// <param name="offset"></param>
+    /// <returns></returns>
+    public Vector2 unmapValue(Vector2 offset)
     {
-        vec2 range = max - min;
-        return vec2(range.x * offset.x, range.y * offset.y) + min;
+        Vector2 range = max - min;
+        return new Vector2(range.X * offset.X, range.Y * offset.Y) + min;
     }
 
-    /**
-        Maps an input value to an offset (0.0->1.0) for an axis
-    */
-    float mapAxis(uint axis, float value)
+    /// <summary>
+    /// Maps an input value to an offset (0.0->1.0) for an axis
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public float mapAxis(int axis, float value)
     {
-        vec2 input = min;
-        if (axis == 0) input.x = value;
-        else input.y = value;
-        vec2 output = mapValue(input);
-        if (axis == 0) return output.x;
-        else return output.y;
+        Vector2 input = min;
+        if (axis == 0) input.X = value;
+        else input.Y = value;
+        Vector2 output = mapValue(input);
+        if (axis == 0) return output.X;
+        else return output.Y;
     }
 
-    /**
-        Maps an internal value (0.0->1.0) to the input range for an axis
-    */
-    float unmapAxis(uint axis, float offset)
+    /// <summary>
+    /// Maps an internal value (0.0->1.0) to the input range for an axis
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <param name="offset"></param>
+    /// <returns></returns>
+    public float unmapAxis(uint axis, float offset)
     {
-        vec2 input = min;
-        if (axis == 0) input.x = offset;
-        else input.y = offset;
-        vec2 output = unmapValue(input);
-        if (axis == 0) return output.x;
-        else return output.y;
+        Vector2 input = min;
+        if (axis == 0) input.X = offset;
+        else input.Y = offset;
+        Vector2 output = unmapValue(input);
+        if (axis == 0) return output.X;
+        else return output.Y;
     }
 
-    /**
-        Gets the axis point closest to a given offset
-    */
-    uint getClosestAxisPointIndex(uint axis, float offset)
+    /// <summary>
+    /// Gets the axis point closest to a given offset
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <param name="offset"></param>
+    /// <returns></returns>
+    public uint getClosestAxisPointIndex(int axis, float offset)
     {
         uint closestPoint = 0;
-        float closestDist = float.infinity;
+        float closestDist = float.NegativeInfinity;
 
-        foreach (i, pointVal; axisPoints[axis]) {
-            float dist = abs(pointVal - offset);
+        for(int i=0; i< axisPoints[axis].Count; i++) 
+        {
+            var pointVal = axisPoints[axis][i];
+            float dist = float.Abs(pointVal - offset);
             if (dist < closestDist)
             {
                 closestDist = dist;
-                closestPoint = cast(uint)i;
+                closestPoint = (uint)i;
             }
         }
 
         return closestPoint;
     }
 
-    /**
-        Find the keypoint closest to the current value
-    */
-    vec2u findClosestKeypoint()
+    /// <summary>
+    /// Find the keypoint closest to the current value
+    /// </summary>
+    /// <returns></returns>
+    public Vector2Uint findClosestKeypoint()
     {
         return findClosestKeypoint(value);
     }
@@ -552,70 +643,88 @@ public class Parameter : IDisposable
     /**
         Find the keypoint closest to a value
     */
-    vec2u findClosestKeypoint(vec2 value)
+    public Vector2Uint findClosestKeypoint(Vector2 value)
     {
-        vec2 mapped = mapValue(value);
-        uint x = getClosestAxisPointIndex(0, mapped.x);
-        uint y = getClosestAxisPointIndex(1, mapped.y);
+        Vector2 mapped = mapValue(value);
+        uint x = getClosestAxisPointIndex(0, mapped.X);
+        uint y = getClosestAxisPointIndex(1, mapped.Y);
 
-        return vec2u(x, y);
+        return new Vector2Uint(x, y);
     }
 
-    /**
-        Find the keypoint closest to the current value
-    */
-    vec2 getClosestKeypointValue()
+    /// <summary>
+    /// Find the keypoint closest to the current value
+    /// </summary>
+    /// <returns></returns>
+    public Vector2 getClosestKeypointValue()
     {
         return getKeypointValue(findClosestKeypoint());
     }
 
-    /**
-        Find the keypoint closest to a value
-    */
-    vec2 getClosestKeypointValue(vec2 value)
+    /// <summary>
+    /// Find the keypoint closest to a value
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public Vector2 getClosestKeypointValue(Vector2 value)
     {
         return getKeypointValue(findClosestKeypoint(value));
     }
 
-    /**
-        Find a binding by node ref and name
-    */
-    ParameterBinding getBinding(Node n, string bindingName)
+    /// <summary>
+    /// Find a binding by node ref and name
+    /// </summary>
+    /// <param name="n"></param>
+    /// <param name="bindingName"></param>
+    /// <returns></returns>
+    public ParameterBinding? getBinding(Node n, string bindingName)
     {
-        foreach (ref binding; bindings) {
+        foreach (var binding in bindings)
+        {
             if (binding.getNode() != n) continue;
-            if (binding.getName == bindingName) return binding;
+            if (binding.getName() == bindingName) return binding;
         }
         return null;
     }
 
-    /**
-        Check if a binding exists for a given node and name
-    */
-    bool hasBinding(Node n, string bindingName)
+    /// <summary>
+    /// Check if a binding exists for a given node and name
+    /// </summary>
+    /// <param name="n"></param>
+    /// <param name="bindingName"></param>
+    /// <returns></returns>
+    public bool hasBinding(Node n, string bindingName)
     {
-        foreach (ref binding; bindings) {
+        foreach (var binding in bindings) 
+        {
             if (binding.getNode() != n) continue;
-            if (binding.getName == bindingName) return true;
+            if (binding.getName() == bindingName) return true;
         }
         return false;
     }
 
-    /**
-        Check if any bindings exists for a given node
-    */
-    bool hasAnyBinding(Node n)
+    /// <summary>
+    /// Check if any bindings exists for a given node
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    public bool hasAnyBinding(Node n)
     {
-        foreach (ref binding; bindings) {
+        foreach (var binding in bindings) 
+        {
             if (binding.getNode() == n) return true;
         }
         return false;
     }
 
-    /**
-        Create a new binding (without adding it) for a given node and name
-    */
-    ParameterBinding createBinding(Node n, string bindingName, bool setZero = true)
+    /// <summary>
+    /// Create a new binding (without adding it) for a given node and name
+    /// </summary>
+    /// <param name="n"></param>
+    /// <param name="bindingName"></param>
+    /// <param name="setZero"></param>
+    /// <returns></returns>
+    public ParameterBinding createBinding(Node n, string bindingName, bool setZero = true)
     {
         ParameterBinding b;
         if (bindingName == "deform")
@@ -629,20 +738,24 @@ public class Parameter : IDisposable
 
         if (setZero)
         {
-            vec2u zeroIndex = findClosestKeypoint(vec2(0, 0));
-            vec2 zero = getKeypointValue(zeroIndex);
-            if (abs(zero.x) < 0.001 && abs(zero.y) < 0.001) b.reset(zeroIndex);
+            var zeroIndex = findClosestKeypoint(new Vector2(0, 0));
+            var zero = getKeypointValue(zeroIndex);
+            if (float.Abs(zero.X) < 0.001 && float.Abs(zero.Y) < 0.001) b.reset(zeroIndex);
         }
 
         return b;
     }
 
-    /**
-        Find a binding if it exists, or create and add a new one, and return it
-    */
-    ParameterBinding getOrAddBinding(Node n, string bindingName, bool setZero = true)
+    /// <summary>
+    /// Find a binding if it exists, or create and add a new one, and return it
+    /// </summary>
+    /// <param name="n"></param>
+    /// <param name="bindingName"></param>
+    /// <param name="setZero"></param>
+    /// <returns></returns>
+    public ParameterBinding? getOrAddBinding(Node n, string bindingName, bool setZero = true)
     {
-        ParameterBinding binding = getBinding(n, bindingName);
+        var binding = getBinding(n, bindingName);
         if (binding is null)
         {
             binding = createBinding(n, bindingName, setZero);
@@ -651,33 +764,31 @@ public class Parameter : IDisposable
         return binding;
     }
 
-    /**
-        Add a new binding (must not exist)
-    */
-    void addBinding(ParameterBinding binding)
+    /// <summary>
+    /// Add a new binding (must not exist)
+    /// </summary>
+    /// <param name="binding"></param>
+    public void addBinding(ParameterBinding binding)
     {
-        assert(!hasBinding(binding.getNode, binding.getName));
-        bindings ~= binding;
-    }
-
-    /**
-        Remove an existing binding by ref
-    */
-    void removeBinding(ParameterBinding binding)
-    {
-        import std.algorithm.searching : countUntil;
-        import std.algorithm.mutation : remove;
-        ptrdiff_t idx = bindings.countUntil(binding);
-        if (idx >= 0)
+        if (hasBinding(binding.getNode(), binding.getName()))
         {
-            bindings = bindings.remove(idx);
+            throw new Exception("binding is exist");
         }
+        bindings.Add(binding);
     }
 
-    void makeIndexable()
+    /// <summary>
+    /// Remove an existing binding by ref
+    /// </summary>
+    /// <param name="binding"></param>
+    public void removeBinding(ParameterBinding binding)
     {
-        import std.uni: toLower;
-        indexableName = name.toLower;
+        bindings.Remove(binding);
+    }
+
+    public void makeIndexable()
+    {
+        indexableName = name.ToLower();
     }
 
     /// <summary>

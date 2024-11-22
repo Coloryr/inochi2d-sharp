@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Inochi2dSharp.Shaders;
 
-namespace Inochi2dSharp.Core.Nodes.Composite;
+namespace Inochi2dSharp.Core.Nodes.Composites;
 
 public static class CompositeHelper
 {

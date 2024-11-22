@@ -34,7 +34,7 @@ public static class Inochi2d
     /// <summary>
     /// Run this at the start of your render/game loop
     /// </summary>
-    public static void inUpdate()
+    public static void InUpdate()
     {
         currentTime_ = tfunc_();
         deltaTime_ = currentTime_ - lastTime_;

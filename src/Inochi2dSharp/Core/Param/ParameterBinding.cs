@@ -98,7 +98,7 @@ public abstract class ParameterBinding
     /// Flip the keypoints on an axis
     /// </summary>
     /// <param name="axis"></param>
-    public abstract void reverseAxis(uint axis);
+    public abstract void reverseAxis(int axis);
 
     /// <summary>
     /// Update keypoint interpolation
@@ -123,21 +123,21 @@ public abstract class ParameterBinding
     /// <param name="axis"></param>
     /// <param name="oldindex"></param>
     /// <param name="index"></param>
-    public abstract void moveKeypoints(uint axis, uint oldindex, uint index);
+    public abstract void moveKeypoints(int axis, int oldindex, int index);
 
     /// <summary>
     /// Add keypoints along a new axis point
     /// </summary>
     /// <param name="axis"></param>
     /// <param name="index"></param>
-    public abstract void insertKeypoints(uint axis, uint index);
+    public abstract void insertKeypoints(int axis, int index);
 
     /// <summary>
     /// Remove keypoints along an axis point
     /// </summary>
     /// <param name="axis"></param>
     /// <param name="index"></param>
-    public abstract void deleteKeypoints(uint axis, uint index);
+    public abstract void deleteKeypoints(int axis, int index);
 
     /// <summary>
     /// Gets target of binding

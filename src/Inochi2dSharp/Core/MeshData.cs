@@ -255,26 +255,26 @@ public record MeshData
     public static MeshData CreateQuadMesh(Vector2Int size, Vector4 uvBounds, Vector2Int cuts, Vector2Int origin)
     {
         // Splits may not be below 2.
-        if (cuts.x < 2) cuts.x = 2;
-        if (cuts.y < 2) cuts.y = 2;
+        if (cuts.X < 2) cuts.X = 2;
+        if (cuts.Y < 2) cuts.Y = 2;
 
         var data = new MeshData();
         var m = new Dictionary<int[], ushort>();
-        int sw = size.x / cuts.x;
-        int sh = size.y / cuts.y;
-        float uvx = uvBounds.W / cuts.x;
-        float uvy = uvBounds.Z / cuts.y;
+        int sw = size.X / cuts.X;
+        int sh = size.Y / cuts.Y;
+        float uvx = uvBounds.W / cuts.X;
+        float uvy = uvBounds.Z / cuts.Y;
 
         // Generate vertices and UVs
-        for (int y = 0; y < cuts.y + 1; y++)
+        for (int y = 0; y < cuts.Y + 1; y++)
         {
-            data.GridAxes[0].Add(y * sh - origin.y);
-            for (int x = 0; x < cuts.x + 1; x++)
+            data.GridAxes[0].Add(y * sh - origin.Y);
+            for (int x = 0; x < cuts.X + 1; x++)
             {
-                data.GridAxes[1].Add(x * sw - origin.x);
+                data.GridAxes[1].Add(x * sw - origin.X);
                 data.Vertices.Add(new(
-                    (x * sw) - origin.x,
-                    (y * sh) - origin.y
+                    (x * sw) - origin.X,
+                    (y * sh) - origin.Y
                 ));
                 data.Uvs.Add(new(
                     uvBounds.X + x * uvx,
@@ -285,10 +285,10 @@ public record MeshData
         }
 
         // Generate indices
-        var center = new Vector2Int(cuts.x / 2, cuts.y / 2);
-        for (int y = 0; y < cuts.y; y++)
+        var center = new Vector2Int(cuts.X / 2, cuts.Y / 2);
+        for (int y = 0; y < cuts.Y; y++)
         {
-            for (int x = 0; x < cuts.x; x++)
+            for (int x = 0; x < cuts.X; x++)
             {
                 // Indices
                 int[] indice0 = [x, y];
@@ -297,7 +297,7 @@ public record MeshData
                 int[] indice3 = [x + 1, y + 1];
 
                 // We want the verticies to generate in an X pattern so that we won't have too many distortion problems
-                if ((x < center.x && y < center.y) || (x >= center.x && y >= center.y))
+                if ((x < center.X && y < center.Y) || (x >= center.X && y >= center.Y))
                 {
                     data.Indices.Add(m[indice0]);
                     data.Indices.Add(m[indice2]);

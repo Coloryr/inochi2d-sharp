@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Inochi2dSharp.Core.Nodes.Parts;
 
-namespace Inochi2dSharp.Core.Nodes.Composite;
+namespace Inochi2dSharp.Core.Nodes.Composites;
 
 [TypeId("Composite")]
 public class Composite : Node
@@ -14,11 +15,12 @@ public class Composite : Node
     private void drawContents()
     {
         // Optimization: Nothing to be drawn, skip context switching
-        if (subParts.length == 0) return;
+        if (subParts.Length == 0) return;
 
         inBeginComposite();
 
-        foreach (Part child; subParts) {
+        foreach (var child in subParts) 
+        {
             child.drawOne();
         }
 

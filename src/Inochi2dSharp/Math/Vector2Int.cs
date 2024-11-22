@@ -8,8 +8,8 @@ namespace Inochi2dSharp.Math;
 
 public struct Vector2Int(int x, int y)
 {
-    public int x = x;
-    public int y = y;
+    public int X = x;
+    public int Y = y;
 
     public Vector2Int(int value) : this(value, value)
     { 
@@ -18,22 +18,22 @@ public struct Vector2Int(int x, int y)
 
     public override readonly string ToString()
     {
-        return $"({x}, {y})";
+        return $"({X}, {Y})";
     }
 
     public static Vector2Int operator +(Vector2Int a, Vector2Int b)
     {
-        return new Vector2Int(a.x + b.x, a.y + b.y);
+        return new Vector2Int(a.X + b.X, a.Y + b.Y);
     }
 
     public static Vector2Int operator -(Vector2Int a, Vector2Int b)
     {
-        return new Vector2Int(a.x - b.x, a.y - b.y);
+        return new Vector2Int(a.X - b.X, a.Y - b.Y);
     }
 
     public static Vector2Int operator *(Vector2Int a, int scalar)
     {
-        return new Vector2Int(a.x * scalar, a.y * scalar);
+        return new Vector2Int(a.X * scalar, a.Y * scalar);
     }
 
     public static Vector2Int operator /(Vector2Int a, int scalar)
@@ -41,7 +41,7 @@ public struct Vector2Int(int x, int y)
         if (scalar == 0)
             throw new DivideByZeroException("Cannot divide by zero.");
 
-        return new Vector2Int(a.x / scalar, a.y / scalar);
+        return new Vector2Int(a.X / scalar, a.Y / scalar);
     }
 
     public override readonly bool Equals(object? obj)
@@ -50,12 +50,12 @@ public struct Vector2Int(int x, int y)
             return false;
 
         var vec = (Vector2Int)obj;
-        return x == vec.x && y == vec.y;
+        return X == vec.X && Y == vec.Y;
     }
 
     public override readonly int GetHashCode()
     {
-        return x.GetHashCode() ^ y.GetHashCode();
+        return X.GetHashCode() ^ Y.GetHashCode();
     }
 
     public static bool operator ==(Vector2Int a, Vector2Int b)
@@ -74,7 +74,7 @@ public struct Vector2Int(int x, int y)
     /// <returns></returns>
     public readonly int SqrMagnitude()
     {
-        return x * x + y * y;
+        return X * X + Y * Y;
     }
 
     /// <summary>

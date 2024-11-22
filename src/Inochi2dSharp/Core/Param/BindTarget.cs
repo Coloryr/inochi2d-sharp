@@ -15,7 +15,7 @@ public record BindTarget
     /// <summary>
     /// The node to bind to
     /// </summary>
-    public Node node;
+    public Node? node;
 
     /// <summary>
     /// The parameter to bind

@@ -8,7 +8,7 @@ using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
 
-namespace Inochi2dSharp.Core.Animations;
+namespace Inochi2dSharp.Core.Automations;
 
 /// <summary>
 /// Automation binding
@@ -85,7 +85,7 @@ public record AutomationBinding
     /// Serializes a parameter
     /// </summary>
     /// <param name="serializer"></param>
-    public void serialize(JObject serializer) 
+    public void serialize(JObject serializer)
     {
         serializer.Add("param", param.name);
         serializer.Add("axis", axis);
@@ -107,6 +107,12 @@ public record AutomationBinding
         temp = data["axis"];
         if (temp != null)
         {
+            axis = (int)temp;
+        }
+
+        temp = data["range"];
+        if (temp != null)
+        {
             range = temp.ToVector2();
         }
     }
@@ -115,7 +121,8 @@ public record AutomationBinding
 
     public void finalize(Puppet puppet)
     {
-        foreach (ref parameter; puppet.parameters) {
+        foreach (var parameter in puppet.parameters)
+        {
             if (parameter.name == paramId)
             {
                 param = parameter;

@@ -168,7 +168,7 @@ public class Texture : IDisposable
         CoreHelper.gl.TexParameter(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MAX_ANISOTROPY,
-            CoreHelper.Clamp(value, 1, CoreHelper.IncGetMaxAnisotropy())
+            float.Clamp(value, 1, CoreHelper.IncGetMaxAnisotropy())
         );
     }
 

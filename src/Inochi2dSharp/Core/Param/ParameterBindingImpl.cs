@@ -166,163 +166,189 @@ public abstract class ParameterBindingImpl<T> : ParameterBinding
             interpolateMode_ = InterpolateMode.Linear;
         }
 
-        uint xCount = parameter.axisPointCount(0);
-        uint yCount = parameter.axisPointCount(1);
+        int xCount = parameter.axisPointCount(0);
+        int yCount = parameter.axisPointCount(1);
 
-        enforce(this.values.length == xCount, "Mismatched X value count");
-        foreach (i; this.values) {
-            enforce(i.length == yCount, "Mismatched Y value count");
+        if (this.values.Length != xCount)
+        {
+            throw new Exception("Mismatched X value count");
+        }
+        foreach (var i in this.values)
+        {
+            if (i.Length != yCount)
+            {
+                throw new Exception("Mismatched Y value count");
+            }
         }
 
-        enforce(this.isSet_.length == xCount, "Mismatched X isSet_ count");
-        foreach (i; this.isSet_) {
-            enforce(i.length == yCount, "Mismatched Y isSet_ count");
+        if (this.isSet_.Length != xCount)
+        {
+            throw new Exception("Mismatched X isSet_ count");  
         }
-
-        return null;
-    }
-
-    override
-    void reconstruct(Puppet puppet)
-    { }
-
-    /**
-        Finalize loading of parameter
-    */
-    override
-    void finalize(Puppet puppet)
-    {
-        //        writefln("finalize binding %s", this.getName());
-
-        this.target.node = puppet.find(nodeRef);
-        //        writefln("node for %d = %x", nodeRef, &(target.node));
-    }
-
-    /**
-        Clear all keypoint data
-    */
-    override
-    void clear()
-    {
-        uint xCount = parameter.axisPointCount(0);
-        uint yCount = parameter.axisPointCount(1);
-
-        values.length = xCount;
-        isSet_.length = xCount;
-        foreach (x; 0..xCount) {
-            isSet_[x].length = 0;
-            isSet_[x].length = yCount;
-
-            values[x].length = yCount;
-            foreach (y; 0..yCount) {
-                clearValue(values[x][y]);
+        foreach (var i in this.isSet_) 
+        {
+            if (i.Length != yCount)
+            {
+                throw new Exception("Mismatched Y isSet_ count");
             }
         }
     }
 
-    void clearValue(ref T i)
+    public override void reconstruct(Puppet puppet)
+    { 
+    
+    }
+
+    /// <summary>
+    /// Finalize loading of parameter
+    /// </summary>
+    /// <param name="puppet"></param>
+    public override void finalize(Puppet puppet)
+    {
+        //        writefln("finalize binding %s", this.getName());
+
+        this.target.node = puppet.find<Node>(nodeRef);
+        //        writefln("node for %d = %x", nodeRef, &(target.node));
+    }
+
+    /// <summary>
+    /// Clear all keypoint data
+    /// </summary>
+    public override void clear()
+    {
+        int xCount = parameter.axisPointCount(0);
+        int yCount = parameter.axisPointCount(1);
+
+        values = new T[xCount][];
+        isSet_ = new bool[xCount][];
+        for (int x = 0; x < xCount; x++)
+        {
+            isSet_[x] = new bool[yCount];
+
+            values[x] = new T[yCount];
+            for (int y = 0; y < yCount; y++)
+            {
+                clearValue(ref values[x][y]);
+            }
+        }
+    }
+
+    public void clearValue(ref T i)
     {
         // Default: no-op
     }
 
-    /**
-        Gets the value at the specified point
-    */
-    ref T getValue(vec2u point)
+    /// <summary>
+    /// Gets the value at the specified point
+    /// </summary>
+    /// <param name="point"></param>
+    /// <returns></returns>
+    public T getValue(Vector2Uint point)
     {
-        return values[point.x][point.y];
+        return values[point.X][point.Y];
     }
 
-    /**
-        Sets value at specified keypoint
-    */
-    void setValue(vec2u point, T value)
+    /// <summary>
+    /// Sets value at specified keypoint
+    /// </summary>
+    /// <param name="point"></param>
+    /// <param name="value"></param>
+    public void setValue(Vector2Uint point, T value)
     {
-        values[point.x][point.y] = value;
-        isSet_[point.x][point.y] = true;
+        values[point.X][point.Y] = value;
+        isSet_[point.X][point.Y] = true;
 
         reInterpolate();
     }
 
-    /**
-        Sets value at specified keypoint to the current value
-    */
-    override
-    void setCurrent(vec2u point)
+    /// <summary>
+    /// Sets value at specified keypoint to the current value
+    /// </summary>
+    /// <param name="point"></param>
+    public override void setCurrent(Vector2Uint point)
     {
-        isSet_[point.x][point.y] = true;
+        isSet_[point.X][point.Y] = true;
 
         reInterpolate();
     }
 
-    /**
-        Unsets value at specified keypoint
-    */
-    override
-    void unset(vec2u point)
+    /// <summary>
+    /// Unsets value at specified keypoint
+    /// </summary>
+    /// <param name="point"></param>
+    public override void unset(Vector2Uint point)
     {
-        clearValue(values[point.x][point.y]);
-        isSet_[point.x][point.y] = false;
+        clearValue(ref values[point.X][point.Y]);
+        isSet_[point.X][point.Y] = false;
 
         reInterpolate();
     }
 
-    /**
-        Resets value at specified keypoint to default
-    */
-    override
-    void reset(vec2u point)
+    /// <summary>
+    /// Resets value at specified keypoint to default
+    /// </summary>
+    /// <param name="point"></param>
+    public override void reset(Vector2Uint point)
     {
-        clearValue(values[point.x][point.y]);
-        isSet_[point.x][point.y] = true;
+        clearValue(ref values[point.X][point.Y]);
+        isSet_[point.X][point.Y] = true;
 
         reInterpolate();
     }
 
-    /**
-        Returns whether the specified keypoint is set
-    */
-    override
-    bool isSet(vec2u index)
+    /// <summary>
+    /// Returns whether the specified keypoint is set
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public override bool isSet(Vector2Uint index)
     {
-        return isSet_[index.x][index.y];
+        return isSet_[index.X][index.Y];
     }
 
-    /**
-        Flip the keypoints on an axis
-    */
-    override void reverseAxis(uint axis)
+    /// <summary>
+    /// Flip the keypoints on an axis
+    /// </summary>
+    /// <param name="axis"></param>
+    public override void reverseAxis(int axis)
     {
         if (axis == 0)
         {
-            values.reverse();
-            isSet_.reverse();
+            values = values.Reverse().ToArray();
+            isSet_ = isSet_.Reverse().ToArray();
         }
         else
         {
-            foreach (ref i; values) i.reverse();
-            foreach (ref i; isSet_) i.reverse();
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = values[i].Reverse().ToArray();
+            }
+            for (int i = 0; i < isSet_.Length; i++)
+            {
+                isSet_[i] = isSet_[i].Reverse().ToArray();
+            }
         }
     }
 
-    /**
-        Re-calculate interpolation
-    */
-    override
-    void reInterpolate()
+    /// <summary>
+    /// Re-calculate interpolation
+    /// </summary>
+    public override void reInterpolate()
     {
-        uint xCount = parameter.axisPointCount(0);
-        uint yCount = parameter.axisPointCount(1);
+        int xCount = parameter.axisPointCount(0);
+        int yCount = parameter.axisPointCount(1);
 
         // Currently valid points
-        bool[][] valid;
-        uint validCount = 0;
-        uint totalCount = xCount * yCount;
+        var valid = new List<bool[]>();
+        int validCount = 0;
+        int totalCount = xCount * yCount;
 
         // Initialize validity map to user-set points
-        foreach (x; 0..xCount) {
-            valid ~= isSet_[x].dup;
-            foreach (y; 0..yCount) {
+        for (int x = 0; x < xCount; x++)
+        {
+            valid.Add([.. isSet_[x]]);
+            for (int y = 0; y < yCount; y++)
+            {
                 if (isSet_[x][y]) validCount++;
             }
         }
@@ -335,11 +361,10 @@ public abstract class ParameterBindingImpl<T> : ParameterBinding
         }
 
         // Whether any given point was just set
-        bool[][] newlySet;
-        newlySet.length = xCount;
+        bool[][] newlySet = new bool[xCount][];
 
         // List of indices to commit
-        vec2u[] commitPoints;
+        var commitPoints = new List<Vector2Uint>();
 
         // Used by extendAndIntersect for x/y factor
         float[][] interpDistance;

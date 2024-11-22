@@ -371,7 +371,7 @@ public class MeshGroup : Drawable
         }
     }
 
-    public void applyDeformToChildren(Parameter[] parameters)
+    public void applyDeformToChildren(List<Parameter> parameters)
     {
         if (dynamic || data.Indices.Count == 0)
             return;
