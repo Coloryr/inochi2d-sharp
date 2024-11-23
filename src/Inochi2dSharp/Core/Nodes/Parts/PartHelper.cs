@@ -159,14 +159,14 @@ public static class PartHelper
     {
         var data = new MeshData()
         {
-            Vertices = 
+            Vertices =
             [
                 new Vector2(-(tex.Width/2), -(tex.Height/2)),
                 new Vector2(-(tex.Width/2), tex.Height/2),
                 new Vector2(tex.Width/2, -(tex.Height/2)),
                 new Vector2(tex.Width/2, tex.Height/2),
             ],
-            Uvs = 
+            Uvs =
             [
                 new Vector2(0, 0),
                 new Vector2(0, 1),
@@ -206,7 +206,7 @@ public static class PartHelper
             Matrix4x4.CreateTranslation(new Vector3(temp.X, temp.Y, temp.Z))
         );
         partShader.setUniform(mvpViewProjection,
-            CoreHelper. inCamera.Matrix()
+            CoreHelper.inCamera.Matrix()
         );
         partShader.setUniform(gopacity, part.opacity);
         partShader.setUniform(gMultColor, part.tint);
@@ -217,15 +217,15 @@ public static class PartHelper
 
         // Enable points array
         CoreHelper.gl.EnableVertexAttribArray(0);
-        CoreHelper.gl.BindBuffer(GlApi. GL_ARRAY_BUFFER, sVertexBuffer);
-        float[] temp1 = 
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sVertexBuffer);
+        float[] temp1 =
         [
             -texWidthP, -texHeightP,
             texWidthP, -texHeightP,
             -texWidthP, texHeightP,
             texWidthP, texHeightP,
         ];
-        fixed (void * ptr = temp1)
+        fixed (void* ptr = temp1)
         {
             CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, 4 * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
@@ -234,7 +234,7 @@ public static class PartHelper
         // Enable UVs array
         CoreHelper.gl.EnableVertexAttribArray(1); // uvs
         CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sUVBuffer);
-        temp1 = 
+        temp1 =
         [
             0, 0,
             1, 0,
@@ -249,7 +249,7 @@ public static class PartHelper
 
         // Bind element array and draw our mesh
         CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, sElementBuffer);
-        ushort[] temp2 = 
+        ushort[] temp2 =
         [
             0, 1, 2,
             2, 1, 3
@@ -278,7 +278,7 @@ public static class PartHelper
     /// <param name="opacity"></param>
     /// <param name="color"></param>
     /// <param name="screenColor"></param>
-    public static void inDrawTextureAtPosition(Texture texture, Vector2 position, float opacity, Vector3 color, Vector3 screenColor)
+    public static unsafe void inDrawTextureAtPosition(Texture texture, Vector2 position, float opacity, Vector3 color, Vector3 screenColor)
     {
         float texWidthP = texture.Width / 2;
         float texHeightP = texture.Height / 2;
@@ -303,97 +303,136 @@ public static class PartHelper
         // Enable points array
         CoreHelper.gl.EnableVertexAttribArray(0);
         CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sVertexBuffer);
-        float[] temp = 
+        float[] temp =
         [
             -texWidthP, -texHeightP,
             texWidthP, -texHeightP,
             -texWidthP, texHeightP,
             texWidthP, texHeightP,
         ];
-        CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, 4 * Marshal.SizeOf<Vector2>(), , GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
+        fixed (void* ptr = temp)
+        {
+            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, 4 * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
+        }
+        CoreHelper.gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable UVs array
-        glEnableVertexAttribArray(1); // uvs
-        glBindBuffer(GL_ARRAY_BUFFER, sUVBuffer);
-        glBufferData(GL_ARRAY_BUFFER, 4 * vec2.sizeof, (cast(float[])[
+        CoreHelper.gl.EnableVertexAttribArray(1); // uvs
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sUVBuffer);
+        temp =
+        [
             0, 0,
             1, 0,
             0, 1,
             1, 1,
-    
-        ]).ptr, GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, null);
+        ];
+        fixed (void* ptr = temp)
+        {
+            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, 4 * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
+        }
+        CoreHelper.gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Bind element array and draw our mesh
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sElementBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * ushort.sizeof, (cast(ushort[])[
-            0u, 1u, 2u,
-            2u, 1u, 3u
-        ]).ptr, GL_STATIC_DRAW);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, null);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, sElementBuffer);
+        ushort[] temp1 =
+        [
+            0, 1, 2,
+            2, 1, 3
+        ];
+        fixed (void* ptr = temp1)
+        {
+            CoreHelper.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
+        }
+        CoreHelper.gl.DrawElements(GlApi.GL_TRIANGLES, 6, GlApi.GL_UNSIGNED_SHORT, 0);
 
         // Disable the vertex attribs after use
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        CoreHelper.gl.DisableVertexAttribArray(0);
+        CoreHelper.gl.DisableVertexAttribArray(1);
     }
 
-    /**
-        Draws a texture at the transform of the specified part
-*/
-    void inDrawTextureAtRect(Texture texture, rect area, rect uvs = rect(0, 0, 1, 1), float opacity = 1, vec3 color = vec3(1, 1, 1), vec3 screenColor = vec3(0, 0, 0), Shader s = null, Camera cam = null)
+
+    public static void inDrawTextureAtRect(Texture texture, Rect area)
     {
+        inDrawTextureAtRect(texture, area, new Rect(0, 0, 1, 1), 1, new Vector3(1, 1, 1), new Vector3(0, 0, 0), null, null);
+    }
 
+    /// <summary>
+    /// Draws a texture at the transform of the specified part
+    /// </summary>
+    /// <param name="texture"></param>
+    /// <param name="area"></param>
+    /// <param name="uvs"></param>
+    /// <param name="opacity"></param>
+    /// <param name="color"></param>
+    /// <param name="screenColor"></param>
+    /// <param name="s"></param>
+    /// <param name="cam"></param>
+    public static unsafe void inDrawTextureAtRect(Texture texture, Rect area, Rect uvs, float opacity, Vector3 color, Vector3 screenColor, Shader? s, Camera? cam)
+    {
         // Bind the vertex array
-        incDrawableBindVAO();
+        NodeHelper.incDrawableBindVAO();
 
-        if (!s) s = partShader;
-        if (!cam) cam = inGetCamera();
+        if (s == null) s = partShader;
+        if (cam == null) cam = CoreHelper.inCamera;
         s.use();
         s.setUniform(s.getUniformLocation("mvp"),
-            cam.matrix *
-            mat4.scaling(1, 1, 1)
+            cam.Matrix() *
+            Matrix4x4.CreateScale(1, 1, 1)
         );
         s.setUniform(s.getUniformLocation("opacity"), opacity);
         s.setUniform(s.getUniformLocation("multColor"), color);
         s.setUniform(s.getUniformLocation("screenColor"), screenColor);
 
         // Bind the texture
-        texture.bind();
+        texture.Bind();
 
         // Enable points array
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, 4 * vec2.sizeof, [
-            area.left, area.top,
-        area.right, area.top,
-        area.left, area.bottom,
-        area.right, area.bottom,
-    ].ptr, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
+        CoreHelper.gl.EnableVertexAttribArray(0);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sVertexBuffer);
+        float[] temp =
+        [
+            area.Left(), area.Top(),
+            area.Right(), area.Top(),
+            area.Left(), area.Bottom(),
+            area.Right(), area.Bottom(),
+        ];
+        fixed (void* ptr = temp)
+        {
+            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, 4 * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
+        }
+        CoreHelper.gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable UVs array
-        glEnableVertexAttribArray(1); // uvs
-        glBindBuffer(GL_ARRAY_BUFFER, sUVBuffer);
-        glBufferData(GL_ARRAY_BUFFER, 4 * vec2.sizeof, (cast(float[])[
-            uvs.x, uvs.y,
-            uvs.width, uvs.y,
-            uvs.x, uvs.height,
-            uvs.width, uvs.height,
-    
-        ]).ptr, GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, null);
+        CoreHelper.gl.EnableVertexAttribArray(1); // uvs
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sUVBuffer);
+        temp =
+        [
+            uvs.X, uvs.Y,
+            uvs.Width, uvs.Y,
+            uvs.X, uvs.Height,
+            uvs.Width, uvs.Height
+        ];
+        fixed (void* ptr = temp)
+        {
+            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, 4 * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
+        }
+        CoreHelper.gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Bind element array and draw our mesh
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sElementBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * ushort.sizeof, (cast(ushort[])[
-            0u, 1u, 2u,
-            2u, 1u, 3u
-        ]).ptr, GL_STATIC_DRAW);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, null);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, sElementBuffer);
+        ushort[] temp1 =
+        [
+            0, 1, 2,
+            2, 1, 3
+        ];
+        fixed (void* ptr = temp)
+        {
+            CoreHelper.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
+        }
+        CoreHelper.gl.DrawElements(GlApi.GL_TRIANGLES, 6, GlApi.GL_UNSIGNED_SHORT, 0);
 
         // Disable the vertex attribs after use
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        CoreHelper.gl.DisableVertexAttribArray(0);
+        CoreHelper.gl.DisableVertexAttribArray(1);
     }
 }

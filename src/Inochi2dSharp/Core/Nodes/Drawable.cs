@@ -167,15 +167,15 @@ public abstract class Drawable : Node
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="recursive"></param>
-    protected override void SerializeSelf(JObject serializer, bool recursive = true)
+    protected override void SerializeSelf(JObject serializer)
     {
-        base.SerializeSelf(serializer, recursive);
+        base.SerializeSelf(serializer);
         var obj = new JObject();
         data.Serialize(obj);
         serializer.Add("mesh", obj);
     }
 
-    protected override void Deserialize(JObject obj)
+    public override void Deserialize(JObject obj)
     {
         base.Deserialize(obj);
         var temp = obj["mesh"];
@@ -290,7 +290,7 @@ public abstract class Drawable : Node
     /**
         Draws the drawable without any processing
     */
-    public void drawOneDirect(bool forMasking) { }
+    public virtual void drawOneDirect(bool forMasking) { }
 
     public override string TypeId()
     {

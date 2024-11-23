@@ -25,6 +25,8 @@ public abstract class GlApi
     public const uint GL_RED = 0x1903;
     public const uint GL_RGB = 0x1907;
     public const uint GL_RGBA = 0x1908;
+    public const uint GL_KEEP = 0x1E00;
+    public const uint GL_REPLACE = 0x1E01;
     public const uint GL_NEAREST = 0x2600;
     public const uint GL_LINEAR = 0x2601;
     public const uint GL_LINEAR_MIPMAP_LINEAR = 0x2703;
@@ -218,4 +220,6 @@ public abstract class GlApi
     public abstract void StencilMask(int mask);
     public abstract void StencilFunc(uint func, int arg, int mask);
     public abstract void BlendBarrierKHR();
+    public abstract void ColorMask(bool red, bool green, bool blue, bool alpha);
+    public abstract void StencilOp(uint fail, uint zfail, uint zpass);
 }

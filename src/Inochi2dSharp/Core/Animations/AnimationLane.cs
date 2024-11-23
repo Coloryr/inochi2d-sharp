@@ -68,12 +68,12 @@ public class AnimationLane
             refuuid = (uint)temp;
         }
 
-        this.paramRef = new AnimationParameterRef(null, 0);
+        paramRef = new AnimationParameterRef();
 
         temp = data["target"];
         if (temp != null)
         {
-            this.paramRef.targetAxis = (int)temp;
+            paramRef.targetAxis = (int)temp;
         }
 
         temp = data["keyframes"];
@@ -173,7 +173,7 @@ public class AnimationLane
 
     public void finalize(Puppet puppet)
     {
-        if (paramRef != null) paramRef.targetParam = puppet.findParameter(refuuid);
+        if (paramRef != null) paramRef.targetParam = puppet.findParameter(refuuid)!;
     }
 
     /// <summary>

@@ -26,6 +26,26 @@ public struct Rect
         Height = height;
     }
 
+    public float Left()
+    {
+        return X;
+    }
+
+    public float Right()
+    {
+        return X + Width;
+    }
+
+    public float Top()  
+    {
+        return Y;
+    }
+
+    public float Bottom()
+    {
+        return Y + Height;
+    }
+
     public readonly double GetArea()
     {
         return Width * Height;

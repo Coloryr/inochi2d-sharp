@@ -12,7 +12,7 @@ public class Animation
     /// <summary>
     /// The timestep of each frame
     /// </summary>
-    public float timestep = 0.0166f;
+    public float Timestep = 0.0166f;
 
     /// <summary>
     /// Whether the animation is additive.
@@ -20,38 +20,38 @@ public class Animation
     /// Additive animations will not replace main animations, but add their data
     /// on top of the running main animation
     /// </summary>
-    public bool additive;
+    public bool Additive;
 
     /// <summary>
     /// The weight of the animation
     /// 
     /// This is only relevant for additive animations
     /// </summary>
-    public float animationWeight;
+    public float AnimationWeight;
 
     /// <summary>
     /// All of the animation lanes in this animation
     /// </summary>
-    public List<AnimationLane> lanes = [];
+    public List<AnimationLane> Lanes = [];
 
     /// <summary>
     /// Length in frames
     /// </summary>
-    public int length;
+    public int Length;
 
     /// <summary>
     /// Time where the lead-in ends
     /// </summary>
-    public int leadIn = -1;
+    public int LeadIn = -1;
 
     /// <summary>
     /// Time where the lead-out starts
     /// </summary>
-    public int leadOut = -1;
+    public int LeadOut = -1;
 
     public void reconstruct(Puppet puppet)
     {
-        foreach (var lane in lanes.ToArray()) lane.reconstruct(puppet);
+        foreach (var lane in Lanes.ToArray()) lane.reconstruct(puppet);
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public class Animation
     /// <param name="puppet"></param>
     public void finalize(Puppet puppet)
     {
-        foreach (var lane in lanes) lane.finalize(puppet);
+        foreach (var lane in Lanes) lane.finalize(puppet);
     }
 
     /// <summary>
@@ -69,15 +69,15 @@ public class Animation
     /// <param name="serializer"></param>
     public void serialize(JObject serializer)
     {
-        serializer.Add("timestep", timestep);
-        serializer.Add("additive", additive);
-        serializer.Add("length", length);
-        serializer.Add("leadIn", leadIn);
-        serializer.Add("leadOut", leadOut);
-        serializer.Add("animationWeight", animationWeight);
+        serializer.Add("timestep", Timestep);
+        serializer.Add("additive", Additive);
+        serializer.Add("length", Length);
+        serializer.Add("leadIn", LeadIn);
+        serializer.Add("leadOut", LeadOut);
+        serializer.Add("animationWeight", AnimationWeight);
 
         var list = new JArray();
-        foreach (var lane in lanes)
+        foreach (var lane in Lanes)
         {
             if (lane.paramRef?.targetParam != null)
             {
@@ -98,37 +98,37 @@ public class Animation
         var temp = data["timestep"];
         if (temp != null)
         {
-            timestep = (float)temp;
+            Timestep = (float)temp;
         }
 
         temp = data["additive"];
         if (temp != null)
         {
-            additive = (bool)temp;
+            Additive = (bool)temp;
         }
 
         temp = data["animationWeight"];
         if (temp != null)
         {
-            animationWeight = (float)temp;
+            AnimationWeight = (float)temp;
         }
 
         temp = data["length"];
         if (temp != null)
         {
-            length = (int)temp;
+            Length = (int)temp;
         }
 
         temp = data["leadIn"];
         if (temp != null)
         {
-            leadIn = (int)temp;
+            LeadIn = (int)temp;
         }
 
         temp = data["leadOut"];
         if (temp != null)
         {
-            leadOut = (int)temp;
+            LeadOut = (int)temp;
         }
 
         temp = data["lanes"];
@@ -138,7 +138,7 @@ public class Animation
             {
                 var land = new AnimationLane();
                 land.deserialize(item);
-                lanes.Add(land);
+                Lanes.Add(land);
             }
         }
     }

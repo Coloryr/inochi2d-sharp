@@ -14,7 +14,7 @@ namespace Inochi2dSharp.Core.Nodes.Parts;
 [TypeId("Part")]
 public class Part : Drawable
 {
-    private uint uvbo;
+    private readonly uint uvbo;
 
     //
     //      PARAMETER OFFSETS
@@ -69,6 +69,46 @@ public class Part : Drawable
     /// </summary>
     public Vector3 screenTint = new(0, 0, 0);
 
+    /// <summary>
+    /// Constructs a new part
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="textures"></param>
+    /// <param name="parent"></param>
+    public Part(MeshData data, Texture[] textures, Node? parent = null) : this(data, textures, NodeHelper.InCreateUUID(), parent)
+    {
+
+    }
+
+    /// <summary>
+    /// Constructs a new part
+    /// </summary>
+    /// <param name="parent"></param>
+    public Part(Node? parent = null) : base(parent)
+    {
+        CoreHelper.gl.GenBuffers(1, out uvbo);
+    }
+
+    /// <summary>
+    /// Constructs a new part
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="textures"></param>
+    /// <param name="uuid"></param>
+    /// <param name="parent"></param>
+    public Part(MeshData data, Texture[] textures, uint uuid, Node? parent = null) : base(data, uuid, parent)
+    {
+        for (int i = 0; i < (int)TextureUsage.COUNT; i++)
+        {
+            if (i >= textures.Length) break;
+            this.textures[i] = textures[i];
+        }
+
+        CoreHelper.gl.GenBuffers(1, out uvbo);
+
+        updateUVs();
+    }
+
     public override string TypeId()
     {
         return "Part";
@@ -79,9 +119,9 @@ public class Part : Drawable
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="recursive"></param>
-    protected override void SerializeSelf(JObject serializer, bool recursive = true)
+    protected override void SerializeSelf(JObject serializer)
     {
-        base.SerializeSelf(serializer, recursive);
+        base.SerializeSelf(serializer);
         if (FmtHelper.IsLoadingINP)
         {
             var list = new JArray();
@@ -126,7 +166,7 @@ public class Part : Drawable
         serializer.Add("opacity", opacity);
     }
 
-    protected override void Deserialize(JObject data)
+    public override void Deserialize(JObject data)
     {
         base.Deserialize(data);
 
@@ -224,7 +264,7 @@ public class Part : Drawable
         }
 
         // Update indices and vertices
-        this.updateUVs();
+        updateUVs();
     }
 
     public override void serializePartial(JObject obj, bool recursive = true)
@@ -474,113 +514,61 @@ public class Part : Drawable
         CoreHelper.gl.BlendEquation(GlApi.GL_FUNC_ADD);
     }
 
-    /**
-        Gets the active texture
-    */
-    Texture activeTexture()
+    /// <summary>
+    /// Gets the active texture
+    /// </summary>
+    /// <returns></returns>
+    public Texture activeTexture()
     {
         return textures[0];
     }
 
-    /**
-        Constructs a new part
-    */
-    this(MeshData data, Texture[] textures, Node parent = null) {
-        this(data, textures, inCreateUUID(), parent);
-    }
-
-    /**
-        Constructs a new part
-    */
-    this(Node parent = null) {
-        super(parent);
-
-        version(InDoesRender) glGenBuffers(1, &uvbo);
-    }
-
-    /**
-        Constructs a new part
-    */
-    this(MeshData data, Texture []
-    textures, uint uuid, Node parent = null) {
-        super(data, uuid, parent);
-        foreach (i; 0..TextureUsage.COUNT) {
-            if (i >= textures.length) break;
-            this.textures[i] = textures[i];
-        }
-
-        version(InDoesRender) glGenBuffers(1, &uvbo);
-
-        this.updateUVs();
-    }
-    
-    override
-    void renderMask(bool dodge = false) {
-
+    public override void renderMask(bool dodge = false)
+    {
         // Enable writing to stencil buffer and disable writing to color buffer
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        glStencilFunc(GL_ALWAYS, dodge ? 0 : 1, 0xFF);
-        glStencilMask(0xFF);
+        CoreHelper.gl.ColorMask(false, false, false, false);
+        CoreHelper.gl.StencilOp(GlApi.GL_KEEP, GlApi.GL_KEEP, GlApi.GL_REPLACE);
+        CoreHelper.gl.StencilFunc(GlApi.GL_ALWAYS, dodge ? 0 : 1, 0xFF);
+        CoreHelper.gl.StencilMask(0xFF);
 
         // Draw ourselves to the stencil buffer
-        drawSelf!true();
+        drawSelf(true);
 
         // Disable writing to stencil buffer and enable writing to color buffer
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        CoreHelper.gl.ColorMask(true, true, true, true);
     }
 
-    override
-    bool hasParam(string key) {
-        if (super.hasParam(key)) return true;
+    public override bool hasParam(string key)
+    {
+        if (base.hasParam(key)) return true;
 
-        switch (key)
+        return key switch
         {
-            case "alphaThreshold":
-            case "opacity":
-            case "tint.r":
-            case "tint.g":
-            case "tint.b":
-            case "screenTint.r":
-            case "screenTint.g":
-            case "screenTint.b":
-            case "emissionStrength":
-                return true;
-            default:
-                return false;
-        }
+            "alphaThreshold" or "opacity" or "tint.r" or "tint.g" or "tint.b" or "screenTint.r" or "screenTint.g" or "screenTint.b" or "emissionStrength" => true,
+            _ => false,
+        };
     }
 
-    override
-    float getDefaultValue(string key) {
+    public override float getDefaultValue(string key)
+    {
         // Skip our list of our parent already handled it
-        float def = super.getDefaultValue(key);
-        if (!isNaN(def)) return def;
+        float def = base.getDefaultValue(key);
+        if (!float.IsNaN(def)) return def;
 
-        switch (key)
+        return key switch
         {
-            case "alphaThreshold":
-                return 0;
-            case "opacity":
-            case "tint.r":
-            case "tint.g":
-            case "tint.b":
-                return 1;
-            case "screenTint.r":
-            case "screenTint.g":
-            case "screenTint.b":
-                return 0;
-            case "emissionStrength":
-                return 1;
-            default: return float();
-        }
+            "alphaThreshold" => 0,
+            "opacity" or "tint.r" or "tint.g" or "tint.b" => 1,
+            "screenTint.r" or "screenTint.g" or "screenTint.b" => 0,
+            "emissionStrength" => 1,
+            _ => 0,
+        };
     }
 
-    override
-    bool setValue(string key, float value) {
-
+    public override bool setValue(string key, float value)
+    {
         // Skip our list of our parent already handled it
-        if (super.setValue(key, value)) return true;
+        if (base.setValue(key, value)) return true;
 
         switch (key)
         {
@@ -591,22 +579,22 @@ public class Part : Drawable
                 offsetOpacity *= value;
                 return true;
             case "tint.r":
-                offsetTint.x *= value;
+                offsetTint.X *= value;
                 return true;
             case "tint.g":
-                offsetTint.y *= value;
+                offsetTint.Y *= value;
                 return true;
             case "tint.b":
-                offsetTint.z *= value;
+                offsetTint.Z *= value;
                 return true;
             case "screenTint.r":
-                offsetScreenTint.x += value;
+                offsetScreenTint.X += value;
                 return true;
             case "screenTint.g":
-                offsetScreenTint.y += value;
+                offsetScreenTint.Y += value;
                 return true;
             case "screenTint.b":
-                offsetScreenTint.z += value;
+                offsetScreenTint.Z += value;
                 return true;
             case "emissionStrength":
                 offsetEmissionStrength += value;
@@ -614,119 +602,127 @@ public class Part : Drawable
             default: return false;
         }
     }
-    
-    override
-    float getValue(string key) {
-        switch (key)
+
+    public override float getValue(string key)
+    {
+        return key switch
         {
-            case "alphaThreshold": return offsetMaskThreshold;
-            case "opacity": return offsetOpacity;
-            case "tint.r": return offsetTint.x;
-            case "tint.g": return offsetTint.y;
-            case "tint.b": return offsetTint.z;
-            case "screenTint.r": return offsetScreenTint.x;
-            case "screenTint.g": return offsetScreenTint.y;
-            case "screenTint.b": return offsetScreenTint.z;
-            case "emissionStrength": return offsetEmissionStrength;
-            default: return super.getValue(key);
-        }
+            "alphaThreshold" => offsetMaskThreshold,
+            "opacity" => offsetOpacity,
+            "tint.r" => offsetTint.X,
+            "tint.g" => offsetTint.Y,
+            "tint.b" => offsetTint.Z,
+            "screenTint.r" => offsetScreenTint.X,
+            "screenTint.g" => offsetScreenTint.Y,
+            "screenTint.b" => offsetScreenTint.Z,
+            "emissionStrength" => offsetEmissionStrength,
+            _ => base.getValue(key),
+        };
     }
 
-    bool isMaskedBy(Drawable drawable) {
-        foreach (mask; masks) {
-            if (mask.maskSrc.uuid == drawable.uuid) return true;
+    public bool isMaskedBy(Drawable drawable)
+    {
+        foreach (var mask in masks)
+        {
+            if (mask.maskSrc.UUID == drawable.UUID) return true;
         }
         return false;
     }
 
-    ptrdiff_t getMaskIdx(Drawable drawable) {
+    public int getMaskIdx(Drawable drawable)
+    {
         if (drawable is null) return -1;
-        foreach (i, ref mask; masks) {
-            if (mask.maskSrc.uuid == drawable.uuid) return i;
+        for (int i = 0; i < masks.Count; i++)
+        {
+            var mask = masks[i];
+            if (mask.maskSrc.UUID == drawable.UUID) return i;
         }
         return -1;
     }
 
-    ptrdiff_t getMaskIdx(uint uuid) {
-        foreach (i, ref mask; masks) {
-            if (mask.maskSrc.uuid == uuid) return i;
+    public int getMaskIdx(uint uuid)
+    {
+        for (int i = 0; i < masks.Count; i++)
+        {
+            var mask = masks[i];
+            if (mask.maskSrc.UUID == uuid) return i;
         }
         return -1;
     }
 
-    override
-    void beginUpdate() {
+    public override void beginUpdate()
+    {
         offsetMaskThreshold = 0;
         offsetOpacity = 1;
-        offsetTint = vec3(1, 1, 1);
-        offsetScreenTint = vec3(0, 0, 0);
+        offsetTint = new(1, 1, 1);
+        offsetScreenTint = new(0, 0, 0);
         offsetEmissionStrength = 1;
-        super.beginUpdate();
+        base.beginUpdate();
     }
-    
-    override
-    void rebuffer(ref MeshData data) {
-        super.rebuffer(data);
+
+    public override void rebuffer(MeshData data)
+    {
+        base.rebuffer(data);
         this.updateUVs();
     }
 
-    override
-    void draw() {
+    public override void draw()
+    {
         if (!enabled) return;
         this.drawOne();
 
-        foreach (child; children) {
+        foreach (var child in Children)
+        {
             child.draw();
         }
     }
 
-    override
-    void drawOne() {
-        version(InDoesRender) {
-            if (!enabled) return;
-            if (!data.isReady) return; // Yeah, don't even try
+    public override void drawOne()
+    {
+        if (!enabled) return;
+        if (!data.IsReady()) return; // Yeah, don't even try
 
-            size_t cMasks = maskCount;
+        var cMasks = maskCount();
 
-            if (masks.length > 0)
+        if (masks.Count > 0)
+        {
+            inBeginMask(cMasks > 0);
+
+            foreach (var mask in masks)
             {
-                import std.stdio: writeln;
-                inBeginMask(cMasks > 0);
-
-                foreach (ref mask; masks) {
-                    mask.maskSrc.renderMask(mask.mode == MaskingMode.DodgeMask);
-                }
-
-                inBeginMaskContent();
-
-                // We are the content
-                this.drawSelf();
-
-                inEndMask();
-                return;
+                mask.maskSrc.renderMask(mask.Mode == MaskingMode.DodgeMask);
             }
 
-            // No masks, draw normally
+            inBeginMaskContent();
+
+            // We are the content
             this.drawSelf();
+
+            inEndMask();
+            return;
         }
-        super.drawOne();
+
+        // No masks, draw normally
+        this.drawSelf();
+        base.drawOne();
     }
 
-    override
-    void drawOneDirect(bool forMasking) {
-        if (forMasking) this.drawSelf!true();
-        else this.drawSelf!false();
+    public override void drawOneDirect(bool forMasking)
+    {
+        if (forMasking) this.drawSelf(true);
+        else this.drawSelf(false);
     }
 
-    override
-    void finalize() {
-        super.finalize();
+    public override void finalize()
+    {
+        base.finalize();
 
-        MaskBinding[] validMasks;
-        foreach (i; 0..masks.length) {
-            if (Drawable nMask = puppet.find!Drawable(masks[i].maskSrcUUID)) {
+        var validMasks = new List<MaskBinding>();
+        for (int i = 0; i < masks.Count; i++)
+        {
+            if (Puppet.find<Drawable>(masks[i].MaskSrcUUID) is { } nMask) {
                 masks[i].maskSrc = nMask;
-                validMasks ~= masks[i];
+                validMasks.Add(masks[i]);
             }
         }
 
@@ -734,12 +730,12 @@ public class Part : Drawable
         masks = validMasks;
     }
 
-
-    override
-    void setOneTimeTransform(mat4* transform) {
-        super.setOneTimeTransform(transform);
-        foreach (m; masks) {
+    public override void setOneTimeTransform(Matrix4x4 transform) 
+    {
+        base.setOneTimeTransform(transform);
+        foreach (var m in masks) 
+        {
             m.maskSrc.oneTimeTransform = transform;
         }
     }
-    }
+}

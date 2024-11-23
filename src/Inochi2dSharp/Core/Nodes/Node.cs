@@ -116,7 +116,7 @@ public class Node
     /// </summary>
     protected float offsetSort = 0f;
 
-    protected Matrix4x4? oneTimeTransform;
+    public Matrix4x4? oneTimeTransform;
 
     public MatrixHolder? overrideTransformMatrix = null;
 
@@ -524,7 +524,7 @@ public class Node
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public bool hasParam(string key)
+    public virtual bool hasParam(string key)
     {
         return key switch
         {
@@ -538,7 +538,7 @@ public class Node
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public float getDefaultValue(string key)
+    public virtual float getDefaultValue(string key)
     {
         return key switch
         {
@@ -554,7 +554,7 @@ public class Node
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public bool setValue(string key, float value)
+    public virtual bool setValue(string key, float value)
     {
         switch (key)
         {
@@ -637,7 +637,7 @@ public class Node
         return newVal;
     }
 
-    public float getValue(string key)
+    public virtual float getValue(string key)
     {
         return key switch
         {
@@ -683,7 +683,7 @@ public class Node
     /// <summary>
     /// Finalizes this node and any children
     /// </summary>
-    public void finalize()
+    public virtual void finalize()
     {
         foreach (var child in Children)
         {
@@ -957,7 +957,7 @@ public class Node
         CoreHelper.inDbgLineWidth(1);
     }
 
-    public void setOneTimeTransform(Matrix4x4 transform)
+    public virtual void setOneTimeTransform(Matrix4x4 transform)
     {
         oneTimeTransform = transform;
 
