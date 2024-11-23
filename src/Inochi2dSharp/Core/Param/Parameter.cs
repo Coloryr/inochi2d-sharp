@@ -141,11 +141,11 @@ public class Parameter : IDisposable
                 false
             );
             newBinding.interpolateMode = binding.interpolateMode;
-            for (uint x = 0; x < axisPointCount(0); x++)
+            for (int x = 0; x < axisPointCount(0); x++)
             {
-                for (uint y = 0; y < axisPointCount(1); y++)
+                for (int y = 0; y < axisPointCount(1); y++)
                 {
-                    binding.copyKeypointToBinding(new Vector2Uint(x, y), newBinding, new Vector2Uint(x, y));
+                    binding.copyKeypointToBinding(new Vector2Int(x, y), newBinding, new Vector2Int(x, y));
                 }
             }
             newParam.addBinding(newBinding);
@@ -193,7 +193,7 @@ public class Parameter : IDisposable
         temp = data["axis_points"];
         if (temp is JArray array)
         {
-            axisPoints = array.ToFloatList();
+            axisPoints = array.ToListList<float>();
         }
 
         temp = data["defaults"];
@@ -209,9 +209,9 @@ public class Parameter : IDisposable
         }
 
         temp = data["bindings"];
-        if (temp != null)
+        if (temp is JArray array1)
         {
-            foreach (JObject child in temp) 
+            foreach (JObject child in array1.Cast<JObject>()) 
             {
                 var temp1 = child["param_name"];
                 // Skip empty children
@@ -265,11 +265,11 @@ public class Parameter : IDisposable
         bindings = validBindingList;
     }
 
-    public void findOffset(Vector2 offset, out Vector2Uint index, out Vector2 outOffset)
+    public void findOffset(Vector2 offset, out Vector2Int index, out Vector2 outOffset)
     {
         index = new();
         outOffset = new();
-        void interpAxis(int axis, float val, out uint index, out float offset)
+        void interpAxis(int axis, float val, out int index, out float offset)
         {
             var pos = axisPoints[axis];
 
@@ -277,7 +277,7 @@ public class Parameter : IDisposable
             {
                 if (pos[i + 1] > val || i == (pos.Count - 2))
                 {
-                    index = (uint)i;
+                    index = i;
                     offset = (val - pos[i]) / (pos[i + 1] - pos[i]);
                     return;
                 }
@@ -530,9 +530,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public Vector2 getKeypointOffset(Vector2Uint index)
+    public Vector2 getKeypointOffset(Vector2Int index)
     {
-        return new(axisPoints[0][(int)index.X], axisPoints[1][(int)index.Y]);
+        return new(axisPoints[0][index.X], axisPoints[1][index.Y]);
     }
 
     /// <summary>
@@ -540,7 +540,7 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public Vector2 getKeypointValue(Vector2Uint index)
+    public Vector2 getKeypointValue(Vector2Int index)
     {
         return unmapValue(getKeypointOffset(index));
     }
@@ -612,9 +612,9 @@ public class Parameter : IDisposable
     /// <param name="axis"></param>
     /// <param name="offset"></param>
     /// <returns></returns>
-    public uint getClosestAxisPointIndex(int axis, float offset)
+    public int getClosestAxisPointIndex(int axis, float offset)
     {
-        uint closestPoint = 0;
+        int closestPoint = 0;
         float closestDist = float.NegativeInfinity;
 
         for(int i=0; i< axisPoints[axis].Count; i++) 
@@ -624,7 +624,7 @@ public class Parameter : IDisposable
             if (dist < closestDist)
             {
                 closestDist = dist;
-                closestPoint = (uint)i;
+                closestPoint = i;
             }
         }
 
@@ -635,7 +635,7 @@ public class Parameter : IDisposable
     /// Find the keypoint closest to the current value
     /// </summary>
     /// <returns></returns>
-    public Vector2Uint findClosestKeypoint()
+    public Vector2Int findClosestKeypoint()
     {
         return findClosestKeypoint(value);
     }
@@ -643,13 +643,13 @@ public class Parameter : IDisposable
     /**
         Find the keypoint closest to a value
     */
-    public Vector2Uint findClosestKeypoint(Vector2 value)
+    public Vector2Int findClosestKeypoint(Vector2 value)
     {
         Vector2 mapped = mapValue(value);
-        uint x = getClosestAxisPointIndex(0, mapped.X);
-        uint y = getClosestAxisPointIndex(1, mapped.Y);
+        int x = getClosestAxisPointIndex(0, mapped.X);
+        int y = getClosestAxisPointIndex(1, mapped.Y);
 
-        return new Vector2Uint(x, y);
+        return new Vector2Int(x, y);
     }
 
     /// <summary>

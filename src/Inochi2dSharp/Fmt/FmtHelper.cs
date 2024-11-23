@@ -8,5 +8,5 @@ namespace Inochi2dSharp.Fmt;
 
 public static class FmtHelper
 {
-    private static bool s_isLoadingINP_ = false;
+    public static bool IsLoadingINP { get; set; }
 }

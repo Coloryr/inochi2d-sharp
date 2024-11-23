@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes;
 
-public class Deformation
+public record Deformation
 {
     private List<Vector2> vertexOffsets;
 
@@ -44,10 +44,12 @@ public class Deformation
         vertexOffsets = [.. new Vector2[length]];
     }
 
-    public void serialize(JArray serializer) {
-            foreach(var offset in vertexOffsets) {
+    public void serialize(JArray serializer)
+    {
+        foreach (var offset in vertexOffsets)
+        {
             serializer.Add(offset.ToToken());
-            }
+        }
     }
 
     public void deserializeFromFghj(JArray data)

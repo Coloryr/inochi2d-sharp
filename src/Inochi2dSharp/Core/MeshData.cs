@@ -34,7 +34,7 @@ public record MeshData
     /// </summary>
     public Vector2 Origin = new(0, 0);
 
-    public List<float>[] GridAxes = [[], []];
+    public List<List<float>> GridAxes = [[], []];
 
     /// <summary>
     /// Adds a new vertex
@@ -161,7 +161,7 @@ public record MeshData
             // Copy UVs
             Indices = [.. Indices],
             // Copy axes
-            GridAxes = GridAxes.Select(row => row.ToList()).ToArray(),
+            GridAxes = GridAxes.Select(row => row.ToList()).ToList(),
             Origin = new(Origin.X, Origin.Y)
         };
     }
@@ -223,7 +223,7 @@ public record MeshData
         elements = obj["grid_axes"];
         if (elements != null)
         {
-            GridAxes = elements.ToFloatArray();
+            GridAxes = elements.ToListList<float>();
         }
         elements = obj["indices"];
         if (elements != null)
@@ -323,12 +323,12 @@ public record MeshData
 
     public bool IsGrid()
     {
-        return GridAxes.Length == 2 && GridAxes[0].Count > 2 && GridAxes[1].Count > 2;
+        return GridAxes.Count == 2 && GridAxes[0].Count > 2 && GridAxes[1].Count > 2;
     }
 
     public bool ClearGridIsDirty()
     {
-        if (GridAxes.Length < 2 || GridAxes[0].Count == 0 || GridAxes[1].Count == 0)
+        if (GridAxes.Count < 2 || GridAxes[0].Count == 0 || GridAxes[1].Count == 0)
             return false;
 
         bool clearGrid()

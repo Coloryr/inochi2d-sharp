@@ -13,6 +13,10 @@ public abstract class GlApi
     public const uint GL_ZERO = 0;
     public const uint GL_ONE = 1;
     public const uint GL_TRIANGLES = 0x0004;
+    public const uint GL_EQUAL = 0x0202;
+    public const uint GL_ALWAYS = 0x0207;
+    public const uint GL_STENCIL_BUFFER_BIT = 0x0400;
+    public const uint GL_STENCIL_TEST = 0x0B90;
     public const uint GL_UNPACK_ALIGNMENT = 0x0CF5;
     public const uint GL_PACK_ALIGNMENT = 0x0D05;
     public const uint GL_TEXTURE_BORDER_COLOR = 0x1004;
@@ -210,4 +214,8 @@ public abstract class GlApi
     /// <param name="arg"></param>
     public abstract void TexParameter(uint target, uint pname, float[] arg);
     public abstract void TexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, nint pixels);
+    public abstract void ClearStencil(int s);
+    public abstract void StencilMask(int mask);
+    public abstract void StencilFunc(uint func, int arg, int mask);
+    public abstract void BlendBarrierKHR();
 }

@@ -589,7 +589,7 @@ public class Puppet
         serializer.Add("meta", new JObject(meta));
         serializer.Add("physics", new JObject(physics));
         var obj = new JObject();
-        root.Serialize(obj);
+        root.serializePartial(obj);
         serializer.Add("nodes", obj);
         var list = new JArray();
         foreach (var item in parameters)
@@ -648,7 +648,7 @@ public class Puppet
         if (temp is JObject obj)
         {
             root = new();
-            root.Serialize(obj);
+            root.Deserialize(obj);
         }
 
         temp = data["param"];
@@ -658,7 +658,7 @@ public class Puppet
             foreach (JObject key in temp)
             {
                 var param = new Parameter();
-                param.Serialize(key);
+                param.Deserialize(key);
                 parameters.Add(param);
             }
         }

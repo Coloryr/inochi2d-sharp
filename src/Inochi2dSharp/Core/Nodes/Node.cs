@@ -11,13 +11,6 @@ using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes;
 
-public record MatrixHolder
-{
-    public Matrix4x4 Matrix;
-
-    public MatrixHolder(Matrix4x4 matrix) => Matrix = matrix;
-}
-
 public class Node
 {
     public Puppet Puppet
@@ -127,7 +120,7 @@ public class Node
 
     public MatrixHolder? overrideTransformMatrix = null;
 
-    public delegate (Vector2[]?, Matrix4x4?) ProcessFilter(Vector2[] a, Vector2[]b, ref Matrix4x4 c);
+    public delegate (Vector2[]?, Matrix4x4?) ProcessFilter(List<Vector2> a, Vector2[]b, ref Matrix4x4 c);
 
     //Matrix4x4*
     public ProcessFilter? preProcessFilter = null;
@@ -209,7 +202,7 @@ public class Node
         Parent?.ResetMask();
     }
 
-    protected virtual void SerializeSelf(JObject obj, bool recursive = true)
+    protected void serializeSelfImpl(JObject obj, bool recursive = true)
     {
         obj.Add("uuid", UUID);
         obj.Add("name", name);
@@ -231,11 +224,16 @@ public class Node
                 if (child is TmpNode) continue;
                 // Serialize permanent nodes
                 var obj2 = new JObject();
-                child.Serialize(obj2);
+                child.SerializeSelf(obj2);
                 list.Add(obj2);
             }
             obj.Add("children", list);
         }
+    }
+
+    protected virtual void SerializeSelf(JObject obj)
+    {
+        serializeSelfImpl(obj, true);
     }
 
     protected unsafe virtual void PreProcess()
@@ -258,7 +256,7 @@ public class Node
         }
     }
 
-    protected unsafe void PostProcess()
+    protected virtual void PostProcess()
     {
         if (postProcessed)
             return;
@@ -528,21 +526,11 @@ public class Node
     /// <returns></returns>
     public bool hasParam(string key)
     {
-        switch (key)
+        return key switch
         {
-            case "zSort":
-            case "transform.t.x":
-            case "transform.t.y":
-            case "transform.t.z":
-            case "transform.r.x":
-            case "transform.r.y":
-            case "transform.r.z":
-            case "transform.s.x":
-            case "transform.s.y":
-                return true;
-            default:
-                return false;
-        }
+            "zSort" or "transform.t.x" or "transform.t.y" or "transform.t.z" or "transform.r.x" or "transform.r.y" or "transform.r.z" or "transform.s.x" or "transform.s.y" => true,
+            _ => false,
+        };
     }
 
     /// <summary>
@@ -550,24 +538,14 @@ public class Node
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    float getDefaultValue(string key)
+    public float getDefaultValue(string key)
     {
-        switch (key)
+        return key switch
         {
-            case "zSort":
-            case "transform.t.x":
-            case "transform.t.y":
-            case "transform.t.z":
-            case "transform.r.x":
-            case "transform.r.y":
-            case "transform.r.z":
-                return 0;
-            case "transform.s.x":
-            case "transform.s.y":
-                return 1;
-            default:
-                return 0;
-        }
+            "zSort" or "transform.t.x" or "transform.t.y" or "transform.t.z" or "transform.r.x" or "transform.r.y" or "transform.r.z" => 0,
+            "transform.s.x" or "transform.s.y" => 1,
+            _ => (float)0,
+        };
     }
 
     /// <summary>
@@ -576,7 +554,7 @@ public class Node
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    bool setValue(string key, float value)
+    public bool setValue(string key, float value)
     {
         switch (key)
         {
@@ -767,16 +745,16 @@ public class Node
     /// Allows serializing a node (with pretty serializer)
     /// </summary>
     /// <param name=""></param>
-    public void Serialize(JObject serializer)
+    public virtual void serializePartial(JObject obj, bool recursive = true)
     {
-        SerializeSelf(serializer);
+        serializeSelfImpl(obj, recursive);
     }
 
     /// <summary>
     ///  Deserializes node from Fghj formatted JSON data.
     /// </summary>
     /// <param name="data"></param>
-    protected virtual void Deserialize(JObject data)
+    public virtual void Deserialize(JObject data)
     {
         var temp = data["uuid"];
         if (temp == null)
@@ -825,7 +803,8 @@ public class Node
         }
 
         // Pre-populate our children with the correct types
-        foreach (var child in array) {
+        foreach (var child in array) 
+        {
             if (child is not JObject obj1)
             {
                 continue;
@@ -951,7 +930,7 @@ public class Node
     /// <summary>
     /// Draws bounds
     /// </summary>
-    public unsafe void drawBounds()
+    public virtual void drawBounds()
     {
         var bounds = getCombinedBounds();
 

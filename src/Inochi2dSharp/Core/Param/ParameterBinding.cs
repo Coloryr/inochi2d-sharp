@@ -31,7 +31,7 @@ public abstract class ParameterBinding
     /// </summary>
     /// <param name="leftKeypoint"></param>
     /// <param name="offset"></param>
-    public abstract void apply(Vector2Uint leftKeypoint, Vector2 offset);
+    public abstract void apply(Vector2Int leftKeypoint, Vector2 offset);
 
     /// <summary>
     /// Clear all keypoint data
@@ -42,26 +42,26 @@ public abstract class ParameterBinding
     /// Sets value at specified keypoint to the current value
     /// </summary>
     /// <param name="point"></param>
-    public abstract void setCurrent(Vector2Uint point);
+    public abstract void setCurrent(Vector2Int point);
 
     /// <summary>
     /// Unsets value at specified keypoint
     /// </summary>
     /// <param name="point"></param>
-    public abstract void unset(Vector2Uint point);
+    public abstract void unset(Vector2Int point);
 
     /// <summary>
     /// Resets value at specified keypoint to default
     /// </summary>
     /// <param name="point"></param>
-    public abstract void reset(Vector2Uint point);
+    public abstract void reset(Vector2Int point);
 
     /// <summary>
     /// Returns whether the specified keypoint is set
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public abstract bool isSet(Vector2Uint index);
+    public abstract bool isSet(Vector2Int index);
 
     /// <summary>
     /// Scales the value, optionally with axis awareness
@@ -69,14 +69,14 @@ public abstract class ParameterBinding
     /// <param name="index"></param>
     /// <param name="axis"></param>
     /// <param name="scale"></param>
-    public abstract void scaleValueAt(Vector2Uint index, int axis, float scale);
+    public abstract void scaleValueAt(Vector2Int index, int axis, float scale);
 
     /// <summary>
     /// Extrapolates the value across an axis
     /// </summary>
     /// <param name="index"></param>
     /// <param name="axis"></param>
-    public abstract void extrapolateValueAt(Vector2Uint index, int axis);
+    public abstract void extrapolateValueAt(Vector2Int index, int axis);
 
     /// <summary>
     /// Copies the value to a point on another compatible binding
@@ -84,7 +84,7 @@ public abstract class ParameterBinding
     /// <param name="src"></param>
     /// <param name="other"></param>
     /// <param name="dest"></param>
-    public abstract void copyKeypointToBinding(Vector2Uint src, ParameterBinding other, Vector2Uint dest);
+    public abstract void copyKeypointToBinding(Vector2Int src, ParameterBinding other, Vector2Int dest);
 
     /// <summary>
     /// Swaps the value to a point on another compatible binding
@@ -92,7 +92,7 @@ public abstract class ParameterBinding
     /// <param name="src"></param>
     /// <param name="other"></param>
     /// <param name="dest"></param>
-    public abstract void swapKeypointWithBinding(Vector2Uint src, ParameterBinding other, Vector2Uint dest);
+    public abstract void swapKeypointWithBinding(Vector2Int src, ParameterBinding other, Vector2Int dest);
 
     /// <summary>
     /// Flip the keypoints on an axis
@@ -109,7 +109,7 @@ public abstract class ParameterBinding
     /// Returns isSet_
     /// </summary>
     /// <returns></returns>
-    public abstract bool[][] getIsSet();
+    public abstract List<List<bool>> getIsSet();
 
     /// <summary>
     /// Gets how many breakpoints this binding is set to
@@ -174,7 +174,7 @@ public abstract class ParameterBinding
     /// The interpolation mode
     /// </summary>
     /// <returns></returns>
-    public abstract InterpolateMode interpolateMode { get; set; }
+    public InterpolateMode interpolateMode { get; set; }
 
     /// <summary>
     /// Serialize

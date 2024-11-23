@@ -471,4 +471,175 @@ void main() {
     outColor = vec4(1, 1, 1, 1);
 }
 """;
+    public const string inBasicFrag =
+"""
+#version 330
+in vec2 texUVs;
+in vec4 vertexCoord;
+
+layout(location = 0) out vec4 outAlbedo;
+layout(location = 1) out vec4 outEmissive;
+layout(location = 2) out vec4 outBump;
+
+uniform sampler2D albedo;
+uniform sampler2D emissive;
+uniform sampler2D bumpmap;
+
+uniform mat4 mvpModel;
+uniform mat4 mvpViewProjection;
+uniform float opacity;
+uniform vec3 multColor;
+uniform vec3 screenColor;
+uniform float emissionStrength = 1;
+
+vec4 screen(vec3 tcol, float a) {
+    return vec4(vec3(1.0) - ((vec3(1.0)-tcol) * (vec3(1.0)-(screenColor*a))), a);
+}
+
+void main() {
+    // Sample texture
+    vec4 texColor = texture(albedo, texUVs);
+    vec4 emiColor = texture(emissive, texUVs);
+
+    vec4 mult = vec4(multColor.xyz, 1);
+
+    // Bumpmapping orientation
+    vec4 origin = mvpModel * vec4(0, 0, 0, 1);
+    vec4 bumpAngle = texture(bumpmap, texUVs) * 2.0 - 1.0;
+    vec4 normal = mvpModel * (vec4(-bumpAngle.x, bumpAngle.yz, 1.0));
+    normal = normalize(normal-origin) * 0.5 + 0.5;
+
+    // Out color math
+    vec4 albedoOut = screen(texColor.xyz, texColor.a) * mult;
+    vec4 emissionOut = screen(emiColor.xyz, texColor.a) * mult * emissionStrength;
+
+    // Albedo
+    outAlbedo = albedoOut * opacity;
+
+    // Emissive
+    outEmissive = emissionOut * outAlbedo.a;
+
+    // Bumpmap
+    outBump = normal * outAlbedo.a;
+}
+""";
+    public const string inBasicVert =
+"""
+#version 330
+uniform mat4 mvpModel;
+uniform mat4 mvpViewProjection;
+uniform vec2 offset;
+
+layout(location = 0) in vec2 verts;
+layout(location = 1) in vec2 uvs;
+layout(location = 2) in vec2 deform;
+
+out vec2 texUVs;
+out vec4 vertexCoord;
+
+void main() {
+    vertexCoord = mvpModel * 
+                  vec4(verts.x-offset.x+deform.x, verts.y-offset.y+deform.y, 0, 1);
+    texUVs = uvs;
+    gl_Position = mvpViewProjection * vertexCoord;
+}
+""";
+    public const string inBasicStage1 =
+"""
+#version 330
+
+// Advanced blendig mode enable
+#ifdef GL_KHR_blend_equation_advanced 
+#extension GL_KHR_blend_equation_advanced : enable
+#endif
+
+#ifdef GL_ARB_sample_shading
+#extension GL_ARB_sample_shading : enable
+#endif
+
+in vec2 texUVs;
+in vec4 vertexCoord;
+
+// Handle layout qualifiers for advanced blending specially
+#ifdef GL_KHR_blend_equation_advanced 
+    layout(blend_support_all_equations) out;
+    layout(location = 0) out vec4 outAlbedo;
+#else
+    layout(location = 0) out vec4 outAlbedo;
+#endif
+
+uniform sampler2D albedo;
+
+uniform float opacity;
+uniform vec3 multColor;
+uniform vec3 screenColor;
+
+void main() {
+    // Sample texture
+    vec4 texColor = texture(albedo, texUVs);
+
+    // Screen color math
+    vec3 screenOut = vec3(1.0) - ((vec3(1.0)-(texColor.xyz)) * (vec3(1.0)-(screenColor*texColor.a)));
+
+    // Multiply color math + opacity application.
+    outAlbedo = vec4(screenOut.xyz, texColor.a) * vec4(multColor.xyz, 1) * opacity;
+}
+""";
+    public const string inBasicStage2 =
+"""
+#version 330
+in vec2 texUVs;
+in vec4 vertexCoord;
+
+layout(location = 1) out vec4 outEmissive;
+layout(location = 2) out vec4 outBump;
+
+uniform sampler2D albedo;
+uniform sampler2D emissive;
+uniform sampler2D bumpmap;
+
+uniform float opacity;
+uniform vec3 multColor;
+uniform vec3 screenColor;
+uniform float emissionStrength = 1;
+
+vec4 screen(vec3 tcol, float a) {
+    return vec4(vec3(1.0) - ((vec3(1.0)-tcol) * (vec3(1.0)-(screenColor*a))), a);
+}
+
+void main() {
+    // Sample texture
+    vec4 texColor = texture(albedo, texUVs);
+    vec4 emiColor = texture(emissive, texUVs);
+    vec4 bmpColor = texture(bumpmap, texUVs);
+
+    vec4 mult = vec4(multColor.xyz, 1);
+
+    // Out color math
+    vec4 emissionOut = screen(emiColor.xyz, texColor.a) * mult * emissionStrength;
+
+    // Emissive
+    outEmissive = emissionOut * texColor.a;
+
+    // Bumpmap
+    outBump = bmpColor * texColor.a;
+}
+""";
+    public const string inBasicMask =
+"""
+#version 330
+in vec2 texUVs;
+in vec4 vertexCoord;
+
+out vec4 outColor;
+
+uniform sampler2D tex;
+uniform float threshold;
+
+void main() {
+    vec4 color = texture(tex, texUVs);
+    if (color.a <= threshold) discard;
+    outColor = vec4(1, 1, 1, 1);
+}
+""";
 }

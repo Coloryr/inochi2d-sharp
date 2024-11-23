@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Inochi2dSharp.Core;
 
 namespace Inochi2dSharp.Math;
 
@@ -31,8 +32,7 @@ public class Camera
 
     public Vector2 GetRealSize()
     {
-        int width, height;
-        inGetViewport(out width, out height);
+        CoreHelper.inGetViewport(out var width, out var height);
 
         return new(width / Scale.X, height / Scale.Y);
     }
