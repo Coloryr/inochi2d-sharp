@@ -27,68 +27,68 @@ public class Shader : IDisposable
     /// </summary>
     public void use()
     {
-        CoreHelper.gl.UseProgram(shaderProgram);
+        I2dCore.gl.UseProgram(shaderProgram);
     }
 
-    public int getUniformLocation(string name)
+    public int GetUniformLocation(string name)
     {
-        return CoreHelper.gl.GetUniformLocation(shaderProgram, name);
+        return I2dCore.gl.GetUniformLocation(shaderProgram, name);
     }
 
     public void setUniform(int uniform, bool value)
     {
-        CoreHelper.gl.Uniform1(uniform, value ? 1 : 0);
+        I2dCore.gl.Uniform1(uniform, value ? 1 : 0);
     }
 
     public void setUniform(int uniform, int value)
     {
-        CoreHelper.gl.Uniform1(uniform, value);
+        I2dCore.gl.Uniform1(uniform, value);
     }
 
     public void setUniform(int uniform, float value)
     {
-        CoreHelper.gl.Uniform1(uniform, value);
+        I2dCore.gl.Uniform1(uniform, value);
     }
 
     public void setUniform(int uniform, Vector2 value)
     {
-        CoreHelper.gl.Uniform2(uniform, value.X, value.Y);
+        I2dCore.gl.Uniform2(uniform, value.X, value.Y);
     }
 
     public void setUniform(int uniform, Vector3 value)
     {
-        CoreHelper.gl.Uniform3(uniform, value.X, value.Y, value.Z);
+        I2dCore.gl.Uniform3(uniform, value.X, value.Y, value.Z);
     }
 
     public void setUniform(int uniform, Vector4 value)
     {
-        CoreHelper.gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
+        I2dCore.gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
     }
 
     public unsafe void setUniform(int uniform, Matrix4x4 value)
     {
-        CoreHelper.gl.UniformMatrix4(uniform, 1, true, new(&value));
+        I2dCore.gl.UniformMatrix4(uniform, 1, true, new(&value));
     }
 
     private void compileShaders(string vertex, string fragment)
     {
         // Compile vertex shader
-        vertShader = CoreHelper.gl.CreateShader(GlApi.GL_VERTEX_SHADER);
-        CoreHelper.gl.ShaderSource(vertShader, vertex);
-        CoreHelper.gl.CompileShader(vertShader);
+        vertShader = I2dCore.gl.CreateShader(GlApi.GL_VERTEX_SHADER);
+        I2dCore.gl.ShaderSource(vertShader, vertex);
+        I2dCore.gl.CompileShader(vertShader);
         verifyShader(vertShader);
 
         // Compile fragment shader
-        fragShader = CoreHelper.gl.CreateShader(GlApi.GL_FRAGMENT_SHADER);
-        CoreHelper.gl.ShaderSource(fragShader, fragment);
-        CoreHelper.gl.CompileShader(fragShader);
+        fragShader = I2dCore.gl.CreateShader(GlApi.GL_FRAGMENT_SHADER);
+        I2dCore.gl.ShaderSource(fragShader, fragment);
+        I2dCore.gl.CompileShader(fragShader);
         verifyShader(fragShader);
 
         // Attach and link them
-        shaderProgram = CoreHelper.gl.CreateProgram();
-        CoreHelper.gl.AttachShader(shaderProgram, vertShader);
-        CoreHelper.gl.AttachShader(shaderProgram, fragShader);
-        CoreHelper.gl.LinkProgram(shaderProgram);
+        shaderProgram = I2dCore.gl.CreateProgram();
+        I2dCore.gl.AttachShader(shaderProgram, vertShader);
+        I2dCore.gl.AttachShader(shaderProgram, fragShader);
+        I2dCore.gl.LinkProgram(shaderProgram);
         verifyProgram();
     }
 
@@ -96,11 +96,11 @@ public class Shader : IDisposable
     {
         string shaderType = shader == fragShader ? "fragment" : "vertex";
 
-        CoreHelper.gl.GetShader(shader, GlApi.GL_COMPILE_STATUS, out int compileStatus);
+        I2dCore.gl.GetShader(shader, GlApi.GL_COMPILE_STATUS, out int compileStatus);
         if (compileStatus == 0)
         {
             // Fetch the error log
-            CoreHelper.gl.GetShaderInfoLog(shader, out var log);
+            I2dCore.gl.GetShaderInfoLog(shader, out var log);
 
             throw new Exception($"Compilation error for {name}->{shaderType}:\n\n{log}");
         }
@@ -108,11 +108,11 @@ public class Shader : IDisposable
 
     private void verifyProgram()
     {
-        CoreHelper.gl.GetProgram(shaderProgram, GlApi.GL_LINK_STATUS, out var linkStatus);
+        I2dCore.gl.GetProgram(shaderProgram, GlApi.GL_LINK_STATUS, out var linkStatus);
         if (linkStatus == 0)
         {
             // Fetch the error log
-            CoreHelper.gl.GetProgramInfoLog(shaderProgram, out var log);
+            I2dCore.gl.GetProgramInfoLog(shaderProgram, out var log);
 
             throw new Exception(log);
         }
@@ -120,11 +120,11 @@ public class Shader : IDisposable
 
     public void Dispose()
     {
-        CoreHelper.gl.DetachShader(shaderProgram, vertShader);
-        CoreHelper.gl.DetachShader(shaderProgram, fragShader);
-        CoreHelper.gl.DeleteProgram(shaderProgram);
+        I2dCore.gl.DetachShader(shaderProgram, vertShader);
+        I2dCore.gl.DetachShader(shaderProgram, fragShader);
+        I2dCore.gl.DeleteProgram(shaderProgram);
 
-        CoreHelper.gl.DeleteShader(fragShader);
-        CoreHelper.gl.DeleteShader(vertShader);
+        I2dCore.gl.DeleteShader(fragShader);
+        I2dCore.gl.DeleteShader(vertShader);
     }
 }

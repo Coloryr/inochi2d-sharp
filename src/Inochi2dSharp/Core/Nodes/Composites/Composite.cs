@@ -8,14 +8,14 @@ namespace Inochi2dSharp.Core.Nodes.Composites;
 [TypeId("Composite")]
 public class Composite : Node
 {
-    protected List<Part> SubParts = [];
+    private readonly List<Part> _subParts = [];
 
     //
     //      PARAMETER OFFSETS
     //
-    protected float OffsetOpacity = 1;
-    protected Vector3 OffsetTint = new(0);
-    protected Vector3 OffsetScreenTint = new(0);
+    private float _offsetOpacity = 1;
+    private Vector3 _offsetTint = new(0);
+    private Vector3 _offsetScreenTint = new(0);
 
     public bool PropagateMeshGroup = true;
 
@@ -49,18 +49,13 @@ public class Composite : Node
     /// </summary>
     public List<MaskBinding> Masks = [];
 
-    public Composite() : this(null)
-    {
-
-    }
-
     /// <summary>
     /// Constructs a new mask
     /// </summary>
     /// <param name="parent"></param>
-    public Composite(Node? parent = null) : this(NodeHelper.InCreateUUID(), parent)
+    public Composite(I2dCore core, Node? parent = null) : this(core, core.InCreateUUID(), parent)
     {
-
+        
     }
 
     /// <summary>
@@ -68,7 +63,7 @@ public class Composite : Node
     /// </summary>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    public Composite(uint uuid, Node? parent = null) : base(uuid, parent)
+    private Composite(I2dCore core, uint uuid, Node? parent = null) : base(core, uuid, parent)
     {
 
     }
@@ -106,25 +101,25 @@ public class Composite : Node
         switch (key)
         {
             case "opacity":
-                OffsetOpacity *= value;
+                _offsetOpacity *= value;
                 return true;
             case "tint.r":
-                OffsetTint.X *= value;
+                _offsetTint.X *= value;
                 return true;
             case "tint.g":
-                OffsetTint.Y *= value;
+                _offsetTint.Y *= value;
                 return true;
             case "tint.b":
-                OffsetTint.Z *= value;
+                _offsetTint.Z *= value;
                 return true;
             case "screenTint.r":
-                OffsetScreenTint.X += value;
+                _offsetScreenTint.X += value;
                 return true;
             case "screenTint.g":
-                OffsetScreenTint.Y += value;
+                _offsetScreenTint.Y += value;
                 return true;
             case "screenTint.b":
-                OffsetScreenTint.Z += value;
+                _offsetScreenTint.Z += value;
                 return true;
             default: return false;
         }
@@ -134,13 +129,13 @@ public class Composite : Node
     {
         return key switch
         {
-            "opacity" => OffsetOpacity,
-            "tint.r" => OffsetTint.X,
-            "tint.g" => OffsetTint.Y,
-            "tint.b" => OffsetTint.Z,
-            "screenTint.r" => OffsetScreenTint.X,
-            "screenTint.g" => OffsetScreenTint.Y,
-            "screenTint.b" => OffsetScreenTint.Z,
+            "opacity" => _offsetOpacity,
+            "tint.r" => _offsetTint.X,
+            "tint.g" => _offsetTint.Y,
+            "tint.b" => _offsetTint.Z,
+            "screenTint.r" => _offsetScreenTint.X,
+            "screenTint.g" => _offsetScreenTint.Y,
+            "screenTint.b" => _offsetScreenTint.Z,
             _ => base.GetValue(key),
         };
     }
@@ -177,9 +172,9 @@ public class Composite : Node
 
     public override void BeginUpdate()
     {
-        OffsetOpacity = 1;
-        OffsetTint = new(1, 1, 1);
-        OffsetScreenTint = new(0, 0, 0);
+        _offsetOpacity = 1;
+        _offsetTint = new(1, 1, 1);
+        _offsetScreenTint = new(0, 0, 0);
         base.BeginUpdate();
     }
 
@@ -194,19 +189,19 @@ public class Composite : Node
 
         if (Masks.Count > 0)
         {
-            NodeHelper.inBeginMask(cMasks > 0);
+            _core.InBeginMask(cMasks > 0);
 
             foreach (var mask in Masks)
             {
                 mask.maskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
 
-            NodeHelper.inBeginMaskContent();
+            _core.InBeginMaskContent();
 
             // We are the content
             DrawSelf();
 
-            NodeHelper.inEndMask();
+            _core.InEndMask();
             return;
         }
 
@@ -244,7 +239,7 @@ public class Composite : Node
     /// </summary>
     public void ScanParts()
     {
-        SubParts.Clear();
+        _subParts.Clear();
         if (Children.Count > 0)
         {
             var temp = Children[0].Parent;
@@ -256,16 +251,16 @@ public class Composite : Node
     private void DrawContents()
     {
         // Optimization: Nothing to be drawn, skip context switching
-        if (SubParts.Count == 0) return;
+        if (_subParts.Count == 0) return;
 
-        CoreHelper.inBeginComposite();
+        _core.InBeginComposite();
 
-        foreach (var child in SubParts)
+        foreach (var child in _subParts)
         {
             child.DrawOne();
         }
 
-        CoreHelper.inEndComposite();
+        _core.InEndComposite();
     }
 
     /// <summary>
@@ -273,34 +268,34 @@ public class Composite : Node
     /// </summary>
     private void DrawSelf()
     {
-        if (SubParts.Count == 0) return;
+        if (_subParts.Count == 0) return;
 
-        CoreHelper.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
+        _core.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
-        CompositeHelper.CShader.use();
-        CompositeHelper.CShader.setUniform(CompositeHelper.Gopacity, float.Clamp(OffsetOpacity * Opacity, 0, 1));
-        CoreHelper.incCompositePrepareRender();
+        _core.CShader.use();
+        _core.CShader.setUniform(_core.Gopacity, float.Clamp(_offsetOpacity * Opacity, 0, 1));
+        _core.IncCompositePrepareRender();
 
         var clampedColor = Tint;
-        if (!float.IsNaN(OffsetTint.X)) clampedColor.X = float.Clamp(Tint.X * OffsetTint.X, 0, 1);
-        if (!float.IsNaN(OffsetTint.Y)) clampedColor.Y = float.Clamp(Tint.Y * OffsetTint.Y, 0, 1);
-        if (!float.IsNaN(OffsetTint.Z)) clampedColor.Z = float.Clamp(Tint.Z * OffsetTint.Z, 0, 1);
-        CompositeHelper.CShader.setUniform(CompositeHelper.GMultColor, clampedColor);
+        if (!float.IsNaN(_offsetTint.X)) clampedColor.X = float.Clamp(Tint.X * _offsetTint.X, 0, 1);
+        if (!float.IsNaN(_offsetTint.Y)) clampedColor.Y = float.Clamp(Tint.Y * _offsetTint.Y, 0, 1);
+        if (!float.IsNaN(_offsetTint.Z)) clampedColor.Z = float.Clamp(Tint.Z * _offsetTint.Z, 0, 1);
+        _core.CShader.setUniform(_core.GMultColor, clampedColor);
 
         clampedColor = ScreenTint;
-        if (!float.IsNaN(OffsetScreenTint.X)) clampedColor.X = float.Clamp(ScreenTint.X + OffsetScreenTint.X, 0, 1);
-        if (!float.IsNaN(OffsetScreenTint.Y)) clampedColor.Y = float.Clamp(ScreenTint.Y + OffsetScreenTint.Y, 0, 1);
-        if (!float.IsNaN(OffsetScreenTint.Z)) clampedColor.Z = float.Clamp(ScreenTint.Z + OffsetScreenTint.Z, 0, 1);
-        CompositeHelper.CShader.setUniform(CompositeHelper.GScreenColor, clampedColor);
-        NodeHelper.inSetBlendMode(BlendingMode, true);
+        if (!float.IsNaN(_offsetScreenTint.X)) clampedColor.X = float.Clamp(ScreenTint.X + _offsetScreenTint.X, 0, 1);
+        if (!float.IsNaN(_offsetScreenTint.Y)) clampedColor.Y = float.Clamp(ScreenTint.Y + _offsetScreenTint.Y, 0, 1);
+        if (!float.IsNaN(_offsetScreenTint.Z)) clampedColor.Z = float.Clamp(ScreenTint.Z + _offsetScreenTint.Z, 0, 1);
+        _core.CShader.setUniform(_core.GScreenColor, clampedColor);
+        _core.InSetBlendMode(BlendingMode, true);
 
         // Bind the texture
-        CoreHelper.gl.DrawArrays(GlApi.GL_TRIANGLES, 0, 6);
+        _core.gl.DrawArrays(GlApi.GL_TRIANGLES, 0, 6);
     }
 
     private void SelfSort()
     {
-        SubParts.Sort((a, b) => a.ZSort.CompareTo(b.ZSort));
+        _subParts.Sort((a, b) => a.ZSort.CompareTo(b.ZSort));
     }
 
     private void ScanPartsRecurse(Node node)
@@ -311,7 +306,7 @@ public class Composite : Node
         // Do the main check
         if (node is Part part)
         {
-            SubParts.Add(part);
+            _subParts.Add(part);
             foreach (var child in part.Children)
             {
                 ScanPartsRecurse(child);
@@ -332,31 +327,31 @@ public class Composite : Node
 
     protected void RenderMask()
     {
-        CoreHelper.inBeginComposite();
+        _core.InBeginComposite();
 
         // Enable writing to stencil buffer and disable writing to color buffer
-        CoreHelper.gl.ColorMask(false, false, false, false);
-        CoreHelper.gl.StencilOp(GlApi.GL_KEEP, GlApi.GL_KEEP, GlApi.GL_REPLACE);
-        CoreHelper.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
-        CoreHelper.gl.StencilMask(0xFF);
+        _core.gl.ColorMask(false, false, false, false);
+        _core.gl.StencilOp(GlApi.GL_KEEP, GlApi.GL_KEEP, GlApi.GL_REPLACE);
+        _core.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
+        _core.gl.StencilMask(0xFF);
 
-        foreach (Part child in SubParts)
+        foreach (Part child in _subParts)
         {
             child.DrawOneDirect(true);
         }
 
         // Disable writing to stencil buffer and enable writing to color buffer
-        CoreHelper.gl.ColorMask(true, true, true, true);
-        CoreHelper.inEndComposite();
+        _core.gl.ColorMask(true, true, true, true);
+        _core.InEndComposite();
 
-        CompositeHelper.CShaderMask.use();
-        CompositeHelper.CShaderMask.setUniform(CompositeHelper.Mopacity, Opacity);
-        CompositeHelper.CShaderMask.setUniform(CompositeHelper.Mthreshold, Threshold);
-        CoreHelper.gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
+        _core.CShaderMask.use();
+        _core.CShaderMask.setUniform(_core.Mopacity, Opacity);
+        _core.CShaderMask.setUniform(_core.Mthreshold, Threshold);
+        _core.gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
 
-        CoreHelper.gl.ActiveTexture(GlApi.GL_TEXTURE0);
-        CoreHelper.gl.BindTexture(GlApi.GL_TEXTURE_2D, CoreHelper.inGetCompositeImage());
-        CoreHelper.gl.DrawArrays(GlApi.GL_TRIANGLES, 0, 6);
+        _core.gl.ActiveTexture(GlApi.GL_TEXTURE0);
+        _core.gl.BindTexture(GlApi.GL_TEXTURE_2D, _core.InGetCompositeImage());
+        _core.gl.DrawArrays(GlApi.GL_TRIANGLES, 0, 6);
     }
 
     protected override void SerializeSelfImpl(JObject serializer, bool recursive = true)

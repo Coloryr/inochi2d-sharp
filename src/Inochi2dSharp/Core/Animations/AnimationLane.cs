@@ -11,23 +11,23 @@ public class AnimationLane
     /// <summary>
     /// Reference to parameter if any
     /// </summary>
-    public AnimationParameterRef ParamRef;
+    public AnimationParameterRef ParamRef { get; private set; }
 
     /// <summary>
     /// List of frames in the lane
     /// </summary>
-    public List<Keyframe> Frames = [];
+    public List<Keyframe> Frames { get; init; } = [];
 
     /// <summary>
     /// The interpolation between each frame in the lane
     /// </summary>
-    public InterpolateMode Interpolation;
+    private InterpolateMode _interpolation;
 
     /// <summary>
     /// Merging mode of the lane
     /// <see cref = "ParamMergeMode" />
     /// </summary>
-    public string MergeMode = ParamMergeMode.Forced;
+    public string MergeMode { get; private set; } = ParamMergeMode.Forced;
 
     /// <summary>
     /// Serialization function
@@ -35,11 +35,11 @@ public class AnimationLane
     /// <param name="serializer"></param>
     public void Serialize(JObject serializer)
     {
-        serializer.Add("interpolation", Interpolation.ToString());
+        serializer.Add("interpolation", _interpolation.ToString());
         if (ParamRef != null)
         {
-            serializer.Add("uuid", ParamRef.targetParam.UUID);
-            serializer.Add("target", ParamRef.targetAxis);
+            serializer.Add("uuid", ParamRef.TargetParam.UUID);
+            serializer.Add("target", ParamRef.TargetAxis);
         }
         serializer.Add("keyframes", new JArray(Frames));
         serializer.Add("merge_mode", MergeMode);
@@ -54,7 +54,7 @@ public class AnimationLane
         var temp = data["interpolation"];
         if (temp != null)
         {
-            Interpolation = Enum.Parse<InterpolateMode>(temp.ToString());
+            _interpolation = Enum.Parse<InterpolateMode>(temp.ToString());
         }
 
         temp = data["uuid"];
@@ -68,7 +68,7 @@ public class AnimationLane
         temp = data["target"];
         if (temp != null)
         {
-            ParamRef.targetAxis = (int)temp;
+            ParamRef.TargetAxis = (int)temp;
         }
 
         temp = data["keyframes"];
@@ -123,7 +123,7 @@ public class AnimationLane
                 // Interpolation tension 0->1
                 float tension = Frames[i].Tension;
 
-                switch (Interpolation)
+                switch (_interpolation)
                 {
                     // Nearest - Snap to the closest frame
                     case InterpolateMode.Nearest:
@@ -168,7 +168,7 @@ public class AnimationLane
 
     public void Finalize(Puppet puppet)
     {
-        if (ParamRef != null) ParamRef.targetParam = puppet.FindParameter(_refuuid)!;
+        if (ParamRef != null) ParamRef.TargetParam = puppet.FindParameter(_refuuid)!;
     }
 
     /// <summary>

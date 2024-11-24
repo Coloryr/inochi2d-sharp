@@ -45,9 +45,9 @@ public class Pendulum : PhysicsSystem
             new Vector3(_bob.X, _bob.Y, 0),
         ];
 
-        CoreHelper.inDbgSetBuffer(points);
-        CoreHelper.inDbgLineWidth(3);
-        CoreHelper.inDbgDrawLines(new Vector4(1, 0, 1, 1), trans);
+        I2dCore.InDbgSetBuffer(points);
+        I2dCore.InDbgLineWidth(3);
+        I2dCore.InDbgDrawLines(new Vector4(1, 0, 1, 1), trans);
     }
 
     public override void UpdateAnchor()

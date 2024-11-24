@@ -56,9 +56,9 @@ public abstract class Drawable : Node
     public Drawable(Node? parent = null) : base(parent)
     {
         // Generate the buffers
-        CoreHelper.gl.GenBuffers(1, out Vbo);
-        CoreHelper.gl.GenBuffers(1, out Ibo);
-        CoreHelper.gl.GenBuffers(1, out Dbo);
+        I2dCore.gl.GenBuffers(1, out Vbo);
+        I2dCore.gl.GenBuffers(1, out Ibo);
+        I2dCore.gl.GenBuffers(1, out Dbo);
 
         // Create deformation stack
         DeformStack = new DeformationStack(this);
@@ -89,9 +89,9 @@ public abstract class Drawable : Node
         Vertices = [.. data.Vertices];
 
         // Generate the buffers
-        CoreHelper.gl.GenBuffers(1, out Vbo);
-        CoreHelper.gl.GenBuffers(1, out Ibo);
-        CoreHelper.gl.GenBuffers(1, out Dbo);
+        I2dCore.gl.GenBuffers(1, out Vbo);
+        I2dCore.gl.GenBuffers(1, out Ibo);
+        I2dCore.gl.GenBuffers(1, out Dbo);
 
         // Update indices and vertices
         UpdateIndices();
@@ -100,22 +100,22 @@ public abstract class Drawable : Node
 
     private unsafe void UpdateIndices()
     {
-        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        I2dCore.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
         var temp = Data.Indices.ToArray();
         fixed (void* ptr = temp)
         {
-            CoreHelper.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, temp.Length * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
+            I2dCore.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, temp.Length * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
     }
 
     private unsafe void UpdateVertices()
     {
         // Important check since the user can change this every frame
-        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
+        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
         var temp = Vertices.ToArray();
         fixed (void* ptr = temp)
         {
-            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, temp.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
+            I2dCore.gl.BufferData(GlApi.GL_ARRAY_BUFFER, temp.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
 
         // Zero-fill the deformation delta
@@ -137,11 +137,11 @@ public abstract class Drawable : Node
 
         PostProcess();
 
-        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
+        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
 
         fixed (void* ptr = Deformation)
         {
-            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Deformation.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
+            I2dCore.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Deformation.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
 
         UpdateBounds();
@@ -153,8 +153,8 @@ public abstract class Drawable : Node
     protected void BindIndex()
     {
         // Bind element array and draw our mesh
-        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
-        CoreHelper.gl.DrawElements(GlApi.GL_TRIANGLES, Data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
+        I2dCore.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        I2dCore.gl.DrawElements(GlApi.GL_TRIANGLES, Data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
     }
 
     /// <summary>
@@ -327,7 +327,7 @@ public abstract class Drawable : Node
 
         float width = Bounds.Z - Bounds.X;
         float height = Bounds.W - Bounds.Y;
-        CoreHelper.inDbgSetBuffer([
+        I2dCore.InDbgSetBuffer([
             new Vector3(Bounds.X, Bounds.Y, 0),
             new Vector3(Bounds.X + width, Bounds.Y, 0),
 
@@ -340,12 +340,12 @@ public abstract class Drawable : Node
             new Vector3(Bounds.X, Bounds.Y+height, 0),
             new Vector3(Bounds.X, Bounds.Y, 0),
         ]);
-        CoreHelper.inDbgLineWidth(3);
+        I2dCore.InDbgLineWidth(3);
         if (OneTimeTransform is { } mat)
-            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), mat);
+            I2dCore.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), mat);
         else
-            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
-        CoreHelper.inDbgLineWidth(1);
+            I2dCore.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
+        I2dCore.InDbgLineWidth(1);
     }
 
     /// <summary>
@@ -376,8 +376,8 @@ public abstract class Drawable : Node
             points[iy + 5] = new Vector3(Vertices[indice] - Data.Origin + Deformation[indice], 0);
         }
 
-        CoreHelper.inDbgSetBuffer(points);
-        CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), trans);
+        I2dCore.InDbgSetBuffer(points);
+        I2dCore.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), trans);
     }
 
     /// <summary>
@@ -395,11 +395,11 @@ public abstract class Drawable : Node
             points[i] = new Vector3(point - Data.Origin + Deformation[i], 0);
         }
 
-        CoreHelper.inDbgSetBuffer(points);
-        CoreHelper.inDbgPointsSize(8);
-        CoreHelper.inDbgDrawPoints(new Vector4(0, 0, 0, 1), trans);
-        CoreHelper.inDbgPointsSize(4);
-        CoreHelper.inDbgDrawPoints(new Vector4(1, 1, 1, 1), trans);
+        I2dCore.InDbgSetBuffer(points);
+        I2dCore.InDbgPointsSize(8);
+        I2dCore.InDbgDrawPoints(new Vector4(0, 0, 0, 1), trans);
+        I2dCore.InDbgPointsSize(4);
+        I2dCore.InDbgDrawPoints(new Vector4(1, 1, 1, 1), trans);
     }
 
     /// <summary>
@@ -442,9 +442,9 @@ public abstract class Drawable : Node
     public void InBeginMask(bool hasMasks)
     {
         // Enable and clear the stencil buffer so we can write our mask to it
-        CoreHelper.gl.Enable(GlApi.GL_STENCIL_TEST);
-        CoreHelper.gl.ClearStencil(hasMasks ? 0 : 1);
-        CoreHelper.gl.Clear(GlApi.GL_STENCIL_BUFFER_BIT);
+        I2dCore.gl.Enable(GlApi.GL_STENCIL_TEST);
+        I2dCore.gl.ClearStencil(hasMasks ? 0 : 1);
+        I2dCore.gl.Clear(GlApi.GL_STENCIL_BUFFER_BIT);
     }
 
     /// <summary>
@@ -455,9 +455,9 @@ public abstract class Drawable : Node
     public void InEndMask()
     {
         // We're done stencil testing, disable it again so that we don't accidentally mask more stuff out
-        CoreHelper.gl.StencilMask(0xFF);
-        CoreHelper.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
-        CoreHelper.gl.Disable(GlApi.GL_STENCIL_TEST);
+        I2dCore.gl.StencilMask(0xFF);
+        I2dCore.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
+        I2dCore.gl.Disable(GlApi.GL_STENCIL_TEST);
     }
 
     /// <summary>
@@ -467,7 +467,7 @@ public abstract class Drawable : Node
     /// </summary>
     public void InBeginMaskContent()
     {
-        CoreHelper.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
-        CoreHelper.gl.StencilMask(0x00);
+        I2dCore.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
+        I2dCore.gl.StencilMask(0x00);
     }
 }

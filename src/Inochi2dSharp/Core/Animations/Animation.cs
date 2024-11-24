@@ -7,7 +7,7 @@ public class Animation
     /// <summary>
     /// The timestep of each frame
     /// </summary>
-    public float Timestep = 0.0166f;
+    public float Timestep { get; private set; } = 0.0166f;
 
     /// <summary>
     /// Whether the animation is additive.
@@ -15,34 +15,34 @@ public class Animation
     /// Additive animations will not replace main animations, but add their data
     /// on top of the running main animation
     /// </summary>
-    public bool Additive;
+    private bool _additive;
 
     /// <summary>
     /// The weight of the animation
     /// 
     /// This is only relevant for additive animations
     /// </summary>
-    public float AnimationWeight;
+    private float _animationWeight;
 
     /// <summary>
     /// All of the animation lanes in this animation
     /// </summary>
-    public List<AnimationLane> Lanes = [];
+    public List<AnimationLane> Lanes { get; init; } = [];
 
     /// <summary>
     /// Length in frames
     /// </summary>
-    public int Length;
+    public int Length { get; private set; }
 
     /// <summary>
     /// Time where the lead-in ends
     /// </summary>
-    public int LeadIn = -1;
+    public int LeadIn { get; private set; } = -1;
 
     /// <summary>
     /// Time where the lead-out starts
     /// </summary>
-    public int LeadOut = -1;
+    public int LeadOut { get; private set; } = -1;
 
     public void Reconstruct(Puppet puppet)
     {
@@ -65,11 +65,11 @@ public class Animation
     public void Serialize(JObject serializer)
     {
         serializer.Add("timestep", Timestep);
-        serializer.Add("additive", Additive);
+        serializer.Add("additive", _additive);
         serializer.Add("length", Length);
         serializer.Add("leadIn", LeadIn);
         serializer.Add("leadOut", LeadOut);
-        serializer.Add("animationWeight", AnimationWeight);
+        serializer.Add("animationWeight", _animationWeight);
 
         var list = new JArray();
         foreach (var lane in Lanes)
@@ -96,13 +96,13 @@ public class Animation
         temp = data["additive"];
         if (temp != null)
         {
-            Additive = (bool)temp;
+            _additive = (bool)temp;
         }
 
         temp = data["animationWeight"];
         if (temp != null)
         {
-            AnimationWeight = (float)temp;
+            _animationWeight = (float)temp;
         }
 
         temp = data["length"];

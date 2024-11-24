@@ -11,9 +11,9 @@ public class PostProcessingShader
         this.shader = shader;
 
         shader.use();
-        shader.setUniform(shader.getUniformLocation("albedo"), 0);
-        shader.setUniform(shader.getUniformLocation("emissive"), 1);
-        shader.setUniform(shader.getUniformLocation("bumpmap"), 2);
+        shader.setUniform(shader.GetUniformLocation("albedo"), 0);
+        shader.setUniform(shader.GetUniformLocation("emissive"), 1);
+        shader.setUniform(shader.GetUniformLocation("bumpmap"), 2);
     }
 
     /// <summary>
@@ -24,7 +24,7 @@ public class PostProcessingShader
     public int getUniform(string name)
     {
         if (hasUniform(name)) return uniformCache[name];
-        int element = shader.getUniformLocation(name);
+        int element = shader.GetUniformLocation(name);
         uniformCache[name] = element;
         return element;
     }

@@ -87,7 +87,7 @@ public class Node : IDisposable
             }
             else if (!value && _lockToRoot)
             {
-                LocalTransform.Translation = LocalTransform.Translation - Parent!.TransformNoLock().Translation;
+                LocalTransform.Translation -= Parent!.TransformNoLock().Translation;
             }
 
             _lockToRoot = value;
@@ -161,27 +161,25 @@ public class Node : IDisposable
 
     public bool RecalculateTransform = true;
 
+    protected readonly I2dCore _core;
+
     /// <summary>
     /// Constructs a new puppet root node
     /// </summary>
     /// <param name="puppet"></param>
-    public Node(Puppet puppet)
+    public Node(I2dCore core, Puppet puppet)
     {
+        _core = core;
         _puppet = puppet;
-    }
-
-    public Node() : this(parent: null)
-    { 
-    
     }
 
     /// <summary>
     /// Constructs a new node
     /// </summary>
     /// <param name="parent"></param>
-    public Node(Node? parent = null) : this(NodeHelper.InCreateUUID(), parent)
+    public Node(I2dCore core, Node? parent = null) : this(core, core.InCreateUUID(), parent)
     {
-
+        _core = core;
     }
 
     /// <summary>
@@ -189,8 +187,9 @@ public class Node : IDisposable
     /// </summary>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    public Node(uint uuid, Node? parent = null)
+    public Node(I2dCore core, uint uuid, Node? parent = null)
     {
+        _core = core;
         Parent = parent;
         UUID = uuid;
     }
@@ -815,10 +814,10 @@ public class Node : IDisposable
 
             // Skips unknown node types
             // TODO: A logging system that shows a warning for this?
-            if (!NodeHelper.HasNodeType(type)) continue;
+            if (!TypeList.HasNodeType(type)) continue;
 
             // instantiate it
-            var n = NodeHelper.InstantiateNode(type, this);
+            var n = TypeList.InstantiateNode(type, _core, this);
             n.Deserialize(obj1);
         }
     }
@@ -912,21 +911,21 @@ public class Node : IDisposable
     public void DrawOrientation()
     {
         var trans = Transform().Matrix;
-        CoreHelper.inDbgLineWidth(4);
+        _core.InDbgLineWidth(4);
 
         // X
-        CoreHelper.inDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(32, 0, 0)], [0, 1]);
-        CoreHelper.inDbgDrawLines(new Vector4(1, 0, 0, 0.7f), trans);
+        _core.InDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(32, 0, 0)], [0, 1]);
+        _core.InDbgDrawLines(new Vector4(1, 0, 0, 0.7f), trans);
 
         // Y
-        CoreHelper.inDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(0, -32, 0)], [0, 1]);
-        CoreHelper.inDbgDrawLines(new Vector4(0, 1, 0, 0.7f), trans);
+        _core.InDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(0, -32, 0)], [0, 1]);
+        _core.InDbgDrawLines(new Vector4(0, 1, 0, 0.7f), trans);
 
         // Z
-        CoreHelper.inDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(0, 0, -32)], [0, 1]);
-        CoreHelper.inDbgDrawLines(new Vector4(0, 0, 1, 0.7f), trans);
+        _core.InDbgSetBuffer([new Vector3(0, 0, 0), new Vector3(0, 0, -32)], [0, 1]);
+        _core.InDbgDrawLines(new Vector4(0, 0, 1, 0.7f), trans);
 
-        CoreHelper.inDbgLineWidth(1);
+        _core.InDbgLineWidth(1);
     }
 
     /// <summary>
@@ -938,7 +937,7 @@ public class Node : IDisposable
 
         float width = bounds.Z - bounds.X;
         float height = bounds.W - bounds.Y;
-        CoreHelper.inDbgSetBuffer([
+        _core.InDbgSetBuffer([
             new Vector3(bounds.X, bounds.Y, 0),
             new Vector3(bounds.X + width, bounds.Y, 0),
 
@@ -951,12 +950,12 @@ public class Node : IDisposable
             new Vector3(bounds.X, bounds.Y+height, 0),
             new Vector3(bounds.X, bounds.Y, 0),
         ]);
-        CoreHelper.inDbgLineWidth(3);
+        _core.InDbgLineWidth(3);
         if (OneTimeTransform != null)
-            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), OneTimeTransform.Value);
+            _core.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), OneTimeTransform.Value);
         else
-            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
-        CoreHelper.inDbgLineWidth(1);
+            _core.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
+        _core.InDbgLineWidth(1);
     }
 
     public virtual void SetOneTimeTransform(Matrix4x4 transform)

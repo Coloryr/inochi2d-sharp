@@ -224,8 +224,8 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
         float realStrength = float.Clamp(_strength, 0, 1);
         foreach (var lane in Anim.Lanes)
         {
-            lane.ParamRef.targetParam.PushIOffsetAxis(
-                lane.ParamRef.targetAxis,
+            lane.ParamRef.TargetParam.PushIOffsetAxis(
+                lane.ParamRef.TargetAxis,
                 lane.Get(Hframe, player.SnapToFramerate) * realStrength,
                 lane.MergeMode
             );

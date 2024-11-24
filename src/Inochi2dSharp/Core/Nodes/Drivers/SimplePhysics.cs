@@ -9,7 +9,7 @@ namespace Inochi2dSharp.Core.Nodes.Drivers;
 [TypeId("SimplePhysics")]
 public class SimplePhysics : Driver
 {
-    private uint _paramRef = NodeHelper.InInvalidUUID;
+    private uint _paramRef = I2dCore.InInvalidUUID;
 
     private Parameter? _param;
 
@@ -113,21 +113,16 @@ public class SimplePhysics : Driver
         set
         {
             _param = value;
-            if (value is null) _paramRef = NodeHelper.InInvalidUUID;
+            if (value is null) _paramRef = I2dCore.InInvalidUUID;
             else _paramRef = value.UUID;
         }
-    }
-
-    public SimplePhysics() : this(null)
-    {
-
     }
 
     /// <summary>
     /// Constructs a new SimplePhysics node
     /// </summary>
     /// <param name="parent"></param>
-    public SimplePhysics(Node? parent = null) : this(NodeHelper.InCreateUUID(), parent)
+    public SimplePhysics(I2dCore core, Node? parent = null) : this(core, core.InCreateUUID(), parent)
     {
 
     }
@@ -137,7 +132,7 @@ public class SimplePhysics : Driver
     /// </summary>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    public SimplePhysics(uint uuid, Node? parent = null) : base(uuid, parent)
+    private SimplePhysics(I2dCore core, uint uuid, Node? parent = null) : base(core, uuid, parent)
     {
         Reset();
     }
@@ -168,7 +163,7 @@ public class SimplePhysics : Driver
     {
         // Timestep is limited to 10 seconds, as if you
         // Are getting 0.1 FPS, you have bigger issues to deal with.
-        float h = float.Min(Inochi2d.deltaTime(), 10);
+        float h = float.Min(_core.I2dTime.DeltaTime(), 10);
 
         UpdateInputs();
 

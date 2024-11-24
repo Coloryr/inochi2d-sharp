@@ -436,7 +436,7 @@ public class MeshGroup(Node? parent = null) : Drawable(parent)
                             var p1 = transformedVertices[Data.Indices[index * 3]];
                             var p2 = transformedVertices[Data.Indices[index * 3 + 1]];
                             var p3 = transformedVertices[Data.Indices[index * 3 + 2]];
-                            triangles[index].transformMatrix = 
+                            triangles[index].transformMatrix =
                                 new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
                                               p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
                                               0, 0, 1) * triangles[index].offsetMatrices;

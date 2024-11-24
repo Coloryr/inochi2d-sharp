@@ -9,8 +9,8 @@ public class TmpNode : Node
     }
 
     public TmpNode() : this(null)
-    { 
-        
+    {
+
     }
 
     public TmpNode(Node? parent = null) : base(parent)

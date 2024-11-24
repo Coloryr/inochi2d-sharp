@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 namespace Inochi2dSharp.Core.Automations;
 
 [TypeId("physics")]
-public class PhysicsAutomation : Automation
+internal class PhysicsAutomation : Automation
 {
     /// <summary>
     /// A node in the internal verlet simulation
@@ -27,8 +27,11 @@ public class PhysicsAutomation : Automation
     /// </summary>
     public float Gravity = 20f;
 
-    public PhysicsAutomation(Puppet parent) : base(parent)
+    private readonly I2dTime _time;
+
+    public PhysicsAutomation(Puppet parent, I2dTime time) : base(parent)
     {
+        _time = time;
         TypeId = "physics";
     }
 
@@ -48,7 +51,7 @@ public class PhysicsAutomation : Automation
         var node = Nodes[i];
 
         var tmp = node.Position;
-        node.Position = (node.Position - node.OldPosition) + new Vector2(0, Gravity) * (Inochi2d.deltaTime() * Inochi2d.deltaTime()) * Bounciness;
+        node.Position = node.Position - node.OldPosition + new Vector2(0, Gravity) * (_time.DeltaTime() * _time.DeltaTime()) * Bounciness;
         node.OldPosition = tmp;
     }
 

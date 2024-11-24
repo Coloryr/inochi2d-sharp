@@ -6,14 +6,14 @@
 /// <param name="puppet"></param>
 public class AnimationPlayer(Puppet puppet)
 {
-    public List<AnimationPlayback> PlayingAnimations = [];
+    public List<AnimationPlayback> PlayingAnimations { get; init; } = [];
 
     public Puppet Puppet => puppet;
 
     /// <summary>
     /// Whether to snap to framerate
     /// </summary>
-    public bool SnapToFramerate = false;
+    public bool SnapToFramerate { get; private set; } = false;
 
     /// <summary>
     /// Run an update step for the animation player
@@ -59,10 +59,7 @@ public class AnimationPlayer(Puppet puppet)
     public AnimationPlayback? Play(string name)
     {
         var anim = CreateOrGet(name);
-        if (anim != null)
-        {
-            anim.Play();
-        }
+        anim?.Play();
 
         return anim;
     }

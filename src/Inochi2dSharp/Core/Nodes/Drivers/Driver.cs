@@ -5,17 +5,12 @@ namespace Inochi2dSharp.Core.Nodes.Drivers;
 [TypeId("Driver")]
 public abstract class Driver : Node
 {
-    protected Driver()
-    {
-
-    }
-
     /// <summary>
     /// Constructs a new Driver node
     /// </summary>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    protected Driver(uint uuid, Node? parent = null) : base(uuid, parent)
+    protected Driver(I2dCore core, uint uuid, Node? parent = null) : base(core, uuid, parent)
     {
 
     }

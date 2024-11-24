@@ -27,7 +27,7 @@ public class Camera
 
     public Vector2 GetRealSize()
     {
-        CoreHelper.inGetViewport(out var width, out var height);
+        I2dCore.InGetViewport(out var width, out var height);
 
         return new(width / Scale.X, height / Scale.Y);
     }

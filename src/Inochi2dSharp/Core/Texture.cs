@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 using SkiaSharp;
 
@@ -51,14 +50,14 @@ public class Texture : IDisposable
         OutColorMode = GlApi.GL_RGBA;
 
         // Generate OpenGL texture
-        CoreHelper.gl.GenTextures(1, out var id);
+        I2dCore.gl.GenTextures(1, out var id);
         Id = id;
         SetData(_image.GetPixels());
 
         // Set default filtering and wrapping
         SetFiltering(Filtering.Linear);
         SetWrapping(Wrapping.Clamp);
-        SetAnisotropy(CoreHelper.IncGetMaxAnisotropy() / 2.0f);
+        SetAnisotropy(I2dCore.IncGetMaxAnisotropy() / 2.0f);
         UUID = NodeHelper.InCreateUUID();
     }
 
@@ -94,14 +93,14 @@ public class Texture : IDisposable
         else if (inChannels == 3) InColorMode = GlApi.GL_RGB;
 
         // Generate OpenGL texture
-        CoreHelper.gl.GenTextures(1, out var id);
+        I2dCore.gl.GenTextures(1, out var id);
         Id = id;
         SetData(data);
 
         // Set default filtering and wrapping
         SetFiltering(Filtering.Linear);
         SetWrapping(Wrapping.Clamp);
-        SetAnisotropy(CoreHelper.IncGetMaxAnisotropy() / 2.0f);
+        SetAnisotropy(I2dCore.IncGetMaxAnisotropy() / 2.0f);
         UUID = NodeHelper.InCreateUUID();
     }
 
@@ -114,7 +113,7 @@ public class Texture : IDisposable
 
         if (Id > 0)
         {
-            CoreHelper.gl.DeleteTexture(Id);
+            I2dCore.gl.DeleteTexture(Id);
             Id = 0;
         }
     }
@@ -144,13 +143,13 @@ public class Texture : IDisposable
     public void SetFiltering(Filtering filtering)
     {
         Bind();
-        CoreHelper.gl.TexParameterI(
+        I2dCore.gl.TexParameterI(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MIN_FILTER,
             filtering == Filtering.Linear ? GlApi.GL_LINEAR_MIPMAP_LINEAR : GlApi.GL_NEAREST
         );
 
-        CoreHelper.gl.TexParameterI(
+        I2dCore.gl.TexParameterI(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MAG_FILTER,
             filtering == Filtering.Linear ? GlApi.GL_LINEAR : GlApi.GL_NEAREST
@@ -160,10 +159,10 @@ public class Texture : IDisposable
     public void SetAnisotropy(float value)
     {
         Bind();
-        CoreHelper.gl.TexParameter(
+        I2dCore.gl.TexParameter(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MAX_ANISOTROPY,
-            float.Clamp(value, 1, CoreHelper.IncGetMaxAnisotropy())
+            float.Clamp(value, 1, I2dCore.IncGetMaxAnisotropy())
         );
     }
 
@@ -174,9 +173,9 @@ public class Texture : IDisposable
     public void SetWrapping(Wrapping wrapping)
     {
         Bind();
-        CoreHelper.gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_S, (uint)wrapping);
-        CoreHelper.gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_T, (uint)wrapping);
-        CoreHelper.gl.TexParameter(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_BORDER_COLOR, [0f, 0f, 0f, 0f]);
+        I2dCore.gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_S, (uint)wrapping);
+        I2dCore.gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_T, (uint)wrapping);
+        I2dCore.gl.TexParameter(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_BORDER_COLOR, [0f, 0f, 0f, 0f]);
     }
 
     /// <summary>
@@ -186,9 +185,9 @@ public class Texture : IDisposable
     public void SetData(IntPtr data)
     {
         Bind();
-        CoreHelper.gl.PixelStore(GlApi.GL_UNPACK_ALIGNMENT, 1);
-        CoreHelper.gl.PixelStore(GlApi.GL_PACK_ALIGNMENT, 1);
-        CoreHelper.gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, OutColorMode, Width, Height, 0, InColorMode, GlApi.GL_UNSIGNED_BYTE, data);
+        I2dCore.gl.PixelStore(GlApi.GL_UNPACK_ALIGNMENT, 1);
+        I2dCore.gl.PixelStore(GlApi.GL_PACK_ALIGNMENT, 1);
+        I2dCore.gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, OutColorMode, Width, Height, 0, InColorMode, GlApi.GL_UNSIGNED_BYTE, data);
 
         GenMipmap();
     }
@@ -199,7 +198,7 @@ public class Texture : IDisposable
     public void GenMipmap()
     {
         Bind();
-        CoreHelper.gl.GenerateMipmap(GlApi.GL_TEXTURE_2D);
+        I2dCore.gl.GenerateMipmap(GlApi.GL_TEXTURE_2D);
     }
 
     /// <summary>
@@ -233,7 +232,7 @@ public class Texture : IDisposable
         // Update the texture
         fixed (void* ptr = data)
         {
-            CoreHelper.gl.TexSubImage2D(GlApi.GL_TEXTURE_2D, 0, x, y, width, height, inChannelMode, GlApi.GL_UNSIGNED_BYTE, new nint(ptr));
+            I2dCore.gl.TexSubImage2D(GlApi.GL_TEXTURE_2D, 0, x, y, width, height, inChannelMode, GlApi.GL_UNSIGNED_BYTE, new nint(ptr));
         }
 
         GenMipmap();
@@ -253,8 +252,8 @@ public class Texture : IDisposable
         {
             throw new Exception("Outside maximum OpenGL texture unit value");
         }
-        CoreHelper.gl.ActiveTexture(GlApi.GL_TEXTURE0 + (unit <= 31u ? unit : 31u));
-        CoreHelper.gl.BindTexture(GlApi.GL_TEXTURE_2D, Id);
+        I2dCore.gl.ActiveTexture(GlApi.GL_TEXTURE0 + (unit <= 31u ? unit : 31u));
+        I2dCore.gl.BindTexture(GlApi.GL_TEXTURE_2D, Id);
     }
 
     /// <summary>
@@ -279,10 +278,10 @@ public class Texture : IDisposable
         long size = Width * Height * Channels;
         var buf = Marshal.AllocHGlobal(Width * Height * Channels);
         Bind();
-        CoreHelper.gl.GetTexImage(GlApi.GL_TEXTURE_2D, 0, OutColorMode, GlApi.GL_UNSIGNED_BYTE, buf);
+        I2dCore.gl.GetTexImage(GlApi.GL_TEXTURE_2D, 0, OutColorMode, GlApi.GL_UNSIGNED_BYTE, buf);
         if (unmultiply && Channels == 4)
         {
-            CoreHelper.inTexUnPremuliply(buf, size);
+            I2dCore.InTexUnPremuliply(buf, size);
         }
         return buf;
     }

@@ -1,17 +1,18 @@
 ﻿using System.Text;
 using Inochi2dSharp.Core;
+using Inochi2dSharp.Fmt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Inochi2dSharp.Fmt;
+namespace Inochi2dSharp;
 
-public static class FmtHelper
+public partial class I2dCore
 {
     public const uint IN_TEX_PNG = 0u; /// PNG encoded Inochi2D texture
     public const uint IN_TEX_TGA = 1u; /// TGA encoded Inochi2D texture
     public const uint IN_TEX_BC7 = 2u; /// BC7 encoded Inochi2D texture
 
-    public static bool IsLoadingINP { get; set; }
+    public bool IsLoadingINP { get; set; }
 
     /// <summary>
     /// Loads a puppet from a file
@@ -19,7 +20,7 @@ public static class FmtHelper
     /// <typeparam name="T"></typeparam>
     /// <param name="file"></param>
     /// <returns></returns>
-    public static T InLoadPuppet<T>(string file) where T : Puppet
+    public T InLoadPuppet<T>(string file) where T : Puppet
     {
         try
         {
@@ -47,7 +48,7 @@ public static class FmtHelper
         }
         catch (Exception ex)
         {
-            CoreHelper.inEndTextureLoading(false);
+            InEndTextureLoading(false);
             throw ex;
         }
     }
@@ -57,11 +58,11 @@ public static class FmtHelper
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public static Puppet InLoadPuppetFromMemory(byte[] data)
+    public Puppet InLoadPuppetFromMemory(byte[] data)
     {
         var temp = Encoding.UTF8.GetString(data);
         var obj = JObject.Parse(temp);
-        var puppet = new Puppet();
+        var puppet = new Puppet(I2dTime);
         puppet.Deserialize(obj);
         return puppet;
     }
@@ -71,7 +72,7 @@ public static class FmtHelper
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public static Puppet InLoadJSONPuppet(string data)
+    public Puppet InLoadJSONPuppet(string data)
     {
         IsLoadingINP = false;
         return JsonConvert.DeserializeObject<Puppet>(data)!;
@@ -82,7 +83,7 @@ public static class FmtHelper
     /// </summary>
     /// <param name=""></param>
     /// <returns></returns>
-    public static T InLoadINPPuppet<T>(Stream buffer) where T : Puppet
+    public T InLoadINPPuppet<T>(Stream buffer) where T : Puppet
     {
         IsLoadingINP = true;
 
@@ -109,7 +110,7 @@ public static class FmtHelper
 
         // Load textures in to memory
 
-        CoreHelper.inBeginTextureLoading();
+        InBeginTextureLoading();
 
         // Get amount of slots
         temp = new byte[4];
@@ -126,25 +127,25 @@ public static class FmtHelper
             var textureType = buffer.ReadByte();
             if (textureLength == 0)
             {
-                CoreHelper.inAddTextureBinary(new ShallowTexture([], 0, 0, 4));
+                InAddTextureBinary(new ShallowTexture([], 0, 0, 4));
             }
             else
             {
                 temp = new byte[textureLength];
                 buffer.ReadExactly(temp);
-                CoreHelper.inAddTextureBinary(new ShallowTexture(temp));
+                InAddTextureBinary(new ShallowTexture(temp));
             }
 
             // Readd to puppet so that stuff doesn't break if we re-save the puppet
-            slots.Add(CoreHelper.inGetLatestTexture());
+            slots.Add(InGetLatestTexture());
         }
 
-        var puppet = new Puppet();
+        var puppet = new Puppet(I2dTime);
         var obj = new JObject(puppetData);
         puppet.Deserialize(obj);
         puppet.TextureSlots = slots;
         puppet.UpdateTextureState();
-        CoreHelper.inEndTextureLoading();
+        InEndTextureLoading();
 
         if (buffer.Length >= buffer.Position + 8 && BinFmt.InVerifyExtBytes(buffer))
         {

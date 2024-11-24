@@ -5,24 +5,24 @@ namespace Inochi2dSharp.Core.Automations;
 
 public class Automation(Puppet puppet)
 {
-    private Puppet Parent = puppet;
+    private Puppet _parent = puppet;
 
-    protected List<AutomationBinding> Bindings = [];
+    protected List<AutomationBinding> Bindings { get; init; } = [];
 
     /// <summary>
     /// Human readable name of automation
     /// </summary>
-    public string Name;
+    private string _name;
 
     /// <summary>
     /// Whether the automation is enabled
     /// </summary>
-    public bool Enabled = true;
+    private bool _enabled = true;
 
     /// <summary>
     /// Type ID of the automation
     /// </summary>
-    public string TypeId;
+    public string TypeId { get; set; }
 
     /// <summary>
     /// Adds a binding
@@ -37,7 +37,7 @@ public class Automation(Puppet puppet)
     {
         foreach (var binding in Bindings.ToArray())
         {
-            binding.Reconstruct(Parent);
+            binding.Reconstruct(_parent);
         }
     }
 
@@ -47,7 +47,7 @@ public class Automation(Puppet puppet)
     /// <param name="parent"></param>
     public void Finalize(Puppet parent)
     {
-        Parent = parent;
+        _parent = parent;
         foreach (var binding in Bindings)
         {
             binding.Finalize(parent);
@@ -60,7 +60,7 @@ public class Automation(Puppet puppet)
     /// </summary>
     public void Update()
     {
-        if (!Enabled) return;
+        if (!_enabled) return;
         OnUpdate();
     }
 
@@ -71,7 +71,7 @@ public class Automation(Puppet puppet)
     public void Serialize(JObject serializer)
     {
         serializer.Add("type", TypeId);
-        serializer.Add("name", Name);
+        serializer.Add("name", _name);
         var list = new JArray();
         foreach (var item in Bindings)
         {
@@ -92,7 +92,7 @@ public class Automation(Puppet puppet)
         var temp = data["name"];
         if (temp != null)
         {
-            Name = temp.ToString();
+            _name = temp.ToString();
         }
 
         temp = data["type"];

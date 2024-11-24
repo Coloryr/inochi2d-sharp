@@ -14,24 +14,24 @@ public class AutomationBinding
     /// Used for serialization.
     /// Name of parameter
     /// </summary>
-    public string ParamId;
+    private string _paramId;
 
     /// <summary>
     /// Parameter to bind to
     /// </summary>
-    public Parameter Param;
+    private Parameter _param;
 
     /// <summary>
     /// Axis to bind to
     /// 0 = X
     /// 1 = Y
     /// </summary>
-    public int Axis;
+    private int _axis;
 
     /// <summary>
     /// Min/max range of binding
     /// </summary>
-    public Vector2 Range;
+    public Vector2 Range { get; private set; }
 
     /// <summary>
     /// Gets the value at the specified axis
@@ -39,10 +39,10 @@ public class AutomationBinding
     /// <returns></returns>
     public float GetAxisValue()
     {
-        return Axis switch
+        return _axis switch
         {
-            0 => Param.Value.X,
-            1 => Param.Value.Y,
+            0 => _param.Value.X,
+            1 => _param.Value.Y,
             _ => float.NaN,
         };
     }
@@ -53,13 +53,13 @@ public class AutomationBinding
     /// <param name="value"></param>
     public void SetAxisValue(float value)
     {
-        switch (Axis)
+        switch (_axis)
         {
             case 0:
-                Param.Value.X = value;
+                _param.Value.X = value;
                 break;
             case 1:
-                Param.Value.Y = value;
+                _param.Value.Y = value;
                 break;
             default: throw new IndexOutOfRangeException("axis was out");
         }
@@ -71,7 +71,7 @@ public class AutomationBinding
     /// <param name="value"></param>
     public void AddAxisOffset(float value)
     {
-        Param.PushIOffsetAxis(Axis, value);
+        _param.PushIOffsetAxis(_axis, value);
     }
 
     /// <summary>
@@ -80,8 +80,8 @@ public class AutomationBinding
     /// <param name="serializer"></param>
     public void Serialize(JObject serializer)
     {
-        serializer.Add("param", Param.Name);
-        serializer.Add("axis", Axis);
+        serializer.Add("param", _param.Name);
+        serializer.Add("axis", _axis);
         serializer.Add("range", Range.ToToken());
     }
 
@@ -94,13 +94,13 @@ public class AutomationBinding
         var temp = data["param"];
         if (temp != null)
         {
-            ParamId = temp.ToString();
+            _paramId = temp.ToString();
         }
 
         temp = data["axis"];
         if (temp != null)
         {
-            Axis = (int)temp;
+            _axis = (int)temp;
         }
 
         temp = data["range"];
@@ -116,9 +116,9 @@ public class AutomationBinding
     {
         foreach (var parameter in puppet.Parameters)
         {
-            if (parameter.Name == ParamId)
+            if (parameter.Name == _paramId)
             {
-                Param = parameter;
+                _param = parameter;
                 return;
             }
         }

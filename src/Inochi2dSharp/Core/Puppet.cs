@@ -18,6 +18,8 @@ namespace Inochi2dSharp.Core;
 /// </summary>
 public class Puppet : IDisposable
 {
+    private readonly I2dTime _time;
+
     public const uint NO_THUMBNAIL = uint.MaxValue;
 
     /// <summary>
@@ -100,8 +102,9 @@ public class Puppet : IDisposable
     /// <summary>
     /// Creates a new puppet from nothing ()
     /// </summary>
-    public Puppet()
+    public Puppet(I2dTime time)
     {
+        _time = time;
         _puppetRootNode = new Node(this);
         Meta = new PuppetMeta();
         Physics = new PuppetPhysics();
@@ -116,8 +119,9 @@ public class Puppet : IDisposable
     /// Creates a new puppet from a node tree
     /// </summary>
     /// <param name="root"></param>
-    public Puppet(Node root)
+    public Puppet(Node root, I2dTime time)
     {
+        _time = time;
         Meta = new PuppetMeta();
         Physics = new PuppetPhysics();
         Root = root;
@@ -287,7 +291,7 @@ public class Puppet : IDisposable
         }
 
         // Update so that the timestep gets reset.
-        Inochi2d.InUpdate();
+        _time.InUpdate();
     }
 
     /// <summary>
@@ -668,9 +672,9 @@ public class Puppet : IDisposable
             {
                 string type = key["type"]!.ToString();
 
-                if (AutomationHelper.HasAutomationType(type))
+                if (TypeList.HasAutomationType(type))
                 {
-                    var auto_ = AutomationHelper.InstantiateAutomation(type, this);
+                    var auto_ = TypeList.InstantiateAutomation(type, this, _time);
                     auto_.Deserialize(key);
                     Automation.Add(auto_);
                 }
