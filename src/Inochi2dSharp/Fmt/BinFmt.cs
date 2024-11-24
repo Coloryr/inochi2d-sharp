@@ -14,9 +14,25 @@ public static class BinFmt
     /// </summary>
     /// <param name="buffer"></param>
     /// <returns></returns>
-    public static bool InVerifyMagicBytes(byte[] buffer)
+    public static bool InVerifyMagicBytes(Stream buffer)
     {
-        return InVerifySection(buffer, MAGIC_BYTES);
+        var temp = new byte[8];
+        buffer.ReadExactly(temp);
+        return InVerifySection(temp, MAGIC_BYTES);
+    }
+
+    public static bool InVerifyTexBytes(Stream buffer)
+    {
+        var temp = new byte[8];
+        buffer.ReadExactly(temp);
+        return InVerifySection(temp, TEX_SECTION);
+    }
+
+    public static bool InVerifyExtBytes(Stream buffer)
+    {
+        var temp = new byte[8];
+        buffer.ReadExactly(temp);
+        return InVerifySection(temp, EXT_SECTION);
     }
 
     /// <summary>
@@ -25,7 +41,7 @@ public static class BinFmt
     /// <param name="buffer"></param>
     /// <param name="section"></param>
     /// <returns></returns>
-    public static bool InVerifySection(byte[] buffer, byte[] section)
+    private static bool InVerifySection(byte[] buffer, byte[] section)
     {
         return buffer.Length >= section.Length && buffer[0..section.Length] == section;
     }

@@ -1,5 +1,9 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using Inochi2dSharp.Core.Nodes;
+using Inochi2dSharp.Core.Nodes.Composites;
+using Inochi2dSharp.Core.Nodes.MeshGroups;
+using Inochi2dSharp.Core.Nodes.Parts;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Shaders;
 using SkiaSharp;
@@ -152,12 +156,12 @@ public static class CoreHelper
         inSetViewport(640, 480);
 
         // Initialize dynamic meshes
-        inInitBlending();
-        inInitNodes();
-        inInitDrawable();
-        inInitPart();
-        inInitComposite();
-        inInitMeshGroup();
+        NodeHelper.inInitBlending();
+        NodeHelper.inInitNodes();
+        NodeHelper.inInitDrawable();
+        PartHelper.inInitPart();
+        CompositeHelper.inInitComposite();
+        MeshGroupHelper.inInitMeshGroup();
         inInitDebug();
 
         // Some defaults that should be changed by app writer
@@ -165,7 +169,7 @@ public static class CoreHelper
 
         inClearColor = new(0, 0, 0, 0);
         // Shader for scene
-        basicSceneShader = new PostProcessingShader(new Shader("scene", Integration.inScencVert, Integration.inSceneFrag));
+        basicSceneShader = new PostProcessingShader(new Shader("scene", Integration.ScencVert, Integration.SceneFrag));
         gl.GenVertexArrays(1, out sceneVAO);
         gl.GenBuffers(1, out sceneVBO);
 
@@ -390,8 +394,8 @@ public static class CoreHelper
     {
         postProcessingStack.Add(new PostProcessingShader(
             new Shader("scene+lighting",
-                Integration.inScencVert,
-                Integration.inLighingFrag
+                Integration.ScencVert,
+                Integration.LighingFrag
             )
         ));
     }
@@ -606,8 +610,8 @@ public static class CoreHelper
 
     private static void inInitDebug()
     {
-        dbgShaderLine = new Shader("debug line", Integration.inDebugVert, Integration.inDebugLineFrag);
-        dbgShaderPoint = new Shader("debug point", Integration.inDebugVert, Integration.inDebugPointFrag);
+        dbgShaderLine = new Shader("debug line", Integration.DebugVert, Integration.DebugLineFrag);
+        dbgShaderPoint = new Shader("debug point", Integration.DebugVert, Integration.DebugPointFrag);
         gl.GenVertexArrays(1, out dbgVAO);
         gl.GenBuffers(1, out dbgVBO);
         gl.GenBuffers(1, out dbgIBO);

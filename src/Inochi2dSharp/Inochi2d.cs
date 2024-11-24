@@ -1,4 +1,5 @@
-﻿using Inochi2dSharp.Core.Automations;
+﻿using Inochi2dSharp.Core;
+using Inochi2dSharp.Core.Automations;
 using Inochi2dSharp.Core.Nodes;
 
 namespace Inochi2dSharp;
@@ -15,7 +16,6 @@ public static class Inochi2d
     public static void Init()
     {
         AutomationHelper.Init();
-        NodeHelper.Init();
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ public static class Inochi2d
     /// <param name="timeFunc"></param>
     public static void inInit(Func<float> timeFunc)
     {
-        initRenderer();
+        CoreHelper.initRenderer();
         tfunc_ = timeFunc;
     }
 

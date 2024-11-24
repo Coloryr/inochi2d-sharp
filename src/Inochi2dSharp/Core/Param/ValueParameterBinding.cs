@@ -26,12 +26,12 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// Serializes a binding
     /// </summary>
     /// <param name="serializer"></param>
-    public override void serialize(JObject serializer)
+    public override void Serialize(JObject serializer)
     {
-        serializer.Add("node", target.node.UUID);
-        serializer.Add("param_name", target.paramName);
+        serializer.Add("node", Target.node.UUID);
+        serializer.Add("param_name", Target.paramName);
         serializer.Add("values", values.ToToken());
-        serializer.Add("isSet", isSet_.ToToken());
+        serializer.Add("isSet", isSet.ToToken());
         serializer.Add("interpolate_mode", interpolateMode.ToString());
     }
 
@@ -39,17 +39,17 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// Deserializes a binding
     /// </summary>
     /// <param name="data"></param>
-    public override void deserialize(JObject data)
+    public override void Deserialize(JObject data)
     {
         var temp = data["node"];
         if (temp != null)
         {
-            nodeRef = (uint)temp;
+            NodeRef = (uint)temp;
         }
         temp = data["param_name"];
         if (temp != null)
         {
-            target.paramName = temp.ToString();
+            Target.paramName = temp.ToString();
         }
 
         temp = data["values"];
@@ -61,7 +61,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         temp = data["isSet"];
         if (temp is JArray array1)
         {
-            isSet_ = array1.ToListList<bool>();
+            isSet = array1.ToListList<bool>();
         }
 
         temp = data["interpolate_mode"];
@@ -74,8 +74,8 @@ public class ValueParameterBinding : ParameterBindingImpl
             interpolateMode = _interpolateMode;
         }
 
-        int xCount = parameter.axisPointCount(0);
-        int yCount = parameter.axisPointCount(1);
+        int xCount = Parameter.AxisPointCount(0);
+        int yCount = Parameter.AxisPointCount(1);
 
         if (values.Count != xCount)
         {
@@ -89,11 +89,11 @@ public class ValueParameterBinding : ParameterBindingImpl
             }
         }
 
-        if (isSet_.Count != xCount)
+        if (isSet.Count != xCount)
         {
             throw new Exception("Mismatched X isSet_ count");
         }
-        foreach (var i in isSet_)
+        foreach (var i in isSet)
         {
             if (i.Count != yCount)
             {
@@ -105,31 +105,31 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <summary>
     /// Clear all keypoint data
     /// </summary>
-    public override void clear()
+    public override void Clear()
     {
-        int xCount = parameter.axisPointCount(0);
-        int yCount = parameter.axisPointCount(1);
+        int xCount = Parameter.AxisPointCount(0);
+        int yCount = Parameter.AxisPointCount(1);
 
         values = [];
-        isSet_ = [];
+        isSet = [];
         for (int x = 0; x < xCount; x++)
         {
-            isSet_.Add([]);
+            isSet.Add([]);
             values.Add([]);
             for (int y = 0; y < yCount; y++)
             {
-                isSet_[x].Add(false);
+                isSet[x].Add(false);
                 values[x].Add(0);
                 var value = values[x][y];
-                clearValue(ref value);
+                ClearValue(ref value);
                 values[x][y] = value;
             }
         }
     }
 
-    public void clearValue(ref float val)
+    public void ClearValue(ref float val)
     {
-        val = target.node.GetDefaultValue(target.paramName);
+        val = Target.node.GetDefaultValue(Target.paramName);
     }
 
     /// <summary>
@@ -137,7 +137,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// </summary>
     /// <param name="point"></param>
     /// <returns></returns>
-    public float getValue(Vector2Int point)
+    public float GetValue(Vector2Int point)
     {
         return values[point.X][point.Y];
     }
@@ -147,52 +147,52 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// </summary>
     /// <param name="point"></param>
     /// <param name="value"></param>
-    public void setValue(Vector2Int point, float value)
+    public void SetValue(Vector2Int point, float value)
     {
         values[point.X][point.Y] = value;
-        isSet_[point.X][point.Y] = true;
+        isSet[point.X][point.Y] = true;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
     /// Unsets value at specified keypoint
     /// </summary>
     /// <param name="point"></param>
-    public override void unset(Vector2Int point)
+    public override void Unset(Vector2Int point)
     {
         var value = values[point.X][point.Y];
-        clearValue(ref value);
+        ClearValue(ref value);
         values[point.X][point.Y] = value;
-        isSet_[point.X][point.Y] = false;
+        isSet[point.X][point.Y] = false;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
     /// Resets value at specified keypoint to default
     /// </summary>
     /// <param name="point"></param>
-    public override void reset(Vector2Int point)
+    public override void Reset(Vector2Int point)
     {
         var value = values[point.X][point.Y];
-        clearValue(ref value);
+        ClearValue(ref value);
         values[point.X][point.Y] = value;
-        isSet_[point.X][point.Y] = true;
+        isSet[point.X][point.Y] = true;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
     /// Flip the keypoints on an axis
     /// </summary>
     /// <param name="axis"></param>
-    public override void reverseAxis(int axis)
+    public override void ReverseAxis(int axis)
     {
         if (axis == 0)
         {
             values.Reverse();
-            isSet_.Reverse();
+            isSet.Reverse();
         }
         else
         {
@@ -200,9 +200,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             {
                 values[i].Reverse();
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                isSet_[i].Reverse();
+                isSet[i].Reverse();
             }
         }
     }
@@ -210,10 +210,10 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <summary>
     /// Re-calculate interpolation
     /// </summary>
-    public override void reInterpolate()
+    public override void ReInterpolate()
     {
-        int xCount = parameter.axisPointCount(0);
-        int yCount = parameter.axisPointCount(1);
+        int xCount = Parameter.AxisPointCount(0);
+        int yCount = Parameter.AxisPointCount(1);
 
         // Currently valid points
         var valid = new List<bool[]>();
@@ -223,17 +223,17 @@ public class ValueParameterBinding : ParameterBindingImpl
         // Initialize validity map to user-set points
         for (int x = 0; x < xCount; x++)
         {
-            valid.Add([.. isSet_[x]]);
+            valid.Add([.. isSet[x]]);
             for (int y = 0; y < yCount; y++)
             {
-                if (isSet_[x][y]) validCount++;
+                if (isSet[x][y]) validCount++;
             }
         }
 
         // If there are zero valid points, just clear ourselves
         if (validCount == 0)
         {
-            clear();
+            Clear();
             return;
         }
 
@@ -255,37 +255,37 @@ public class ValueParameterBinding : ParameterBindingImpl
         bool yMajor = false;
 
         // Helpers to handle interpolation across both axes more easily
-        int majorCnt()
+        int MajorCnt()
         {
             if (yMajor) return yCount;
             else return xCount;
         }
-        int minorCnt()
+        int MinorCnt()
         {
             if (yMajor) return xCount;
             else return yCount;
         }
-        bool isValid(int maj, int min)
+        bool IsValid(int maj, int min)
         {
             if (yMajor) return valid[min][maj];
             else return valid[maj][min];
         }
-        bool isNewlySet(int maj, int min)
+        bool IsNewlySet(int maj, int min)
         {
             if (yMajor) return newlySet[min][maj];
             else return newlySet[maj][min];
         }
-        float get(int maj, int min)
+        float Get(int maj, int min)
         {
             if (yMajor) return values[min][maj];
             else return values[maj][min];
         }
-        float getDistance(int maj, int min)
+        float GetDistance(int maj, int min)
         {
             if (yMajor) return interpDistance[min][maj];
             else return interpDistance[maj][min];
         }
-        void reset(int maj, int min, float val, float distance = 0)
+        void Reset(int maj, int min, float val, float distance = 0)
         {
             if (yMajor)
             {
@@ -310,41 +310,40 @@ public class ValueParameterBinding : ParameterBindingImpl
                 newlySet[maj][min] = true;
             }
         }
-        void set(int maj, int min, float val, float distance = 0)
+        void Set(int maj, int min, float val, float distance = 0)
         {
-            reset(maj, min, val, distance);
+            Reset(maj, min, val, distance);
             if (yMajor) commitPoints.Add(new Vector2Int(min, maj));
             else commitPoints.Add(new Vector2Int(maj, min));
         }
-        float axisPoint(int idx)
+        float AxisPoint(int idx)
         {
-            if (yMajor) return parameter.axisPoints[0][idx];
-            else return parameter.axisPoints[1][idx];
+            if (yMajor) return Parameter.AxisPoints[0][idx];
+            else return Parameter.AxisPoints[1][idx];
         }
-        float interp(int maj, int left, int mid, int right)
+        float Interp(int maj, int left, int mid, int right)
         {
-            float leftOff = axisPoint(left);
-            float midOff = axisPoint(mid);
-            float rightOff = axisPoint(right);
+            float leftOff = AxisPoint(left);
+            float midOff = AxisPoint(mid);
+            float rightOff = AxisPoint(right);
             float off = (midOff - leftOff) / (rightOff - leftOff);
 
             //writefln("interp %d %d %d %d -> %f %f %f %f", maj, left, mid, right,
             //leftOff, midOff, rightOff, off);
-            return get(maj, left) * (1 - off) + get(maj, right) * off;
+            return Get(maj, left) * (1 - off) + Get(maj, right) * off;
         }
-
-        void interpolate1D2D(bool secondPass)
+        void Interpolate1D2D(bool secondPass)
         {
             yMajor = secondPass;
             bool detectedIntersections = false;
 
-            for (int i = 0; i < majorCnt(); i++)
+            for (int i = 0; i < MajorCnt(); i++)
             {
                 int l = 0;
-                int cnt = minorCnt();
+                int cnt = MinorCnt();
 
                 // Find first element set
-                for (; l < cnt && !isValid(i, l); l++) { }
+                for (; l < cnt && !IsValid(i, l); l++) { }
 
                 // Empty row, we're done
                 if (l >= cnt) continue;
@@ -352,14 +351,14 @@ public class ValueParameterBinding : ParameterBindingImpl
                 while (true)
                 {
                     // Advance until before a missing element
-                    for (; l < cnt - 1 && isValid(i, l + 1); l++) { }
+                    for (; l < cnt - 1 && IsValid(i, l + 1); l++) { }
 
                     // Reached right side, done
                     if (l >= (cnt - 1)) break;
 
                     // Find next set element
                     int r = l + 1;
-                    for (; r < cnt && !isValid(i, r); r++) { }
+                    for (; r < cnt && !IsValid(i, r); r++) { }
 
                     // If we ran off the edge, we're done
                     if (r >= cnt) break;
@@ -367,10 +366,10 @@ public class ValueParameterBinding : ParameterBindingImpl
                     // Interpolate between the pair of valid elements
                     for (int m = l + 1; m < r; m++)
                     {
-                        float val = interp(i, l, m, r);
+                        float val = Interp(i, l, m, r);
 
                         // If we're running the second stage of intersecting 1D interpolation
-                        if (secondPass && isNewlySet(i, m))
+                        if (secondPass && IsNewlySet(i, m))
                         {
                             // Found an intersection, do not commit the previous points
                             if (!detectedIntersections)
@@ -379,14 +378,14 @@ public class ValueParameterBinding : ParameterBindingImpl
                                 commitPoints.Clear();
                             }
                             // Average out the point at the intersection
-                            set(i, m, (val + get(i, m)) * 0.5f);
+                            Set(i, m, (val + Get(i, m)) * 0.5f);
                             // From now on we're only computing intersection points
                             detectedIntersections = true;
                         }
                         // If we've found no intersections so far, continue with normal
                         // 1D interpolation.
                         if (!detectedIntersections)
-                            set(i, m, val);
+                            Set(i, m, val);
                     }
 
                     // Look for the next pair
@@ -395,11 +394,11 @@ public class ValueParameterBinding : ParameterBindingImpl
             }
         }
 
-        void extrapolateCorners()
+        void ExtrapolateCorners()
         {
             if (yCount <= 1 || xCount <= 1) return;
 
-            void extrapolateCorner(int baseX, int baseY, int offX, int offY)
+            void ExtrapolateCorner(int baseX, int baseY, int offX, int offY)
             {
                 float base1 = values[baseX][baseY];
                 float dX = values[baseX + offX][baseY] + (base1 * -1f);
@@ -413,37 +412,37 @@ public class ValueParameterBinding : ParameterBindingImpl
                 for (int y = 0; y < yCount - 1; y++)
                 {
                     if (valid[x][y] && valid[x + 1][y] && valid[x][y + 1] && !valid[x + 1][y + 1])
-                        extrapolateCorner(x, y, 1, 1);
+                        ExtrapolateCorner(x, y, 1, 1);
                     else if (valid[x][y] && valid[x + 1][y] && !valid[x][y + 1] && valid[x + 1][y + 1])
-                        extrapolateCorner(x + 1, y, -1, 1);
+                        ExtrapolateCorner(x + 1, y, -1, 1);
                     else if (valid[x][y] && !valid[x + 1][y] && valid[x][y + 1] && valid[x + 1][y + 1])
-                        extrapolateCorner(x, y + 1, 1, -1);
+                        ExtrapolateCorner(x, y + 1, 1, -1);
                     else if (!valid[x][y] && valid[x + 1][y] && valid[x][y + 1] && valid[x + 1][y + 1])
-                        extrapolateCorner(x + 1, y + 1, -1, -1);
+                        ExtrapolateCorner(x + 1, y + 1, -1, -1);
                 }
             }
         }
 
-        void extendAndIntersect(bool secondPass)
+        void ExtendAndIntersect(bool secondPass)
         {
             yMajor = secondPass;
             bool detectedIntersections = false;
 
-            void setOrAverage(int maj, int min, float val, float origin)
+            void SetOrAverage(int maj, int min, float val, float origin)
             {
-                float minDist = float.Abs(axisPoint(min) - origin);
+                float minDist = float.Abs(AxisPoint(min) - origin);
                 // Same logic as in interpolate1D2D
-                if (secondPass && isNewlySet(maj, min))
+                if (secondPass && IsNewlySet(maj, min))
                 {
                     // Found an intersection, do not commit the previous points
                     if (!detectedIntersections)
                     {
                         commitPoints.Clear();
                     }
-                    float majDist = getDistance(maj, min);
+                    float majDist = GetDistance(maj, min);
                     float frac = minDist / (minDist + majDist * majDist / minDist);
                     // Interpolate the point at the intersection
-                    set(maj, min, val * (1 - frac) + get(maj, min) * frac);
+                    Set(maj, min, val * (1 - frac) + Get(maj, min) * frac);
                     // From now on we're only computing intersection points
                     detectedIntersections = true;
                 }
@@ -451,38 +450,38 @@ public class ValueParameterBinding : ParameterBindingImpl
                 // 1D extension.
                 if (!detectedIntersections)
                 {
-                    set(maj, min, val, minDist);
+                    Set(maj, min, val, minDist);
                 }
             }
 
-            for (int i = 0; i < majorCnt(); i++)
+            for (int i = 0; i < MajorCnt(); i++)
             {
                 int j;
-                int cnt = minorCnt();
+                int cnt = MinorCnt();
 
                 // Find first element set
-                for (j = 0; j < cnt && !isValid(i, j); j++) { }
+                for (j = 0; j < cnt && !IsValid(i, j); j++) { }
 
                 // Empty row, we're done
                 if (j >= cnt) continue;
 
                 // Replicate leftwards
-                float val = get(i, j);
-                float origin = axisPoint(j);
+                float val = Get(i, j);
+                float origin = AxisPoint(j);
                 for (int k = 0; k < j; k++)
                 {
-                    setOrAverage(i, k, val, origin);
+                    SetOrAverage(i, k, val, origin);
                 }
 
                 // Find last element set
-                for (j = cnt - 1; j < cnt && !isValid(i, j); j--) { }
+                for (j = cnt - 1; j < cnt && !IsValid(i, j); j--) { }
 
                 // Replicate rightwards
-                val = get(i, j);
-                origin = axisPoint(j);
+                val = Get(i, j);
+                origin = AxisPoint(j);
                 for (int k = j + 1; k < cnt; k++)
                 {
-                    setOrAverage(i, k, val, origin);
+                    SetOrAverage(i, k, val, origin);
                 }
             }
         }
@@ -510,17 +509,17 @@ public class ValueParameterBinding : ParameterBindingImpl
             }
 
             // Try 1D interpolation in the X-Major direction
-            interpolate1D2D(false);
+            Interpolate1D2D(false);
             // Try 1D interpolation in the Y-Major direction, with intersection detection
             // If this finds an intersection with the above, it will fall back to
             // computing *only* the intersecting points as the average of the interpolated values.
             // If that happens, the next loop will re-try normal 1D interpolation.
-            interpolate1D2D(true);
+            Interpolate1D2D(true);
             // Did we get work done? If so, commit and loop
             if (commitPoints.Count > 0) continue;
 
             // Now try corner extrapolation
-            extrapolateCorners();
+            ExtrapolateCorners();
             // Did we get work done? If so, commit and loop
             if (commitPoints.Count > 0) continue;
 
@@ -528,8 +527,8 @@ public class ValueParameterBinding : ParameterBindingImpl
             // two expansions intersect then compute the average and commit only intersections.
             // This works like interpolate1D2D, in two passes, one per axis, changing behavior
             // once an intersection is detected.
-            extendAndIntersect(false);
-            extendAndIntersect(true);
+            ExtendAndIntersect(false);
+            ExtendAndIntersect(true);
             // Did we get work done? If so, commit and loop
             if (commitPoints.Count > 0) continue;
 
@@ -544,24 +543,21 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
     }
 
-    public float interpolate(Vector2Int leftKeypoint, Vector2 offset)
+    public float Interpolate(Vector2Int leftKeypoint, Vector2 offset)
     {
-        switch (interpolateMode)
+        return interpolateMode switch
         {
-            case InterpolateMode.Nearest:
-                return interpolateNearest(leftKeypoint, offset);
-            case InterpolateMode.Linear:
-                return interpolateLinear(leftKeypoint, offset);
-            case InterpolateMode.Cubic:
-                return interpolateCubic(leftKeypoint, offset);
-            default: throw new Exception("out of range");
-        }
+            InterpolateMode.Nearest => InterpolateNearest(leftKeypoint, offset),
+            InterpolateMode.Linear => InterpolateLinear(leftKeypoint, offset),
+            InterpolateMode.Cubic => InterpolateCubic(leftKeypoint, offset),
+            _ => throw new Exception("out of range"),
+        };
     }
 
-    public float interpolateNearest(Vector2Int leftKeypoint, Vector2 offset)
+    public float InterpolateNearest(Vector2Int leftKeypoint, Vector2 offset)
     {
         var px = leftKeypoint.X + ((offset.X >= 0.5) ? 1 : 0);
-        if (parameter.isVec2)
+        if (Parameter.IsVec2)
         {
             var py = leftKeypoint.Y + ((offset.Y >= 0.5) ? 1 : 0);
             return values[px][py];
@@ -572,11 +568,11 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
     }
 
-    public float interpolateLinear(Vector2Int leftKeypoint, Vector2 offset)
+    public float InterpolateLinear(Vector2Int leftKeypoint, Vector2 offset)
     {
         float p0, p1;
 
-        if (parameter.isVec2)
+        if (Parameter.IsVec2)
         {
             float p00 = values[leftKeypoint.X][leftKeypoint.Y];
             float p01 = values[leftKeypoint.X][leftKeypoint.Y + 1];
@@ -594,11 +590,11 @@ public class ValueParameterBinding : ParameterBindingImpl
         return float.Lerp(p0, p1, offset.X);
     }
 
-    public float interpolateCubic(Vector2Int leftKeypoint, Vector2 offset)
+    public float InterpolateCubic(Vector2Int leftKeypoint, Vector2 offset)
     {
         float p0, p1, p2, p3;
 
-        float bicubicInterp(Vector2Int left, float xt, float yt)
+        float BicubicInterp(Vector2Int left, float xt, float yt)
         {
             float p01, p02, p03, p04;
             float[] pOut = new float[4];
@@ -622,9 +618,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             return MathHelper.Cubic(pOut[0], pOut[1], pOut[2], pOut[3], yt);
         }
 
-        if (parameter.isVec2)
+        if (Parameter.IsVec2)
         {
-            return bicubicInterp(leftKeypoint, offset.X, offset.Y);
+            return BicubicInterp(leftKeypoint, offset.X, offset.Y);
         }
         else
         {
@@ -639,12 +635,12 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
     }
 
-    public override void apply(Vector2Int leftKeypoint, Vector2 offset)
+    public override void Apply(Vector2Int leftKeypoint, Vector2 offset)
     {
-        applyToTarget(interpolate(leftKeypoint, offset));
+        ApplyToTarget(Interpolate(leftKeypoint, offset));
     }
 
-    public override void insertKeypoints(int axis, int index)
+    public override void InsertKeypoints(int axis, int index)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -653,14 +649,14 @@ public class ValueParameterBinding : ParameterBindingImpl
 
         if (axis == 0)
         {
-            int yCount = parameter.axisPointCount(1);
+            int yCount = Parameter.AxisPointCount(1);
 
             values.Insert(index, []);
-            isSet_.Insert(index, []);
+            isSet.Insert(index, []);
             for (int i = 0; i < yCount; i++)
             {
                 values[index].Add(0);
-                isSet_[index].Add(false);
+                isSet[index].Add(false);
             }
         }
         else if (axis == 1)
@@ -670,17 +666,17 @@ public class ValueParameterBinding : ParameterBindingImpl
                 var item = values[i];
                 item.Insert(index, 0);
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                var item = isSet_[i];
+                var item = isSet[i];
                 item.Insert(index, false);
             }
         }
 
-        reInterpolate();
+        ReInterpolate();
     }
 
-    public override void moveKeypoints(int axis, int oldindex, int newindex)
+    public override void MoveKeypoints(int axis, int oldindex, int newindex)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -696,9 +692,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             }
 
             {
-                var swap = isSet_[oldindex];
-                isSet_.RemoveAt(oldindex);
-                isSet_.Insert(newindex, swap);
+                var swap = isSet[oldindex];
+                isSet.RemoveAt(oldindex);
+                isSet.Insert(newindex, swap);
             }
         }
         else if (axis == 1)
@@ -710,19 +706,19 @@ public class ValueParameterBinding : ParameterBindingImpl
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                var item = isSet_[i];
+                var item = isSet[i];
                 var swap = item[oldindex];
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
             }
         }
 
-        reInterpolate();
+        ReInterpolate();
     }
 
-    public override void deleteKeypoints(int axis, int index)
+    public override void DeleteKeypoints(int axis, int index)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -732,7 +728,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         if (axis == 0)
         {
             values.RemoveAt(index);
-            isSet_.RemoveAt(index);
+            isSet.RemoveAt(index);
         }
         else if (axis == 1)
         {
@@ -740,24 +736,24 @@ public class ValueParameterBinding : ParameterBindingImpl
             {
                 values[i].RemoveAt(index);
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                isSet_[i].RemoveAt(index);
+                isSet[i].RemoveAt(index);
             }
         }
 
-        reInterpolate();
+        ReInterpolate();
     }
 
-    public override void scaleValueAt(Vector2Int index, int axis, float scale)
+    public override void ScaleValueAt(Vector2Int index, int axis, float scale)
     {
         /* Nodes know how to do axis-aware scaling */
-        setValue(index, Node.ScaleValue(target.paramName, getValue(index), axis, scale));
+        SetValue(index, Node.ScaleValue(Target.paramName, GetValue(index), axis, scale));
     }
 
-    public override void extrapolateValueAt(Vector2Int index, int axis)
+    public override void ExtrapolateValueAt(Vector2Int index, int axis)
     {
-        var offset = parameter.getKeypointOffset(index);
+        var offset = Parameter.GetKeypointOffset(index);
 
         switch (axis)
         {
@@ -767,23 +763,23 @@ public class ValueParameterBinding : ParameterBindingImpl
             default: throw new Exception("bad axis");
         }
 
-        parameter.findOffset(offset, out var srcIndex, out var subOffset);
+        Parameter.FindOffset(offset, out var srcIndex, out var subOffset);
 
-        float srcVal = interpolate(srcIndex, subOffset);
+        float srcVal = Interpolate(srcIndex, subOffset);
 
-        setValue(index, srcVal);
-        scaleValueAt(index, axis, -1);
+        SetValue(index, srcVal);
+        ScaleValueAt(index, axis, -1);
     }
 
-    public override void copyKeypointToBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
+    public override void CopyKeypointToBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
     {
-        if (!isSet(src))
+        if (!IsSet(src))
         {
-            other.unset(dest);
+            other.Unset(dest);
         }
         else if (other is ValueParameterBinding o)
         {
-            o.setValue(dest, getValue(src));
+            o.SetValue(dest, GetValue(src));
         }
         else
         {
@@ -791,23 +787,23 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
     }
 
-    public override void swapKeypointWithBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
+    public override void SwapKeypointWithBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
     {
         if (other is ValueParameterBinding o)
         {
-            bool thisSet = isSet(src);
-            bool otherSet = other.isSet(dest);
-            float thisVal = getValue(src);
-            float otherVal = o.getValue(dest);
+            bool thisSet = IsSet(src);
+            bool otherSet = other.IsSet(dest);
+            float thisVal = GetValue(src);
+            float otherVal = o.GetValue(dest);
 
             // Swap directly, to avoid clobbering by update
             o.values[dest.X][dest.Y] = thisVal;
-            o.isSet_[dest.X][dest.Y] = thisSet;
+            o.isSet[dest.X][dest.Y] = thisSet;
             values[src.X][src.Y] = otherVal;
-            isSet_[src.X][src.Y] = otherSet;
+            isSet[src.X][src.Y] = otherSet;
 
-            reInterpolate();
-            o.reInterpolate();
+            ReInterpolate();
+            o.ReInterpolate();
         }
         else
         {
@@ -819,13 +815,13 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// Apply parameter to target node
     /// </summary>
     /// <param name="value"></param>
-    public void applyToTarget(float value)
+    public void ApplyToTarget(float value)
     {
-        target.node.SetValue(target.paramName, value);
+        Target.node.SetValue(Target.paramName, value);
     }
 
-    public override bool isCompatibleWithNode(Node other)
+    public override bool IsCompatibleWithNode(Node other)
     {
-        return other.HasParam(this.target.paramName);
+        return other.HasParam(Target.paramName);
     }
 }

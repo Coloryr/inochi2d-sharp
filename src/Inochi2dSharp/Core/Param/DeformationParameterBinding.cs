@@ -10,7 +10,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <summary>
     /// The value at each 2D keypoint
     /// </summary>
-    public List<List<Deformation>> values;
+    public List<List<Deformation>> values = [];
 
     public DeformationParameterBinding(Parameter parameter) : base(parameter)
     {
@@ -26,12 +26,24 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// Serializes a binding
     /// </summary>
     /// <param name="serializer"></param>
-    public override void serialize(JObject serializer)
+    public override void Serialize(JObject serializer)
     {
-        serializer.Add("node", target.node.UUID);
-        serializer.Add("param_name", target.paramName);
-        serializer.Add("values", values.ToToken());
-        serializer.Add("isSet", isSet_.ToToken());
+        serializer.Add("node", Target.node.UUID);
+        serializer.Add("param_name", Target.paramName);
+        var list = new JArray();
+        foreach (var item in values)
+        {
+            var list1 = new JArray();
+            foreach (var item1 in item)
+            {
+                var obj = new JArray();
+                item1.Serialize(obj);
+                list1.Add(obj);
+            }
+            list.Add(list1);
+        }
+        serializer.Add("values", list);
+        serializer.Add("isSet", isSet.ToToken());
         serializer.Add("interpolate_mode", interpolateMode.ToString());
     }
 
@@ -39,29 +51,39 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// Deserializes a binding
     /// </summary>
     /// <param name="data"></param>
-    public override void deserialize(JObject data)
+    public override void Deserialize(JObject data)
     {
         var temp = data["node"];
         if (temp != null)
         {
-            nodeRef = (uint)temp;
+            NodeRef = (uint)temp;
         }
         temp = data["param_name"];
         if (temp != null)
         {
-            target.paramName = temp.ToString();
+            Target.paramName = temp.ToString();
         }
 
         temp = data["values"];
         if (temp is JArray array)
         {
-            values = array.ToListList<Deformation>();
+            foreach (JArray item in array.Cast<JArray>())
+            {
+                var list = new List<Deformation>();
+                foreach (JArray item1 in item.Cast<JArray>())
+                {
+                    var item2 = new Deformation();
+                    item2.Deserialize(item1);
+                    list.Add(item2);
+                }
+                values.Add(list);
+            }
         }
 
         temp = data["isSet"];
         if (temp is JArray array1)
         {
-            isSet_ = array1.ToListList<bool>();
+            isSet = array1.ToListList<bool>();
         }
 
         temp = data["interpolate_mode"];
@@ -74,8 +96,8 @@ public class DeformationParameterBinding : ParameterBindingImpl
             interpolateMode = _interpolateMode;
         }
 
-        int xCount = parameter.axisPointCount(0);
-        int yCount = parameter.axisPointCount(1);
+        int xCount = Parameter.AxisPointCount(0);
+        int yCount = Parameter.AxisPointCount(1);
 
         if (values.Count != xCount)
         {
@@ -89,11 +111,11 @@ public class DeformationParameterBinding : ParameterBindingImpl
             }
         }
 
-        if (isSet_.Count != xCount)
+        if (isSet.Count != xCount)
         {
             throw new Exception("Mismatched X isSet_ count");
         }
-        foreach (var i in isSet_)
+        foreach (var i in isSet)
         {
             if (i.Count != yCount)
             {
@@ -105,33 +127,33 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <summary>
     /// Clear all keypoint data
     /// </summary>
-    public override void clear()
+    public override void Clear()
     {
-        int xCount = parameter.axisPointCount(0);
-        int yCount = parameter.axisPointCount(1);
+        int xCount = Parameter.AxisPointCount(0);
+        int yCount = Parameter.AxisPointCount(1);
 
         values = [];
-        isSet_ = [];
+        isSet = [];
         for (int x = 0; x < xCount; x++)
         {
-            isSet_.Add([]);
+            isSet.Add([]);
             values.Add([]);
             for (int y = 0; y < yCount; y++)
             {
-                isSet_[x].Add(false);
+                isSet[x].Add(false);
                 var value = new Deformation();
-                clearValue(ref value);
-                values.Add(value);
+                ClearValue(value);
+                values[x].Add(value);
             }
         }
     }
 
-    public void clearValue(ref Deformation val)
+    public void ClearValue(Deformation val)
     {
         // Reset deformation to identity, with the right vertex count
-        if (target.node is Drawable d)
+        if (Target.node is Drawable d)
         {
-            val.Clear(d.vertices.length);
+            val.Clear(d.Vertices.Count);
         }
     }
 
@@ -140,7 +162,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// </summary>
     /// <param name="point"></param>
     /// <returns></returns>
-    public Deformation getValue(Vector2Int point)
+    public Deformation GetValue(Vector2Int point)
     {
         return values[point.X][point.Y];
     }
@@ -150,58 +172,58 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// </summary>
     /// <param name="point"></param>
     /// <param name="value"></param>
-    public void setValue(Vector2Int point, Deformation value)
+    public void SetValue(Vector2Int point, Deformation value)
     {
         values[point.X][point.Y] = value;
-        isSet_[point.X][point.Y] = true;
+        isSet[point.X][point.Y] = true;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
     /// Unsets value at specified keypoint
     /// </summary>
     /// <param name="point"></param>
-    public override void unset(Vector2Int point)
+    public override void Unset(Vector2Int point)
     {
-        clearValue(ref values[point.X][point.Y]);
-        isSet_[point.X][point.Y] = false;
+        ClearValue(values[point.X][point.Y]);
+        isSet[point.X][point.Y] = false;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
     /// Resets value at specified keypoint to default
     /// </summary>
     /// <param name="point"></param>
-    public override void reset(Vector2Int point)
+    public override void Reset(Vector2Int point)
     {
-        clearValue(ref values[point.X][point.Y]);
-        isSet_[point.X][point.Y] = true;
+        ClearValue(values[point.X][point.Y]);
+        isSet[point.X][point.Y] = true;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
     /// Flip the keypoints on an axis
     /// </summary>
     /// <param name="axis"></param>
-    public override void reverseAxis(int axis)
+    public override void ReverseAxis(int axis)
     {
         if (axis == 0)
         {
-            values = values.Reverse().ToArray();
-            isSet_ = isSet_.Reverse().ToArray();
+            values.Reverse();
+            isSet.Reverse();
         }
         else
         {
-            for (int i = 0; i < values.Length; i++)
+            for (int i = 0; i < values.Count; i++)
             {
-                values[i] = values[i].Reverse().ToArray();
+                values[i].Reverse();
             }
-            for (int i = 0; i < isSet_.Length; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                isSet_[i] = isSet_[i].Reverse().ToArray();
+                isSet[i].Reverse();
             }
         }
     }
@@ -209,10 +231,10 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <summary>
     /// Re-calculate interpolation
     /// </summary>
-    public override void reInterpolate()
+    public override void ReInterpolate()
     {
-        int xCount = parameter.axisPointCount(0);
-        int yCount = parameter.axisPointCount(1);
+        int xCount = Parameter.AxisPointCount(0);
+        int yCount = Parameter.AxisPointCount(1);
 
         // Currently valid points
         var valid = new List<bool[]>();
@@ -222,17 +244,17 @@ public class DeformationParameterBinding : ParameterBindingImpl
         // Initialize validity map to user-set points
         for (int x = 0; x < xCount; x++)
         {
-            valid.Add([.. isSet_[x]]);
+            valid.Add([.. isSet[x]]);
             for (int y = 0; y < yCount; y++)
             {
-                if (isSet_[x][y]) validCount++;
+                if (isSet[x][y]) validCount++;
             }
         }
 
         // If there are zero valid points, just clear ourselves
         if (validCount == 0)
         {
-            clear();
+            Clear();
             return;
         }
 
@@ -254,37 +276,37 @@ public class DeformationParameterBinding : ParameterBindingImpl
         bool yMajor = false;
 
         // Helpers to handle interpolation across both axes more easily
-        int majorCnt()
+        int MajorCnt()
         {
             if (yMajor) return yCount;
             else return xCount;
         }
-        int minorCnt()
+        int MinorCnt()
         {
             if (yMajor) return xCount;
             else return yCount;
         }
-        bool isValid(int maj, int min)
+        bool IsValid(int maj, int min)
         {
             if (yMajor) return valid[min][maj];
             else return valid[maj][min];
         }
-        bool isNewlySet(int maj, int min)
+        bool IsNewlySet(int maj, int min)
         {
             if (yMajor) return newlySet[min][maj];
             else return newlySet[maj][min];
         }
-        Deformation get(int maj, int min)
+        Deformation Get(int maj, int min)
         {
             if (yMajor) return values[min][maj];
             else return values[maj][min];
         }
-        float getDistance(int maj, int min)
+        float GetDistance(int maj, int min)
         {
             if (yMajor) return interpDistance[min][maj];
             else return interpDistance[maj][min];
         }
-        void reset(int maj, int min, Deformation val, float distance = 0)
+        void Reset(int maj, int min, Deformation val, float distance = 0)
         {
             if (yMajor)
             {
@@ -309,41 +331,41 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 newlySet[maj][min] = true;
             }
         }
-        void set(int maj, int min, Deformation val, float distance = 0)
+        void Set(int maj, int min, Deformation val, float distance = 0)
         {
-            reset(maj, min, val, distance);
+            Reset(maj, min, val, distance);
             if (yMajor) commitPoints.Add(new Vector2Int(min, maj));
             else commitPoints.Add(new Vector2Int(maj, min));
         }
-        float axisPoint(int idx)
+        float AxisPoint(int idx)
         {
-            if (yMajor) return parameter.axisPoints[0][idx];
-            else return parameter.axisPoints[1][idx];
+            if (yMajor) return Parameter.AxisPoints[0][idx];
+            else return Parameter.AxisPoints[1][idx];
         }
-        Deformation interp(int maj, int left, int mid, int right)
+        Deformation Interp(int maj, int left, int mid, int right)
         {
-            float leftOff = axisPoint(left);
-            float midOff = axisPoint(mid);
-            float rightOff = axisPoint(right);
+            float leftOff = AxisPoint(left);
+            float midOff = AxisPoint(mid);
+            float rightOff = AxisPoint(right);
             float off = (midOff - leftOff) / (rightOff - leftOff);
 
             //writefln("interp %d %d %d %d -> %f %f %f %f", maj, left, mid, right,
             //leftOff, midOff, rightOff, off);
-            return get(maj, left) * (1 - off) + get(maj, right) * off;
+            return Get(maj, left) * (1 - off) + Get(maj, right) * off;
         }
 
-        void interpolate1D2D(bool secondPass)
+        void Interpolate1D2D(bool secondPass)
         {
             yMajor = secondPass;
             bool detectedIntersections = false;
 
-            for (int i = 0; i < majorCnt(); i++)
+            for (int i = 0; i < MajorCnt(); i++)
             {
                 int l = 0;
-                int cnt = minorCnt();
+                int cnt = MinorCnt();
 
                 // Find first element set
-                for (; l < cnt && !isValid(i, l); l++) { }
+                for (; l < cnt && !IsValid(i, l); l++) { }
 
                 // Empty row, we're done
                 if (l >= cnt) continue;
@@ -351,14 +373,14 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 while (true)
                 {
                     // Advance until before a missing element
-                    for (; l < cnt - 1 && isValid(i, l + 1); l++) { }
+                    for (; l < cnt - 1 && IsValid(i, l + 1); l++) { }
 
                     // Reached right side, done
                     if (l >= (cnt - 1)) break;
 
                     // Find next set element
                     int r = l + 1;
-                    for (; r < cnt && !isValid(i, r); r++) { }
+                    for (; r < cnt && !IsValid(i, r); r++) { }
 
                     // If we ran off the edge, we're done
                     if (r >= cnt) break;
@@ -366,10 +388,10 @@ public class DeformationParameterBinding : ParameterBindingImpl
                     // Interpolate between the pair of valid elements
                     for (int m = l + 1; m < r; m++)
                     {
-                        Deformation val = interp(i, l, m, r);
+                        Deformation val = Interp(i, l, m, r);
 
                         // If we're running the second stage of intersecting 1D interpolation
-                        if (secondPass && isNewlySet(i, m))
+                        if (secondPass && IsNewlySet(i, m))
                         {
                             // Found an intersection, do not commit the previous points
                             if (!detectedIntersections)
@@ -378,14 +400,14 @@ public class DeformationParameterBinding : ParameterBindingImpl
                                 commitPoints.Clear();
                             }
                             // Average out the point at the intersection
-                            set(i, m, (val + get(i, m)) * 0.5f);
+                            Set(i, m, (val + Get(i, m)) * 0.5f);
                             // From now on we're only computing intersection points
                             detectedIntersections = true;
                         }
                         // If we've found no intersections so far, continue with normal
                         // 1D interpolation.
                         if (!detectedIntersections)
-                            set(i, m, val);
+                            Set(i, m, val);
                     }
 
                     // Look for the next pair
@@ -394,7 +416,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
             }
         }
 
-        void extrapolateCorners()
+        void ExtrapolateCorners()
         {
             if (yCount <= 1 || xCount <= 1) return;
 
@@ -423,26 +445,26 @@ public class DeformationParameterBinding : ParameterBindingImpl
             }
         }
 
-        void extendAndIntersect(bool secondPass)
+        void ExtendAndIntersect(bool secondPass)
         {
             yMajor = secondPass;
             bool detectedIntersections = false;
 
             void setOrAverage(int maj, int min, Deformation val, float origin)
             {
-                float minDist = float.Abs(axisPoint(min) - origin);
+                float minDist = float.Abs(AxisPoint(min) - origin);
                 // Same logic as in interpolate1D2D
-                if (secondPass && isNewlySet(maj, min))
+                if (secondPass && IsNewlySet(maj, min))
                 {
                     // Found an intersection, do not commit the previous points
                     if (!detectedIntersections)
                     {
                         commitPoints.Clear();
                     }
-                    float majDist = getDistance(maj, min);
+                    float majDist = GetDistance(maj, min);
                     float frac = minDist / (minDist + majDist * majDist / minDist);
                     // Interpolate the point at the intersection
-                    set(maj, min, val * (1 - frac) + get(maj, min) * frac);
+                    Set(maj, min, val * (1 - frac) + Get(maj, min) * frac);
                     // From now on we're only computing intersection points
                     detectedIntersections = true;
                 }
@@ -450,35 +472,35 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 // 1D extension.
                 if (!detectedIntersections)
                 {
-                    set(maj, min, val, minDist);
+                    Set(maj, min, val, minDist);
                 }
             }
 
-            for (int i = 0; i < majorCnt(); i++)
+            for (int i = 0; i < MajorCnt(); i++)
             {
                 int j;
-                int cnt = minorCnt();
+                int cnt = MinorCnt();
 
                 // Find first element set
-                for (j = 0; j < cnt && !isValid(i, j); j++) { }
+                for (j = 0; j < cnt && !IsValid(i, j); j++) { }
 
                 // Empty row, we're done
                 if (j >= cnt) continue;
 
                 // Replicate leftwards
-                Deformation val = get(i, j);
-                float origin = axisPoint(j);
+                Deformation val = Get(i, j);
+                float origin = AxisPoint(j);
                 for (int k = 0; k < j; k++)
                 {
                     setOrAverage(i, k, val, origin);
                 }
 
                 // Find last element set
-                for (j = cnt - 1; j < cnt && !isValid(i, j); j--) { }
+                for (j = cnt - 1; j < cnt && !IsValid(i, j); j--) { }
 
                 // Replicate rightwards
-                val = get(i, j);
-                origin = axisPoint(j);
+                val = Get(i, j);
+                origin = AxisPoint(j);
                 for (int k = j + 1; k < cnt; k++)
                 {
                     setOrAverage(i, k, val, origin);
@@ -509,17 +531,17 @@ public class DeformationParameterBinding : ParameterBindingImpl
             }
 
             // Try 1D interpolation in the X-Major direction
-            interpolate1D2D(false);
+            Interpolate1D2D(false);
             // Try 1D interpolation in the Y-Major direction, with intersection detection
             // If this finds an intersection with the above, it will fall back to
             // computing *only* the intersecting points as the average of the interpolated values.
             // If that happens, the next loop will re-try normal 1D interpolation.
-            interpolate1D2D(true);
+            Interpolate1D2D(true);
             // Did we get work done? If so, commit and loop
             if (commitPoints.Count > 0) continue;
 
             // Now try corner extrapolation
-            extrapolateCorners();
+            ExtrapolateCorners();
             // Did we get work done? If so, commit and loop
             if (commitPoints.Count > 0) continue;
 
@@ -527,8 +549,8 @@ public class DeformationParameterBinding : ParameterBindingImpl
             // two expansions intersect then compute the average and commit only intersections.
             // This works like interpolate1D2D, in two passes, one per axis, changing behavior
             // once an intersection is detected.
-            extendAndIntersect(false);
-            extendAndIntersect(true);
+            ExtendAndIntersect(false);
+            ExtendAndIntersect(true);
             // Did we get work done? If so, commit and loop
             if (commitPoints.Count > 0) continue;
 
@@ -543,24 +565,21 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
     }
 
-    public Deformation interpolate(Vector2Int leftKeypoint, Vector2 offset)
+    public Deformation Interpolate(Vector2Int leftKeypoint, Vector2 offset)
     {
-        switch (interpolateMode)
+        return interpolateMode switch
         {
-            case InterpolateMode.Nearest:
-                return interpolateNearest(leftKeypoint, offset);
-            case InterpolateMode.Linear:
-                return interpolateLinear(leftKeypoint, offset);
-            case InterpolateMode.Cubic:
-                return interpolateCubic(leftKeypoint, offset);
-            default: throw new Exception("out of range");
-        }
+            InterpolateMode.Nearest => InterpolateNearest(leftKeypoint, offset),
+            InterpolateMode.Linear => InterpolateLinear(leftKeypoint, offset),
+            InterpolateMode.Cubic => InterpolateCubic(leftKeypoint, offset),
+            _ => throw new Exception("out of range"),
+        };
     }
 
-    public Deformation interpolateNearest(Vector2Int leftKeypoint, Vector2 offset)
+    public Deformation InterpolateNearest(Vector2Int leftKeypoint, Vector2 offset)
     {
         var px = leftKeypoint.X + ((offset.X >= 0.5) ? 1 : 0);
-        if (parameter.isVec2)
+        if (Parameter.IsVec2)
         {
             var py = leftKeypoint.Y + ((offset.Y >= 0.5) ? 1 : 0);
             return values[px][py];
@@ -571,18 +590,18 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
     }
 
-    public Deformation interpolateLinear(Vector2Int leftKeypoint, Vector2 offset)
+    public Deformation InterpolateLinear(Vector2Int leftKeypoint, Vector2 offset)
     {
         Deformation p0, p1;
 
-        if (parameter.isVec2)
+        if (Parameter.IsVec2)
         {
-            Deformation p00 = values[leftKeypoint.X][leftKeypoint.Y];
-            Deformation p01 = values[leftKeypoint.X][leftKeypoint.Y + 1];
-            Deformation p10 = values[leftKeypoint.X + 1][leftKeypoint.Y];
-            Deformation p11 = values[leftKeypoint.X + 1][leftKeypoint.Y + 1];
-            p0 = float.Lerp(p00, p01, offset.Y);
-            p1 = float.Lerp(p10, p11, offset.Y);
+            var p00 = values[leftKeypoint.X][leftKeypoint.Y];
+            var p01 = values[leftKeypoint.X][leftKeypoint.Y + 1];
+            var p10 = values[leftKeypoint.X + 1][leftKeypoint.Y];
+            var p11 = values[leftKeypoint.X + 1][leftKeypoint.Y + 1];
+            p0 = MathHelper.Lerp(p00, p01, offset.Y);
+            p1 = MathHelper.Lerp(p10, p11, offset.Y);
         }
         else
         {
@@ -590,20 +609,20 @@ public class DeformationParameterBinding : ParameterBindingImpl
             p1 = values[leftKeypoint.X + 1][0];
         }
 
-        return float.Lerp(p0, p1, offset.X);
+        return MathHelper.Lerp(p0, p1, offset.X);
     }
 
-    public Deformation interpolateCubic(Vector2Int leftKeypoint, Vector2 offset)
+    public Deformation InterpolateCubic(Vector2Int leftKeypoint, Vector2 offset)
     {
         Deformation p0, p1, p2, p3;
 
-        Deformation bicubicInterp(Vector2Int left, float xt, float yt)
+        Deformation BicubicInterp(Vector2Int left, float xt, float yt)
         {
             Deformation p01, p02, p03, p04;
             Deformation[] pOut = new Deformation[4];
 
-            var xlen = values.Length - 1;
-            var ylen = values[0].Length - 1;
+            var xlen = values.Count - 1;
+            var ylen = values[0].Count - 1;
             var xkp = leftKeypoint.X;
             var ykp = leftKeypoint.Y;
 
@@ -621,14 +640,14 @@ public class DeformationParameterBinding : ParameterBindingImpl
             return MathHelper.Cubic(pOut[0], pOut[1], pOut[2], pOut[3], yt);
         }
 
-        if (parameter.isVec2)
+        if (Parameter.IsVec2)
         {
-            return bicubicInterp(leftKeypoint, offset.X, offset.Y);
+            return BicubicInterp(leftKeypoint, offset.X, offset.Y);
         }
         else
         {
             var xkp = leftKeypoint.X;
-            var xlen = values.Length - 1;
+            var xlen = values.Count - 1;
 
             p0 = values[int.Max(xkp - 1, 0)][0];
             p1 = values[xkp][0];
@@ -638,12 +657,12 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
     }
 
-    public override void apply(Vector2Int leftKeypoint, Vector2 offset)
+    public override void Apply(Vector2Int leftKeypoint, Vector2 offset)
     {
-        applyToTarget(interpolate(leftKeypoint, offset));
+        ApplyToTarget(Interpolate(leftKeypoint, offset));
     }
 
-    public override void insertKeypoints(int axis, int index)
+    public override void InsertKeypoints(int axis, int index)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -652,12 +671,16 @@ public class DeformationParameterBinding : ParameterBindingImpl
 
         if (axis == 0)
         {
-            int yCount = parameter.axisPointCount(1);
+            int yCount = Parameter.AxisPointCount(1);
 
             values.Insert(index, []);
-            values[index] = new Deformation[yCount];
-            isSet_.Insert(index, []);
-            isSet_[index] = new bool[yCount];
+            isSet.Insert(index, []);
+
+            for (int i = 0; i < yCount; i++)
+            {
+                isSet[index].Add(false);
+                values[index].Add(new());
+            }
         }
         else if (axis == 1)
         {
@@ -666,17 +689,17 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 var item = values[i];
                 item.Insert(index, new Deformation());
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                var item = isSet_[i];
+                var item = isSet[i];
                 item.Insert(index, false);
             }
         }
 
-        reInterpolate();
+        ReInterpolate();
     }
 
-    public override void moveKeypoints(int axis, int oldindex, int newindex)
+    public override void MoveKeypoints(int axis, int oldindex, int newindex)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -692,9 +715,9 @@ public class DeformationParameterBinding : ParameterBindingImpl
             }
 
             {
-                var swap = isSet_[oldindex];
-                isSet_.RemoveAt(oldindex);
-                isSet_.Insert(newindex, swap);
+                var swap = isSet[oldindex];
+                isSet.RemoveAt(oldindex);
+                isSet.Insert(newindex, swap);
             }
         }
         else if (axis == 1)
@@ -706,19 +729,19 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                var item = isSet_[i];
+                var item = isSet[i];
                 var swap = item[oldindex];
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
             }
         }
 
-        reInterpolate();
+        ReInterpolate();
     }
 
-    public override void deleteKeypoints(int axis, int index)
+    public override void DeleteKeypoints(int axis, int index)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -728,7 +751,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
         if (axis == 0)
         {
             values.RemoveAt(index);
-            isSet_.RemoveAt(index);
+            isSet.RemoveAt(index);
         }
         else if (axis == 1)
         {
@@ -736,34 +759,32 @@ public class DeformationParameterBinding : ParameterBindingImpl
             {
                 values[i].RemoveAt(index);
             }
-            for (int i = 0; i < isSet_.Count; i++)
+            for (int i = 0; i < isSet.Count; i++)
             {
-                isSet_[i].RemoveAt(index);
+                isSet[i].RemoveAt(index);
             }
         }
 
-        reInterpolate();
+        ReInterpolate();
     }
 
-    public override void scaleValueAt(Vector2Int index, int axis, float scale)
+    public override void ScaleValueAt(Vector2Int index, int axis, float scale)
     {
-        Vector2 vecScale;
-
-        switch (axis)
+        var vecScale = axis switch
         {
-            case -1: vecScale = new(scale, scale); break;
-            case 0: vecScale = new(scale, 1); break;
-            case 1: vecScale = new(1, scale); break;
-            default: throw new Exception("Bad axis");
-        }
+            -1 => new Vector2(scale, scale),
+            0 => new Vector2(scale, 1),
+            1 => new Vector2(1, scale),
+            _ => throw new Exception("Bad axis"),
+        };
 
         /* Default to just scalar scale */
-        setValue(index, getValue(index) * vecScale);
+        SetValue(index, GetValue(index) * vecScale);
     }
 
-    public override void extrapolateValueAt(Vector2Int index, int axis)
+    public override void ExtrapolateValueAt(Vector2Int index, int axis)
     {
-        var offset = parameter.getKeypointOffset(index);
+        var offset = Parameter.GetKeypointOffset(index);
 
         switch (axis)
         {
@@ -773,25 +794,23 @@ public class DeformationParameterBinding : ParameterBindingImpl
             default: throw new Exception("bad axis");
         }
 
-        Vector2Int srcIndex;
-        Vector2 subOffset;
-        parameter.findOffset(offset, out srcIndex, out subOffset);
+        Parameter.FindOffset(offset, out var srcIndex, out var subOffset);
 
-        Deformation srcVal = interpolate(srcIndex, subOffset);
+        var srcVal = Interpolate(srcIndex, subOffset);
 
-        setValue(index, srcVal);
-        scaleValueAt(index, axis, -1);
+        SetValue(index, srcVal);
+        ScaleValueAt(index, axis, -1);
     }
 
-    public override void copyKeypointToBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
+    public override void CopyKeypointToBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
     {
-        if (!isSet(src))
+        if (!IsSet(src))
         {
-            other.unset(dest);
+            other.Unset(dest);
         }
         else if (other is DeformationParameterBinding o)
         {
-            o.setValue(dest, getValue(src));
+            o.SetValue(dest, GetValue(src));
         }
         else
         {
@@ -799,23 +818,23 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
     }
 
-    public override void swapKeypointWithBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
+    public override void SwapKeypointWithBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
     {
         if (other is DeformationParameterBinding o)
         {
-            bool thisSet = isSet(src);
-            bool otherSet = other.isSet(dest);
-            Deformation thisVal = getValue(src);
-            Deformation otherVal = o.getValue(dest);
+            bool thisSet = IsSet(src);
+            bool otherSet = other.IsSet(dest);
+            Deformation thisVal = GetValue(src);
+            Deformation otherVal = o.GetValue(dest);
 
             // Swap directly, to avoid clobbering by update
-            o.values[dest.x][dest.y] = thisVal;
-            o.isSet_[dest.x][dest.y] = thisSet;
-            values[src.x][src.y] = otherVal;
-            isSet_[src.x][src.y] = otherSet;
+            o.values[dest.X][dest.Y] = thisVal;
+            o.isSet[dest.X][dest.Y] = thisSet;
+            values[src.X][src.Y] = otherVal;
+            isSet[src.X][src.Y] = otherSet;
 
-            reInterpolate();
-            o.reInterpolate();
+            ReInterpolate();
+            o.ReInterpolate();
         }
         else
         {
@@ -827,26 +846,26 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// Apply parameter to target node
     /// </summary>
     /// <param name="value"></param>
-    public override void applyToTarget(Deformation value)
+    public void ApplyToTarget(Deformation value)
     {
-        if (this.target.paramName != "deform")
+        if (Target.paramName != "deform")
         {
             throw new Exception("paramName is not deform");
         }
 
-        if (target.node is Drawable d)
+        if (Target.node is Drawable d)
         {
-            d.DeformStack.push(value);
+            d.DeformStack.Push(value);
         }
     }
 
-    public override bool isCompatibleWithNode(Node other)
+    public override bool IsCompatibleWithNode(Node other)
     {
-        if (target.node is Drawable d)
+        if (Target.node is Drawable d)
         {
             if (other is Drawable o)
             {
-                return d.Vertices.length == o.vertices.length;
+                return d.Vertices.Count == o.Vertices.Count;
             }
             else
             {
@@ -859,10 +878,10 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
     }
 
-    public void update(Vector2Int point, Vector2[] offsets)
+    public void Update(Vector2Int point, Vector2[] offsets)
     {
-        this.isSet_[point.X][point.Y] = true;
-        this.values[point.X][point.Y].update(offsets.ToArray());
-        this.reInterpolate();
+        isSet[point.X][point.Y] = true;
+        values[point.X][point.Y].Update(offsets.ToArray());
+        ReInterpolate();
     }
 }

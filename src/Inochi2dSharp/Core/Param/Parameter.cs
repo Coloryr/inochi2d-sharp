@@ -7,75 +7,75 @@ namespace Inochi2dSharp.Core.Param;
 
 public class Parameter : IDisposable
 {
-    private Combinator iadd;
-    private Combinator imul;
+    private Combinator _iadd;
+    private Combinator _imul;
 
     /// <summary>
     /// Unique ID of parameter
     /// </summary>
-    public uint uuid;
+    public uint UUID;
 
     /// <summary>
     /// Name of the parameter
     /// </summary>
-    public string name;
+    public string Name;
 
     /// <summary>
     /// Optimized indexable name generated at runtime
     /// DO NOT SERIALIZE THIS.
     /// </summary>
-    public string indexableName;
+    public string IndexableName;
 
     /// <summary>
     /// Whether this parameter updates the model
     /// </summary>
-    public bool active = true;
+    public bool Active = true;
 
     /// <summary>
     /// The current parameter value
     /// </summary>
-    public Vector2 value = new(0);
+    public Vector2 Value = new(0);
 
     /// <summary>
     /// The previous internal value offset
     /// </summary>
-    public Vector2 lastInternal = new(0);
+    public Vector2 LastInternal = new(0);
 
     /// <summary>
     /// Parameter merge mode
     /// <see cref="ParamMergeMode"/>
     /// </summary>
-    public string mergeMode;
+    public string MergeMode;
 
     /// <summary>
     /// The default value
     /// </summary>
-    public Vector2 defaults = new(0);
+    public Vector2 Defaults = new(0);
 
     /// <summary>
     /// Whether the parameter is 2D
     /// </summary>
-    public bool isVec2;
+    public bool IsVec2;
 
     /// <summary>
     /// The parameter's minimum bounds
     /// </summary>
-    public Vector2 min = new(0, 0);
+    public Vector2 Min = new(0, 0);
 
     /// <summary>
     /// The parameter's maximum bounds
     /// </summary>
-    public Vector2 max = new(1, 1);
+    public Vector2 Max = new(1, 1);
 
     /// <summary>
     /// Position of the keypoints along each axis
     /// </summary>
-    public List<List<float>> axisPoints = [[0, 1], [0, 1]];
+    public List<List<float>> AxisPoints = [[0, 1], [0, 1]];
 
     /// <summary>
     /// Binding to targets
     /// </summary>
-    public List<ParameterBinding> bindings = [];
+    public List<ParameterBinding> Bindings = [];
 
     public Parameter()
     {
@@ -84,22 +84,22 @@ public class Parameter : IDisposable
 
     public Parameter(string name, bool isVec2)
     {
-        this.uuid = NodeHelper.InCreateUUID();
-        this.name = name;
-        this.isVec2 = isVec2;
+        UUID = NodeHelper.InCreateUUID();
+        Name = name;
+        IsVec2 = isVec2;
         if (!isVec2)
-            axisPoints[1] = [0];
+            AxisPoints[1] = [0];
 
-        this.makeIndexable();
+        MakeIndexable();
     }
 
     /// <summary>
     /// Gets the value normalized to the internal range (0.0->1.0)
     /// </summary>
     /// <returns></returns>
-    public Vector2 normalizedValue()
+    public Vector2 NormalizedValue()
     {
-        return this.mapValue(value);
+        return MapValue(Value);
     }
 
     /// <summary>
@@ -107,11 +107,11 @@ public class Parameter : IDisposable
     /// to the user defined range.
     /// </summary>
     /// <param name="value"></param>
-    public void normalizedValue(Vector2 value)
+    public void NormalizedValue(Vector2 value)
     {
-        this.value = new Vector2(
-            value.X * (max.X - min.X) + min.X,
-            value.Y * (max.Y - min.Y) + min.Y
+        Value = new Vector2(
+            value.X * (Max.X - Min.X) + Min.X,
+            value.Y * (Max.Y - Min.Y) + Min.Y
         );
     }
 
@@ -121,29 +121,29 @@ public class Parameter : IDisposable
     /// <returns></returns>
     public Parameter Copy()
     {
-        var newParam = new Parameter(name + " (Copy)", isVec2)
+        var newParam = new Parameter(Name + " (Copy)", IsVec2)
         {
-            min = min,
-            max = max,
-            axisPoints = [.. axisPoints]
+            Min = Min,
+            Max = Max,
+            AxisPoints = [.. AxisPoints]
         };
 
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
-            var newBinding = newParam.createBinding(
+            var newBinding = newParam.CreateBinding(
                 binding.getNode(),
                 binding.getName(),
                 false
             );
             newBinding.interpolateMode = binding.interpolateMode;
-            for (int x = 0; x < axisPointCount(0); x++)
+            for (int x = 0; x < AxisPointCount(0); x++)
             {
-                for (int y = 0; y < axisPointCount(1); y++)
+                for (int y = 0; y < AxisPointCount(1); y++)
                 {
-                    binding.copyKeypointToBinding(new Vector2Int(x, y), newBinding, new Vector2Int(x, y));
+                    binding.CopyKeypointToBinding(new Vector2Int(x, y), newBinding, new Vector2Int(x, y));
                 }
             }
-            newParam.addBinding(newBinding);
+            newParam.AddBinding(newBinding);
         }
 
         return newParam;
@@ -158,49 +158,49 @@ public class Parameter : IDisposable
         var temp = data["uuid"];
         if (temp != null)
         {
-            uuid = (uint)temp;
+            UUID = (uint)temp;
         }
 
         temp = data["name"];
         if (temp != null)
         {
-            name = temp.ToString();
+            Name = temp.ToString();
         }
 
         temp = data["is_vec2"];
         if (temp != null)
         {
-            isVec2 = (bool)temp;
+            IsVec2 = (bool)temp;
         }
 
         temp = data["min"];
         if (temp != null)
         {
-            min = temp.ToVector2();
+            Min = temp.ToVector2();
         }
 
         temp = data["max"];
         if (temp != null)
         {
-            max = temp.ToVector2();
+            Max = temp.ToVector2();
         }
 
         temp = data["axis_points"];
         if (temp is JArray array)
         {
-            axisPoints = array.ToListList<float>();
+            AxisPoints = array.ToListList<float>();
         }
 
         temp = data["defaults"];
         if (temp != null)
         {
-            defaults = temp.ToVector2();
+            Defaults = temp.ToVector2();
         }
 
         temp = data["merge_mode"];
         if (temp != null)
         {
-            mergeMode = temp.ToString();
+            MergeMode = temp.ToString();
         }
 
         temp = data["bindings"];
@@ -217,22 +217,22 @@ public class Parameter : IDisposable
                 if (paramName == "deform")
                 {
                     var binding = new DeformationParameterBinding(this);
-                    binding.deserialize(child);
-                    bindings.Add(binding);
+                    binding.Deserialize(child);
+                    Bindings.Add(binding);
                 }
                 else
                 {
                     var binding = new ValueParameterBinding(this);
-                    binding.deserialize(child);
-                    bindings.Add(binding);
+                    binding.Deserialize(child);
+                    Bindings.Add(binding);
                 }
             }
         }
     }
 
-    public void reconstruct(Puppet puppet)
+    public void Reconstruct(Puppet puppet)
     {
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
             binding.reconstruct(puppet);
         }
@@ -242,31 +242,31 @@ public class Parameter : IDisposable
     /// Finalize loading of parameter
     /// </summary>
     /// <param name="puppet"></param>
-    public void finalize(Puppet puppet)
+    public void Finalize(Puppet puppet)
     {
-        makeIndexable();
-        value = defaults;
+        MakeIndexable();
+        Value = Defaults;
 
         var validBindingList = new List<ParameterBinding>();
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
-            if (puppet.find<Node>(binding.getNodeUUID()) != null)
+            if (puppet.Find<Node>(binding.getNodeUUID()) != null)
             {
                 binding.finalize(puppet);
                 validBindingList.Add(binding);
             }
         }
 
-        bindings = validBindingList;
+        Bindings = validBindingList;
     }
 
-    public void findOffset(Vector2 offset, out Vector2Int index, out Vector2 outOffset)
+    public void FindOffset(Vector2 offset, out Vector2Int index, out Vector2 outOffset)
     {
         index = new();
         outOffset = new();
         void interpAxis(int axis, float val, out int index, out float offset)
         {
-            var pos = axisPoints[axis];
+            var pos = AxisPoints[axis];
 
             for (int i = 0; i < pos.Count - 1; i++)
             {
@@ -283,64 +283,64 @@ public class Parameter : IDisposable
         }
 
         interpAxis(0, offset.X, out index.X, out outOffset.X);
-        if (isVec2) interpAxis(1, offset.Y, out index.Y, out outOffset.Y);
+        if (IsVec2) interpAxis(1, offset.Y, out index.Y, out outOffset.Y);
     }
 
-    public void update()
+    public void Update()
     {
-        if (!active)
+        if (!Active)
             return;
 
-        lastInternal = (value + iadd.Csum()) * imul.Avg();
+        LastInternal = (Value + _iadd.Csum()) * _imul.Avg();
 
-        findOffset(this.mapValue(lastInternal), out var index, out var offset_);
-        foreach (var binding in bindings)
+        FindOffset(MapValue(LastInternal), out var index, out var offset_);
+        foreach (var binding in Bindings)
         {
-            binding.apply(index, offset_);
+            binding.Apply(index, offset_);
         }
 
         // Reset combinatorics
-        iadd.clear();
-        imul.clear();
+        _iadd.clear();
+        _imul.clear();
     }
 
-    public void pushIOffset(Vector2 offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
+    public void PushIOffset(Vector2 offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
     {
-        if (mode == ParamMergeMode.Passthrough) mode = mergeMode;
+        if (mode == ParamMergeMode.Passthrough) mode = MergeMode;
         switch (mode)
         {
             case ParamMergeMode.Forced:
-                this.value = offset;
+                this.Value = offset;
                 break;
             case ParamMergeMode.Additive:
-                iadd.Add(offset, 1);
+                _iadd.Add(offset, 1);
                 break;
             case ParamMergeMode.Multiplicative:
-                imul.Add(offset, 1);
+                _imul.Add(offset, 1);
                 break;
             case ParamMergeMode.Weighted:
-                imul.Add(offset, weight);
+                _imul.Add(offset, weight);
                 break;
             default: break;
         }
     }
 
-    public void pushIOffsetAxis(int axis, float offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
+    public void PushIOffsetAxis(int axis, float offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
     {
-        if (mode == ParamMergeMode.Passthrough) mode = mergeMode;
+        if (mode == ParamMergeMode.Passthrough) mode = MergeMode;
         switch (mode)
         {
             case ParamMergeMode.Forced:
-                value[axis] = offset;
+                Value[axis] = offset;
                 break;
             case ParamMergeMode.Additive:
-                iadd.Add(axis, offset, 1);
+                _iadd.Add(axis, offset, 1);
                 break;
             case ParamMergeMode.Multiplicative:
-                imul.Add(axis, offset, 1);
+                _imul.Add(axis, offset, 1);
                 break;
             case ParamMergeMode.Weighted:
-                imul.Add(axis, offset, weight);
+                _imul.Add(axis, offset, weight);
                 break;
             default: break;
         }
@@ -351,9 +351,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="axis"></param>
     /// <returns></returns>
-    public int axisPointCount(int axis = 0)
+    public int AxisPointCount(int axis = 0)
     {
-        return axisPoints[axis].Count;
+        return AxisPoints[axis].Count;
     }
 
     /// <summary>
@@ -362,9 +362,9 @@ public class Parameter : IDisposable
     /// <param name="axis"></param>
     /// <param name="oldidx"></param>
     /// <param name="newoff"></param>
-    public void moveAxisPoint(int axis, int oldidx, float newoff)
+    public void MoveAxisPoint(int axis, int oldidx, float newoff)
     {
-        if (oldidx <= 0 && oldidx >= this.axisPointCount(axis) - 1)
+        if (oldidx <= 0 && oldidx >= this.AxisPointCount(axis) - 1)
         {
             throw new Exception("invalid point index");
         }
@@ -372,7 +372,7 @@ public class Parameter : IDisposable
         {
             throw new Exception("offset out of bounds");
         }
-        if (isVec2)
+        if (IsVec2)
         {
             if (axis > 1)
             {
@@ -389,9 +389,9 @@ public class Parameter : IDisposable
 
         // Find the index at which to insert
         int index;
-        for (index = 1; index < axisPoints[axis].Count; index++)
+        for (index = 1; index < AxisPoints[axis].Count; index++)
         {
-            if (axisPoints[axis][index + 1] > newoff)
+            if (AxisPoints[axis][index + 1] > newoff)
                 break;
         }
 
@@ -400,21 +400,21 @@ public class Parameter : IDisposable
             // BUG: Apparently deleting the oldindex and replacing it with newindex causes a crash.
 
             // Insert it into the new position in the list
-            float swap = axisPoints[axis][oldidx];
-            var tempList = new List<float>(axisPoints[axis]);
+            float swap = AxisPoints[axis][oldidx];
+            var tempList = new List<float>(AxisPoints[axis]);
             tempList.RemoveAt(oldidx);
             tempList.Insert(index, swap);
 
-            axisPoints[axis] = [.. tempList];
+            AxisPoints[axis] = [.. tempList];
 #if DEBUG
-            Console.WriteLine("after move ", axisPointCount(0));
+            Console.WriteLine("after move ", AxisPointCount(0));
 #endif
         }
 
         // Tell all bindings to reinterpolate
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
-            binding.moveKeypoints(axis, oldidx, index);
+            binding.MoveKeypoints(axis, oldidx, index);
         }
     }
 
@@ -423,13 +423,13 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="axis"></param>
     /// <param name="off"></param>
-    public void insertAxisPoint(int axis, float off)
+    public void InsertAxisPoint(int axis, float off)
     {
         if (off <= 0 || off >= 1)
         {
             throw new Exception("offset out of bounds");
         }
-        if (isVec2)
+        if (IsVec2)
         {
             if (axis > 1)
             {
@@ -446,19 +446,19 @@ public class Parameter : IDisposable
 
         // Find the index at which to insert
         int index;
-        for (index = 1; index < axisPoints[axis].Count; index++)
+        for (index = 1; index < AxisPoints[axis].Count; index++)
         {
-            if (axisPoints[axis][index] > off)
+            if (AxisPoints[axis][index] > off)
                 break;
         }
 
         // Insert it into the position list
-        axisPoints[axis].Insert(index, off);
+        AxisPoints[axis].Insert(index, off);
 
         // Tell all bindings to insert space into their arrays
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
-            binding.insertKeypoints(axis, index);
+            binding.InsertKeypoints(axis, index);
         }
     }
 
@@ -467,9 +467,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="axis"></param>
     /// <param name="index"></param>
-    public void deleteAxisPoint(int axis, int index)
+    public void DeleteAxisPoint(int axis, int index)
     {
-        if (isVec2)
+        if (IsVec2)
         {
             if (axis > 1)
             {
@@ -488,18 +488,18 @@ public class Parameter : IDisposable
         {
             throw new Exception("cannot delete axis point at 0");
         }
-        if (index >= (axisPoints[axis].Count - 1))
+        if (index >= (AxisPoints[axis].Count - 1))
         {
             throw new Exception("cannot delete axis point at 1");
         }
 
         // Remove the keypoint
-        axisPoints[axis].RemoveAt(index);
+        AxisPoints[axis].RemoveAt(index);
 
         // Tell all bindings to remove it from their arrays
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
-            binding.deleteKeypoints(axis, index);
+            binding.DeleteKeypoints(axis, index);
         }
     }
 
@@ -507,16 +507,16 @@ public class Parameter : IDisposable
     /// Flip the mapping across an axis
     /// </summary>
     /// <param name="axis"></param>
-    public void reverseAxis(int axis)
+    public void ReverseAxis(int axis)
     {
-        axisPoints[axis].Reverse();
-        for (var i = 0; i < axisPoints[axis].Count; i++)
+        AxisPoints[axis].Reverse();
+        for (var i = 0; i < AxisPoints[axis].Count; i++)
         {
-            axisPoints[axis][i] = 1 - axisPoints[axis][i];
+            AxisPoints[axis][i] = 1 - AxisPoints[axis][i];
         }
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
-            binding.reverseAxis(axis);
+            binding.ReverseAxis(axis);
         }
     }
 
@@ -525,9 +525,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public Vector2 getKeypointOffset(Vector2Int index)
+    public Vector2 GetKeypointOffset(Vector2Int index)
     {
-        return new(axisPoints[0][index.X], axisPoints[1][index.Y]);
+        return new(AxisPoints[0][index.X], AxisPoints[1][index.Y]);
     }
 
     /// <summary>
@@ -535,9 +535,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public Vector2 getKeypointValue(Vector2Int index)
+    public Vector2 GetKeypointValue(Vector2Int index)
     {
-        return unmapValue(getKeypointOffset(index));
+        return UnmapValue(GetKeypointOffset(index));
     }
 
     /// <summary>
@@ -545,10 +545,10 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    public Vector2 mapValue(Vector2 value)
+    public Vector2 MapValue(Vector2 value)
     {
-        var range = max - min;
-        var tmp = (value - min);
+        var range = Max - Min;
+        var tmp = (value - Min);
         var off = new Vector2(tmp.X / range.X, tmp.Y / range.Y);
 
         var clamped = new Vector2(
@@ -563,10 +563,10 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="offset"></param>
     /// <returns></returns>
-    public Vector2 unmapValue(Vector2 offset)
+    public Vector2 UnmapValue(Vector2 offset)
     {
-        Vector2 range = max - min;
-        return new Vector2(range.X * offset.X, range.Y * offset.Y) + min;
+        Vector2 range = Max - Min;
+        return new Vector2(range.X * offset.X, range.Y * offset.Y) + Min;
     }
 
     /// <summary>
@@ -575,12 +575,12 @@ public class Parameter : IDisposable
     /// <param name="axis"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public float mapAxis(int axis, float value)
+    public float MapAxis(int axis, float value)
     {
-        Vector2 input = min;
+        Vector2 input = Min;
         if (axis == 0) input.X = value;
         else input.Y = value;
-        Vector2 output = mapValue(input);
+        Vector2 output = MapValue(input);
         if (axis == 0) return output.X;
         else return output.Y;
     }
@@ -591,12 +591,12 @@ public class Parameter : IDisposable
     /// <param name="axis"></param>
     /// <param name="offset"></param>
     /// <returns></returns>
-    public float unmapAxis(uint axis, float offset)
+    public float UnmapAxis(uint axis, float offset)
     {
-        Vector2 input = min;
+        Vector2 input = Min;
         if (axis == 0) input.X = offset;
         else input.Y = offset;
-        Vector2 output = unmapValue(input);
+        Vector2 output = UnmapValue(input);
         if (axis == 0) return output.X;
         else return output.Y;
     }
@@ -607,14 +607,14 @@ public class Parameter : IDisposable
     /// <param name="axis"></param>
     /// <param name="offset"></param>
     /// <returns></returns>
-    public int getClosestAxisPointIndex(int axis, float offset)
+    public int GetClosestAxisPointIndex(int axis, float offset)
     {
         int closestPoint = 0;
         float closestDist = float.NegativeInfinity;
 
-        for (int i = 0; i < axisPoints[axis].Count; i++)
+        for (int i = 0; i < AxisPoints[axis].Count; i++)
         {
-            var pointVal = axisPoints[axis][i];
+            var pointVal = AxisPoints[axis][i];
             float dist = float.Abs(pointVal - offset);
             if (dist < closestDist)
             {
@@ -630,19 +630,19 @@ public class Parameter : IDisposable
     /// Find the keypoint closest to the current value
     /// </summary>
     /// <returns></returns>
-    public Vector2Int findClosestKeypoint()
+    public Vector2Int FindClosestKeypoint()
     {
-        return findClosestKeypoint(value);
+        return FindClosestKeypoint(Value);
     }
 
     /**
         Find the keypoint closest to a value
     */
-    public Vector2Int findClosestKeypoint(Vector2 value)
+    public Vector2Int FindClosestKeypoint(Vector2 value)
     {
-        Vector2 mapped = mapValue(value);
-        int x = getClosestAxisPointIndex(0, mapped.X);
-        int y = getClosestAxisPointIndex(1, mapped.Y);
+        Vector2 mapped = MapValue(value);
+        int x = GetClosestAxisPointIndex(0, mapped.X);
+        int y = GetClosestAxisPointIndex(1, mapped.Y);
 
         return new Vector2Int(x, y);
     }
@@ -651,9 +651,9 @@ public class Parameter : IDisposable
     /// Find the keypoint closest to the current value
     /// </summary>
     /// <returns></returns>
-    public Vector2 getClosestKeypointValue()
+    public Vector2 GetClosestKeypointValue()
     {
-        return getKeypointValue(findClosestKeypoint());
+        return GetKeypointValue(FindClosestKeypoint());
     }
 
     /// <summary>
@@ -661,9 +661,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    public Vector2 getClosestKeypointValue(Vector2 value)
+    public Vector2 GetClosestKeypointValue(Vector2 value)
     {
-        return getKeypointValue(findClosestKeypoint(value));
+        return GetKeypointValue(FindClosestKeypoint(value));
     }
 
     /// <summary>
@@ -672,9 +672,9 @@ public class Parameter : IDisposable
     /// <param name="n"></param>
     /// <param name="bindingName"></param>
     /// <returns></returns>
-    public ParameterBinding? getBinding(Node n, string bindingName)
+    public ParameterBinding? GetBinding(Node n, string bindingName)
     {
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
             if (binding.getNode() != n) continue;
             if (binding.getName() == bindingName) return binding;
@@ -688,9 +688,9 @@ public class Parameter : IDisposable
     /// <param name="n"></param>
     /// <param name="bindingName"></param>
     /// <returns></returns>
-    public bool hasBinding(Node n, string bindingName)
+    public bool HasBinding(Node n, string bindingName)
     {
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
             if (binding.getNode() != n) continue;
             if (binding.getName() == bindingName) return true;
@@ -703,9 +703,9 @@ public class Parameter : IDisposable
     /// </summary>
     /// <param name="n"></param>
     /// <returns></returns>
-    public bool hasAnyBinding(Node n)
+    public bool HasAnyBinding(Node n)
     {
-        foreach (var binding in bindings)
+        foreach (var binding in Bindings)
         {
             if (binding.getNode() == n) return true;
         }
@@ -719,7 +719,7 @@ public class Parameter : IDisposable
     /// <param name="bindingName"></param>
     /// <param name="setZero"></param>
     /// <returns></returns>
-    public ParameterBinding createBinding(Node n, string bindingName, bool setZero = true)
+    public ParameterBinding CreateBinding(Node n, string bindingName, bool setZero = true)
     {
         ParameterBinding b;
         if (bindingName == "deform")
@@ -733,9 +733,9 @@ public class Parameter : IDisposable
 
         if (setZero)
         {
-            var zeroIndex = findClosestKeypoint(new Vector2(0, 0));
-            var zero = getKeypointValue(zeroIndex);
-            if (float.Abs(zero.X) < 0.001 && float.Abs(zero.Y) < 0.001) b.reset(zeroIndex);
+            var zeroIndex = FindClosestKeypoint(new Vector2(0, 0));
+            var zero = GetKeypointValue(zeroIndex);
+            if (float.Abs(zero.X) < 0.001 && float.Abs(zero.Y) < 0.001) b.Reset(zeroIndex);
         }
 
         return b;
@@ -748,13 +748,13 @@ public class Parameter : IDisposable
     /// <param name="bindingName"></param>
     /// <param name="setZero"></param>
     /// <returns></returns>
-    public ParameterBinding? getOrAddBinding(Node n, string bindingName, bool setZero = true)
+    public ParameterBinding? GetOrAddBinding(Node n, string bindingName, bool setZero = true)
     {
-        var binding = getBinding(n, bindingName);
+        var binding = GetBinding(n, bindingName);
         if (binding is null)
         {
-            binding = createBinding(n, bindingName, setZero);
-            addBinding(binding);
+            binding = CreateBinding(n, bindingName, setZero);
+            AddBinding(binding);
         }
         return binding;
     }
@@ -763,27 +763,27 @@ public class Parameter : IDisposable
     /// Add a new binding (must not exist)
     /// </summary>
     /// <param name="binding"></param>
-    public void addBinding(ParameterBinding binding)
+    public void AddBinding(ParameterBinding binding)
     {
-        if (hasBinding(binding.getNode(), binding.getName()))
+        if (HasBinding(binding.getNode(), binding.getName()))
         {
             throw new Exception("binding is exist");
         }
-        bindings.Add(binding);
+        Bindings.Add(binding);
     }
 
     /// <summary>
     /// Remove an existing binding by ref
     /// </summary>
     /// <param name="binding"></param>
-    public void removeBinding(ParameterBinding binding)
+    public void RemoveBinding(ParameterBinding binding)
     {
-        bindings.Remove(binding);
+        Bindings.Remove(binding);
     }
 
-    public void makeIndexable()
+    public void MakeIndexable()
     {
-        indexableName = name.ToLower();
+        IndexableName = Name.ToLower();
     }
 
     /// <summary>
@@ -792,19 +792,19 @@ public class Parameter : IDisposable
     /// <param name="serializer"></param>
     public void Serialize(JObject serializer)
     {
-        serializer.Add("uuid", uuid);
-        serializer.Add("name", name);
-        serializer.Add("is_vec2", isVec2);
-        serializer.Add("min", min.ToToken());
-        serializer.Add("max", max.ToToken());
-        serializer.Add("defaults", defaults.ToToken());
-        serializer.Add("axis_points", axisPoints.ToToken());
-        serializer.Add("merge_mode", mergeMode);
+        serializer.Add("uuid", UUID);
+        serializer.Add("name", Name);
+        serializer.Add("is_vec2", IsVec2);
+        serializer.Add("min", Min.ToToken());
+        serializer.Add("max", Max.ToToken());
+        serializer.Add("defaults", Defaults.ToToken());
+        serializer.Add("axis_points", AxisPoints.ToToken());
+        serializer.Add("merge_mode", MergeMode);
         var list = new JArray();
-        foreach (var item in bindings)
+        foreach (var item in Bindings)
         {
             var obj = new JObject();
-            item.serialize(obj);
+            item.Serialize(obj);
             list.Add(item);
         }
         serializer.Add("bindings", list);
@@ -812,6 +812,6 @@ public class Parameter : IDisposable
 
     public void Dispose()
     {
-        NodeHelper.InUnloadUUID(uuid);
+        NodeHelper.InUnloadUUID(UUID);
     }
 }

@@ -11,7 +11,7 @@ namespace Inochi2dSharp.Core.Nodes.MeshGroups;
 /// children of this node
 /// </summary>
 [TypeId("MeshGroup")]
-public class MeshGroup : Drawable
+public class MeshGroup(Node? parent = null) : Drawable(parent)
 {
     protected ushort[] bitMask;
     protected Vector4 bounds;
@@ -36,11 +36,6 @@ public class MeshGroup : Drawable
     }
 
     public MeshGroup() : this(null)
-    {
-
-    }
-
-    public MeshGroup(Node? parent = null) : base(parent)
     {
 
     }
@@ -155,7 +150,7 @@ public class MeshGroup : Drawable
             return;
         }
 
-        Vector4 GetBounds(ICollection<Vector2> vertices)
+        static Vector4 GetBounds(ICollection<Vector2> vertices)
         {
             var bounds = new Vector4(float.MaxValue, float.MaxValue, float.MinValue, float.MinValue);
             foreach (var v in vertices)
@@ -218,7 +213,6 @@ public class MeshGroup : Drawable
         bitMask = new ushort[width * height];
         for (int i = 0; i < triangles.Count; i++)
         {
-            var t = triangles[i];
             Vector2[] tvertices =
             [
                 Data.Vertices[Data.Indices[3*i]],
@@ -340,7 +334,7 @@ public class MeshGroup : Drawable
         }
     }
 
-    public void ApplyDeformToChildren(Parameter[] par)
+    public void ApplyDeformToChildren(List<Parameter> par)
     {
         if (Dynamic || Data.Indices.Count == 0)
             return;
@@ -358,16 +352,15 @@ public class MeshGroup : Drawable
             {
                 var drawable = node as Drawable;
                 var group = node as MeshGroup;
-                var composite = node as Composite;
                 bool isDrawable = drawable != null;
-                bool isComposite = composite != null && composite.PropagateMeshGroup;
+                bool isComposite = node is Composite composite && composite.PropagateMeshGroup;
                 bool mustPropagate = (isDrawable && group is null) || isComposite;
                 if (isDrawable)
                 {
                     var vertices = drawable!.Vertices;
                     var matrix = drawable.Transform().Matrix;
 
-                    var nodeBinding = param.getOrAddBinding(node, "deform") as DeformationParameterBinding;
+                    var nodeBinding = param.GetOrAddBinding(node, "deform") as DeformationParameterBinding;
                     var nodeDeform = nodeBinding!.values[x][y].VertexOffsets.ToArray();
                     var filterResult = FilterChildren(vertices, nodeDeform, ref matrix);
                     if (filterResult.Item1 != null)
@@ -386,8 +379,8 @@ public class MeshGroup : Drawable
                     List<Vector2> vertices = [new Vector2(temp.X, temp.Y)];
                     var matrix = node.Parent != null ? node.Parent.Transform().Matrix : Matrix4x4.Identity;
 
-                    var nodeBindingX = param.getOrAddBinding(node, "transform.t.x") as ValueParameterBinding;
-                    var nodeBindingY = param.getOrAddBinding(node, "transform.t.y") as ValueParameterBinding;
+                    var nodeBindingX = param.GetOrAddBinding(node, "transform.t.x") as ValueParameterBinding;
+                    var nodeBindingY = param.GetOrAddBinding(node, "transform.t.y") as ValueParameterBinding;
                     var temp1 = node.OffsetTransform.Translation;
                     Vector2[] nodeDeform = [new Vector2(temp1.X, temp1.Y)];
                     var filterResult = FilterChildren(vertices, nodeDeform, ref matrix);
@@ -410,7 +403,7 @@ public class MeshGroup : Drawable
             }
 
 
-            if (param.getBinding(this, "deform") is { } binding)
+            if (param.GetBinding(this, "deform") is { } binding)
             {
                 if (binding is not DeformationParameterBinding deformBinding)
                 {
@@ -418,18 +411,18 @@ public class MeshGroup : Drawable
                 }
                 Node target = binding.getTarget().node;
 
-                for (int x = 0; x < param.axisPoints[0].Count; x++)
+                for (int x = 0; x < param.AxisPoints[0].Count; x++)
                 {
-                    for (int y = 0; y < param.axisPoints[1].Count; y++)
+                    for (int y = 0; y < param.AxisPoints[1].Count; y++)
                     {
                         Vector2[] deformation;
-                        if (deformBinding.isSet_[x][y])
+                        if (deformBinding.isSet[x][y])
                             deformation = [.. deformBinding.values[x][y].VertexOffsets];
                         else
                         {
-                            bool rightMost = x == param.axisPoints[0].Count - 1;
-                            bool bottomMost = y == param.axisPoints[1].Count - 1;
-                            deformation = [.. deformBinding.interpolate(new Vector2Int(rightMost ? x - 1 : x, bottomMost ? y - 1 : y), new Vector2(rightMost ? 1 : 0, bottomMost ? 1 : 0)).VertexOffsets];
+                            bool rightMost = x == param.AxisPoints[0].Count - 1;
+                            bool bottomMost = y == param.AxisPoints[1].Count - 1;
+                            deformation = [.. deformBinding.Interpolate(new Vector2Int(rightMost ? x - 1 : x, bottomMost ? y - 1 : y), new Vector2(rightMost ? 1 : 0, bottomMost ? 1 : 0)).VertexOffsets];
                         }
                         transformedVertices = new Vector2[Vertices.Count];
                         for (int i = 0; i < Vertices.Count; i++)
@@ -443,9 +436,10 @@ public class MeshGroup : Drawable
                             var p1 = transformedVertices[Data.Indices[index * 3]];
                             var p2 = transformedVertices[Data.Indices[index * 3 + 1]];
                             var p3 = transformedVertices[Data.Indices[index * 3 + 2]];
-                            triangles[index].transformMatrix = new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
-                                                                            p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
-                                                                            0, 0, 1) * triangles[index].offsetMatrices;
+                            triangles[index].transformMatrix = 
+                                new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
+                                              p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
+                                              0, 0, 1) * triangles[index].offsetMatrices;
                         }
 
                         foreach (var child in Children)
@@ -455,7 +449,7 @@ public class MeshGroup : Drawable
 
                     }
                 }
-                param.removeBinding(binding);
+                param.RemoveBinding(binding);
             }
 
         }

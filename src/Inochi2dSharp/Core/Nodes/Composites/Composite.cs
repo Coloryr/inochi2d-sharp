@@ -228,7 +228,7 @@ public class Composite : Node
         var validMasks = new List<MaskBinding>();
         for (int i = 0; i < Masks.Count; i++)
         {
-            if (Puppet.find<Drawable>(Masks[i].MaskSrcUUID) is { } nMask)
+            if (Puppet.Find<Drawable>(Masks[i].MaskSrcUUID) is { } nMask)
             {
                 Masks[i].maskSrc = nMask;
                 validMasks.Add(Masks[i]);

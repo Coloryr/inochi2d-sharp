@@ -80,7 +80,7 @@ public class SimplePhysics : Driver
     /// <summary>
     /// Gets the final gravity
     /// </summary>
-    public float Gravity => _gravity * _offsetGravity * Puppet.physics.gravity * GetScale();
+    public float Gravity => _gravity * _offsetGravity * Puppet.Physics.gravity * GetScale();
 
     /// <summary>
     /// Gets the final length
@@ -114,7 +114,7 @@ public class SimplePhysics : Driver
         {
             _param = value;
             if (value is null) _paramRef = NodeHelper.InInvalidUUID;
-            else _paramRef = value.uuid;
+            else _paramRef = value.UUID;
         }
     }
 
@@ -287,8 +287,8 @@ public class SimplePhysics : Driver
             default: throw new Exception("mapMode out of range");
         }
 
-        Param.pushIOffset(new Vector2(paramVal.X * oscale.X, paramVal.Y * oscale.Y), ParamMergeMode.Forced);
-        Param.update();
+        Param.PushIOffset(new Vector2(paramVal.X * oscale.X, paramVal.Y * oscale.Y), ParamMergeMode.Forced);
+        Param.Update();
     }
 
     public override void Reset()
@@ -305,7 +305,7 @@ public class SimplePhysics : Driver
 
     public override void Dispose()
     {
-        _param = Puppet.findParameter(_paramRef);
+        _param = Puppet.FindParameter(_paramRef);
         base.Dispose();
         Reset();
     }
@@ -317,7 +317,7 @@ public class SimplePhysics : Driver
 
     public float GetScale()
     {
-        return Puppet.physics.pixelsPerMeter;
+        return Puppet.Physics.pixelsPerMeter;
     }
 
     public override bool HasParam(string key)

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Inochi2dSharp.Core.Nodes;
 
 namespace Inochi2dSharp.Math;
 
@@ -97,11 +98,26 @@ public static class MathHelper
         // Assuming T supports multiplication and addition with float
         float dp0 = p0, dp1 = p1, dp2 = p2, dp3 = p3;
 
-        double a = -0.5 * dp0 + 1.5 * dp1 - 1.5 * dp2 + 0.5 * dp3;
-        double b = dp0 - 2.5 * dp1 + 2 * dp2 - 0.5 * dp3;
-        double c = -0.5 * dp0 + 0.5 * dp2;
-        double d = dp1;
+        float a = -0.5f * dp0 + 1.5f * dp1 - 1.5f * dp2 + 0.5f * dp3;
+        float b = dp0 - 2.5f * dp1 + 2f * dp2 - 0.5f * dp3;
+        float c = -0.5f * dp0 + 0.5f * dp2;
+        float d = dp1;
 
         return (float)(a * (t * t * t) + b * (t * t) + c * t + d);
+    }
+
+    public static Deformation Lerp(Deformation value1, Deformation value2, float amount) => (value1 * (1.0f - amount)) + (value2 * amount);
+
+    public static Deformation Cubic(Deformation p0, Deformation p1, Deformation p2, Deformation p3, float t)
+    {
+        // Assuming T supports multiplication and addition with float
+        Deformation dp0 = p0, dp1 = p1, dp2 = p2, dp3 = p3;
+
+        Deformation a = dp0 * -0.5f + dp1 * 1.5f - dp2 * 1.5f + dp3 * 0.5f;
+        Deformation b = dp0 - dp1 * 2.5f + dp2 * 2f - dp3 * 0.5f;
+        Deformation c = dp0 * -0.5f + dp2 * 0.5f;
+        Deformation d = dp1;
+
+        return (a * (t * t * t) + b * (t * t) + c * t + d);
     }
 }

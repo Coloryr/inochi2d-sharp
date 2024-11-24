@@ -40,7 +40,7 @@ public abstract class Driver : Node
     {
         foreach (var p in GetAffectedParameters())
         {
-            if (p.uuid == param.uuid) return true;
+            if (p.UUID == param.UUID) return true;
         }
         return false;
     }

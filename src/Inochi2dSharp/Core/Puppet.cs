@@ -16,100 +16,100 @@ namespace Inochi2dSharp.Core;
 /// <summary>
 /// A puppet
 /// </summary>
-public class Puppet
+public class Puppet : IDisposable
 {
     public const uint NO_THUMBNAIL = uint.MaxValue;
 
     /// <summary>
     /// An internal puppet root node
     /// </summary>
-    private Node puppetRootNode;
+    private Node _puppetRootNode;
 
     /// <summary>
     /// A list of parts that are not masked by other parts for Z sorting
     /// </summary>
-    public List<Node> rootParts { get; init; } = [];
+    public List<Node> RootParts { get; init; } = [];
 
     /// <summary>
     /// A list of drivers that need to run to update the puppet
     /// </summary>
-    public List<Driver> drivers { get; init; } = [];
+    public List<Driver> Drivers { get; init; } = [];
 
     /// <summary>
     /// A list of parameters that are driven by drivers
     /// </summary>
-    public Dictionary<Parameter, Driver> drivenParameters { get; init; } = [];
+    public Dictionary<Parameter, Driver> DrivenParameters { get; init; } = [];
 
     /// <summary>
     /// A dictionary of named animations
     /// </summary>
-    public Dictionary<string, Animation> animations { get; init; } = [];
+    public Dictionary<string, Animation> Animations { get; init; } = [];
 
     /// <summary>
     /// Meta information about this puppet
     /// </summary>
-    public PuppetMeta meta;
+    public PuppetMeta Meta;
 
     /// <summary>
     /// Global physics settings for this puppet
     /// </summary>
-    public PuppetPhysics physics;
+    public PuppetPhysics Physics;
 
     /// <summary>
     /// The root node of the puppet
     /// </summary>
-    public Node root;
+    public Node Root;
 
     /// <summary>
     /// Parameters
     /// </summary>
-    public List<Parameter> parameters = [];
+    public List<Parameter> Parameters = [];
 
     /// <summary>
     /// Automations
     /// </summary>
-    public List<Automation> automation = [];
+    public List<Automation> Automation = [];
 
     /// <summary>
     /// INP Texture slots for this puppet
     /// </summary>
-    public List<Texture> textureSlots = [];
+    public List<Texture> TextureSlots = [];
 
     /// <summary>
     /// Extended vendor data
     /// </summary>
-    public Dictionary<string, byte[]> extData;
+    public Dictionary<string, byte[]> ExtData = [];
 
     /// <summary>
     /// Whether parameters should be rendered
     /// </summary>
-    public bool renderParameters = true;
+    public bool RenderParameters = true;
 
     /// <summary>
     /// Whether drivers should run
     /// </summary>
-    public bool enableDrivers = true;
+    public bool EnableDrivers = true;
 
     /// <summary>
     /// Puppet render transform
     /// 
     /// This transform does not affect physics
     /// </summary>
-    public Transform transform;
+    public Transform Transform;
 
     /// <summary>
     /// Creates a new puppet from nothing ()
     /// </summary>
     public Puppet()
     {
-        puppetRootNode = new Node(this);
-        meta = new PuppetMeta();
-        physics = new PuppetPhysics();
-        root = new Node(puppetRootNode)
+        _puppetRootNode = new Node(this);
+        Meta = new PuppetMeta();
+        Physics = new PuppetPhysics();
+        Root = new Node(_puppetRootNode)
         {
             name = "Root"
         };
-        transform = new Transform();
+        Transform = new Transform();
     }
 
     /// <summary>
@@ -118,17 +118,17 @@ public class Puppet
     /// <param name="root"></param>
     public Puppet(Node root)
     {
-        this.meta = new PuppetMeta();
-        this.physics = new PuppetPhysics();
-        this.root = root;
-        this.puppetRootNode = new Node(this);
-        this.root.name = "Root";
-        this.scanParts(this.root, true);
-        transform = new Transform();
-        this.selfSort();
+        Meta = new PuppetMeta();
+        Physics = new PuppetPhysics();
+        Root = root;
+        _puppetRootNode = new Node(this);
+        Root.name = "Root";
+        ScanParts(Root, true);
+        Transform = new Transform();
+        SelfSort();
     }
 
-    public void scanPartsRecurse(Node node, bool driversOnly = false)
+    public void ScanPartsRecurse(Node node, bool driversOnly = false)
     {
         // Don't need to scan null nodes
         if (node is null) return;
@@ -136,10 +136,10 @@ public class Puppet
         // Collect Drivers
         if (node is Driver part)
         {
-            drivers.Add(part);
+            Drivers.Add(part);
             foreach (Parameter param in part.GetAffectedParameters())
             {
-                drivenParameters[param] = part;
+                DrivenParameters[param] = part;
             }
         }
         else if (!driversOnly)
@@ -150,7 +150,7 @@ public class Puppet
             {
                 // Composite nodes handle and keep their own root node list, as such we should just draw them directly
                 composite.ScanParts();
-                rootParts.Add(composite);
+                RootParts.Add(composite);
 
                 // For this subtree, only look for Drivers
                 driversOnly = true;
@@ -158,7 +158,7 @@ public class Puppet
             else if (node is Part part1)
             {
                 // Collect Part nodes
-                rootParts.Add(part1);
+                RootParts.Add(part1);
             }
             // Non-part nodes just need to be recursed through,
             // they don't draw anything.
@@ -167,24 +167,24 @@ public class Puppet
         // Recurse through children nodes
         foreach (var child in node.Children)
         {
-            scanPartsRecurse(child, driversOnly);
+            ScanPartsRecurse(child, driversOnly);
         }
     }
 
-    public void scanParts(Node node, bool reparent = false)
+    public void ScanParts(Node node, bool reparent = false)
     {
         // We want rootParts to be cleared so that we
         // don't draw the same part multiple times
         // and if the node tree changed we want to reflect those changes
         // not the old node tree.
-        rootParts.Clear();
+        RootParts.Clear();
 
         // Same for drivers
-        drivers.Clear();
+        Drivers.Clear();
 
-        drivenParameters.Clear();
+        DrivenParameters.Clear();
 
-        this.scanPartsRecurse(node);
+        ScanPartsRecurse(node);
 
         // To make sure the GC can collect any nodes that aren't referenced
         // anymore, we clear its children first, then assign its new child
@@ -192,18 +192,18 @@ public class Puppet
         // quite different.
         if (reparent)
         {
-            if (puppetRootNode != null)
-                puppetRootNode.ClearChildren();
-            node.Parent = puppetRootNode;
+            if (_puppetRootNode != null)
+                _puppetRootNode.ClearChildren();
+            node.Parent = _puppetRootNode;
         }
     }
 
-    public void selfSort()
+    public void SelfSort()
     {
-        rootParts.Sort((a, b) => a.ZSort.CompareTo(b.ZSort));
+        RootParts.Sort((a, b) => a.ZSort.CompareTo(b.ZSort));
     }
 
-    public Node? findNode(Node n, string name)
+    public Node? FindNode(Node n, string name)
     {
         // Name matches!
         if (n.name == name) return n;
@@ -211,23 +211,22 @@ public class Puppet
         // Recurse through children
         foreach (var child in n.Children)
         {
-            if (findNode(child, name) is { } c) return c;
+            if (FindNode(child, name) is { } c) return c;
         }
 
         // Not found
         return null;
     }
 
-    public Node? findNode(Node n, uint uuid)
+    public Node? FindNode(Node n, uint uuid)
     {
-
         // Name matches!
         if (n.UUID == uuid) return n;
 
         // Recurse through children
         foreach (var child in n.Children)
         {
-            if (findNode(child, uuid) is { } c) return c;
+            if (FindNode(child, uuid) is { } c) return c;
         }
 
         // Not found
@@ -237,52 +236,52 @@ public class Puppet
     /// <summary>
     /// Updates the nodes
     /// </summary>
-    public void update()
+    public void Update()
     {
-        transform.Update();
+        Transform.Update();
 
         // Update Automators
-        foreach (var auto_ in automation)
+        foreach (var auto_ in Automation)
         {
             auto_.Update();
         }
 
-        root.BeginUpdate();
+        Root.BeginUpdate();
 
-        if (renderParameters)
+        if (RenderParameters)
         {
 
             // Update parameters
-            foreach (var parameter in parameters)
+            foreach (var parameter in Parameters)
             {
 
-                if (!enableDrivers || !drivenParameters.ContainsKey(parameter))
-                    parameter.update();
+                if (!EnableDrivers || !DrivenParameters.ContainsKey(parameter))
+                    parameter.Update();
             }
         }
 
         // Ensure the transform tree is updated
-        root.TransformChanged();
+        Root.TransformChanged();
 
-        if (renderParameters && enableDrivers)
+        if (RenderParameters && EnableDrivers)
         {
             // Update parameter/node driver nodes (e.g. physics)
-            foreach (var driver in drivers)
+            foreach (var driver in Drivers)
             {
                 driver.UpdateDriver();
             }
         }
 
         // Update nodes
-        root.Update();
+        Root.Update();
     }
 
     /// <summary>
     /// Reset drivers/physics nodes
     /// </summary>
-    public void resetDrivers()
+    public void ResetDrivers()
     {
-        foreach (var driver in drivers)
+        foreach (var driver in Drivers)
         {
             driver.Reset();
         }
@@ -296,12 +295,12 @@ public class Puppet
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public int findParameterIndex(string name)
+    public int FindParameterIndex(string name)
     {
-        for (int i = 0; i < parameters.Count; i++)
+        for (int i = 0; i < Parameters.Count; i++)
         {
-            var parameter = parameters[i];
-            if (parameter.name == name)
+            var parameter = Parameters[i];
+            if (parameter.Name == name)
             {
                 return i;
             }
@@ -314,11 +313,11 @@ public class Puppet
     /// </summary>
     /// <param name="uuid"></param>
     /// <returns></returns>
-    public Parameter? findParameter(uint uuid)
+    public Parameter? FindParameter(uint uuid)
     {
-        foreach (var parameter in parameters)
+        foreach (var parameter in Parameters)
         {
-            if (parameter.uuid == uuid)
+            if (parameter.UUID == uuid)
             {
                 return parameter;
             }
@@ -331,11 +330,11 @@ public class Puppet
     /// </summary>
     /// <param name="n"></param>
     /// <returns></returns>
-    public bool getIsNodeBound(Node n)
+    public bool GetIsNodeBound(Node n)
     {
-        foreach (var parameter in parameters)
+        foreach (var parameter in Parameters)
         {
-            if (parameter.hasAnyBinding(n)) return true;
+            if (parameter.HasAnyBinding(n)) return true;
         }
         return false;
     }
@@ -343,11 +342,11 @@ public class Puppet
     /// <summary>
     /// Draws the puppet
     /// </summary>
-    public void draw()
+    public void Draw()
     {
-        this.selfSort();
+        SelfSort();
 
-        foreach (var rootPart in rootParts)
+        foreach (var rootPart in RootParts)
         {
             if (!rootPart.RenderEnabled) continue;
             rootPart.DrawOne();
@@ -358,12 +357,12 @@ public class Puppet
     /// Removes a parameter from this puppet
     /// </summary>
     /// <param name="param"></param>
-    public void removeParameter(Parameter param)
+    public void RemoveParameter(Parameter param)
     {
-        var idx = parameters.IndexOf(param);
+        var idx = Parameters.IndexOf(param);
         if (idx >= 0)
         {
-            parameters.RemoveAt(idx);
+            Parameters.RemoveAt(idx);
         }
     }
 
@@ -372,20 +371,20 @@ public class Puppet
     /// 
     /// Run this every time you change the layout of the puppet's node tree
     /// </summary>
-    public void rescanNodes()
+    public void RescanNodes()
     {
-        this.scanParts(root, false);
+        ScanParts(Root, false);
     }
 
     /// <summary>
     /// Updates the texture state for all texture slots.
     /// </summary>
-    public void updateTextureState()
+    public void UpdateTextureState()
     {
         // Update filtering mode for texture slots
-        foreach (var texutre in textureSlots)
+        foreach (var texutre in TextureSlots)
         {
-            texutre.SetFiltering(meta.PreservePixels ? Filtering.Point : Filtering.Linear);
+            texutre.SetFiltering(Meta.PreservePixels ? Filtering.Point : Filtering.Linear);
         }
     }
 
@@ -395,9 +394,9 @@ public class Puppet
     /// <typeparam name="T"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public T? find<T>(string name) where T : Node
+    public T? Find<T>(string name) where T : Node
     {
-        return (T?)findNode(root, name);
+        return (T?)FindNode(Root, name);
     }
 
     /// <summary>
@@ -406,18 +405,18 @@ public class Puppet
     /// <typeparam name="T"></typeparam>
     /// <param name="uuid"></param>
     /// <returns></returns>
-    public T? find<T>(uint uuid) where T : Node
+    public T? Find<T>(uint uuid) where T : Node
     {
-        return (T?)findNode(root, uuid);
+        return (T?)FindNode(Root, uuid);
     }
 
     /// <summary>
     /// Returns all the parts in the puppet
     /// </summary>
     /// <returns></returns>
-    public Part[] getAllParts()
+    public Part[] FetAllParts()
     {
-        return findNodesType<Part>(root);
+        return FindNodesType<Part>(Root);
     }
 
     /// <summary>
@@ -426,7 +425,7 @@ public class Puppet
     /// <typeparam name="T"></typeparam>
     /// <param name="n"></param>
     /// <returns></returns>
-    public T[] findNodesType<T>(Node node) where T : Node
+    public T[] FindNodesType<T>(Node node) where T : Node
     {
         var nodes = new List<T>();
 
@@ -438,7 +437,7 @@ public class Puppet
         // Recurse through children
         foreach (var child in node.Children)
         {
-            nodes.AddRange(findNodesType<T>(child));
+            nodes.AddRange(FindNodesType<T>(child));
         }
 
         return [.. nodes];
@@ -449,25 +448,25 @@ public class Puppet
     /// </summary>
     /// <param name="texture"></param>
     /// <returns></returns>
-    public uint addTextureToSlot(Texture texture)
+    public uint AddTextureToSlot(Texture texture)
     {
         // Add texture if we can't find it.
-        if (!textureSlots.Contains(texture)) textureSlots.Add(texture);
-        return (uint)textureSlots.Count - 1;
+        if (!TextureSlots.Contains(texture)) TextureSlots.Add(texture);
+        return (uint)TextureSlots.Count - 1;
     }
 
     /// <summary>
     /// Populate texture slots with all visible textures in the model
     /// </summary>
-    public void populateTextureSlots()
+    public void PopulateTextureSlots()
     {
-        if (textureSlots.Count > 0) textureSlots.Clear();
+        if (TextureSlots.Count > 0) TextureSlots.Clear();
 
-        foreach (var part in getAllParts())
+        foreach (var part in FetAllParts())
         {
             foreach (var texture in part.textures)
             {
-                if (texture != null) this.addTextureToSlot(texture);
+                if (texture != null) AddTextureToSlot(texture);
             }
         }
     }
@@ -477,9 +476,9 @@ public class Puppet
     /// </summary>
     /// <param name="uuid"></param>
     /// <returns></returns>
-    public Texture? findTextureByRuntimeUUID(uint uuid)
+    public Texture? FindTextureByRuntimeUUID(uint uuid)
     {
-        foreach (var slot in textureSlots)
+        foreach (var slot in TextureSlots)
         {
             if (slot.UUID != 0)
                 return slot;
@@ -491,15 +490,15 @@ public class Puppet
     /// Sets thumbnail of this puppet
     /// </summary>
     /// <param name="texture"></param>
-    public void setThumbnail(Texture texture)
+    public void SetThumbnail(Texture texture)
     {
-        if (meta.ThumbnailId == NO_THUMBNAIL)
+        if (Meta.ThumbnailId == NO_THUMBNAIL)
         {
-            meta.ThumbnailId = addTextureToSlot(texture);
+            Meta.ThumbnailId = AddTextureToSlot(texture);
         }
         else
         {
-            textureSlots[(int)meta.ThumbnailId] = texture;
+            TextureSlots[(int)Meta.ThumbnailId] = texture;
         }
     }
 
@@ -510,9 +509,9 @@ public class Puppet
     /// </summary>
     /// <param name="texture"></param>
     /// <returns></returns>
-    public int getTextureSlotIndexFor(Texture texture)
+    public int GetTextureSlotIndexFor(Texture texture)
     {
-        return textureSlots.IndexOf(texture);
+        return TextureSlots.IndexOf(texture);
     }
 
     /// <summary>
@@ -521,14 +520,14 @@ public class Puppet
     /// By default it does not delete the texture assigned, pass in true to delete texture
     /// </summary>
     /// <param name="deleteTexture"></param>
-    public void clearThumbnail(bool deleteTexture = false)
+    public void ClearThumbnail(bool deleteTexture = false)
     {
 
         if (deleteTexture)
         {
-            textureSlots.RemoveAll(texture => texture.Id == meta.ThumbnailId);
+            TextureSlots.RemoveAll(texture => texture.Id == Meta.ThumbnailId);
         }
-        meta.ThumbnailId = NO_THUMBNAIL;
+        Meta.ThumbnailId = NO_THUMBNAIL;
     }
 
     /// <summary>
@@ -579,18 +578,18 @@ public class Puppet
             return s.ToString();
         }
 
-        return ToStringBranch(root, 0);
+        return ToStringBranch(Root, 0);
     }
 
-    public void serializeSelf(JObject serializer)
+    public void SerializeSelf(JObject serializer)
     {
-        serializer.Add("meta", new JObject(meta));
-        serializer.Add("physics", new JObject(physics));
+        serializer.Add("meta", new JObject(Meta));
+        serializer.Add("physics", new JObject(Physics));
         var obj = new JObject();
-        root.SerializePartial(obj);
+        Root.SerializePartial(obj);
         serializer.Add("nodes", obj);
         var list = new JArray();
-        foreach (var item in parameters)
+        foreach (var item in Parameters)
         {
             var obj1 = new JObject();
             item.Serialize(obj1);
@@ -598,7 +597,7 @@ public class Puppet
         }
         serializer.Add("param", list);
         list = [];
-        foreach (var item in automation)
+        foreach (var item in Automation)
         {
             var obj1 = new JObject();
             item.Serialize(obj1);
@@ -606,7 +605,7 @@ public class Puppet
         }
         serializer.Add("automation", list);
         list = [];
-        foreach (var item in animations)
+        foreach (var item in Animations)
         {
             var obj1 = new JObject();
             item.Value.Serialize(obj1);
@@ -619,45 +618,45 @@ public class Puppet
     /// Serializes a puppet
     /// </summary>
     /// <param name="serializer"></param>
-    public void serialize(JObject serializer)
+    public void Serialize(JObject serializer)
     {
-        serializeSelf(serializer);
+        SerializeSelf(serializer);
     }
 
     /// <summary>
     /// Deserializes a puppet
     /// </summary>
     /// <param name="data"></param>
-    public void deserialize(JObject data)
+    public void Deserialize(JObject data)
     {
         var temp = data["meta"];
         if (temp != null)
         {
-            meta = temp.ToObject<PuppetMeta>()!;
+            Meta = temp.ToObject<PuppetMeta>()!;
         }
 
         temp = data["physics"];
         if (temp != null)
         {
-            physics = temp.ToObject<PuppetPhysics>()!;
+            Physics = temp.ToObject<PuppetPhysics>()!;
         }
 
         temp = data["nodes"];
         if (temp is JObject obj)
         {
-            root = new();
-            root.Deserialize(obj);
+            Root = new();
+            Root.Deserialize(obj);
         }
 
         temp = data["param"];
         if (temp != null)
         {
             // Allow parameter loading to be overridden (for Inochi Creator)
-            foreach (JObject key in temp)
+            foreach (JObject key in temp.Cast<JObject>())
             {
                 var param = new Parameter();
                 param.Deserialize(key);
-                parameters.Add(param);
+                Parameters.Add(param);
             }
         }
 
@@ -673,7 +672,7 @@ public class Puppet
                 {
                     var auto_ = AutomationHelper.InstantiateAutomation(type, this);
                     auto_.Deserialize(key);
-                    automation.Add(auto_);
+                    Automation.Add(auto_);
                 }
             }
         }
@@ -685,71 +684,71 @@ public class Puppet
             {
                 var item = new Animation();
                 item.Deserialize((obj1.Value as JObject)!);
-                animations.Add(obj1.Name, item);
+                Animations.Add(obj1.Name, item);
             }
         }
-        finalizeDeserialization(data);
+        FinalizeDeserialization(data);
     }
 
-    public void reconstruct()
+    public void Reconstruct()
     {
-        root.Reconstruct();
-        foreach (var parameter in parameters.ToArray())
+        Root.Reconstruct();
+        foreach (var parameter in Parameters.ToArray())
         {
-            parameter.reconstruct(this);
+            parameter.Reconstruct(this);
         }
-        foreach (var automation_ in automation.ToArray())
+        foreach (var automation_ in Automation.ToArray())
         {
             automation_.Reconstruct(this);
         }
-        foreach (var animation in animations.ToArray())
+        foreach (var animation in Animations.ToArray())
         {
             animation.Value.Reconstruct(this);
         }
     }
 
-    public void finalize()
+    public void Dispose()
     {
-        root.Puppet = this;
-        root.name = "Root";
-        puppetRootNode = new Node(this);
+        Root.Puppet = this;
+        Root.name = "Root";
+        _puppetRootNode = new Node(this);
 
         // Finally update link etc.
-        root.Dispose();
-        foreach (var parameter in parameters)
+        Root.Dispose();
+        foreach (var parameter in Parameters)
         {
-            parameter.finalize(this);
+            parameter.Finalize(this);
         }
-        foreach (var automation_ in automation)
+        foreach (var automation_ in Automation)
         {
             automation_.Finalize(this);
         }
-        foreach (var animation in animations)
+        foreach (var animation in Animations)
         {
             animation.Value.Finalize(this);
         }
-        scanParts(root, true);
-        selfSort();
+        ScanParts(Root, true);
+        SelfSort();
     }
 
     /// <summary>
     /// Finalizer
     /// </summary>
     /// <param name="data"></param>
-    public void finalizeDeserialization(JObject data)
+    public void FinalizeDeserialization(JObject data)
     {
         // reconstruct object path so that object is located at final position
-        reconstruct();
-        finalize();
+        Reconstruct();
+        Dispose();
     }
 
 
-    public void applyDeformToChildren()
+    public void ApplyDeformToChildren()
     {
-        var nodes = findNodesType<MeshGroup>(root);
+        var nodes = FindNodesType<MeshGroup>(Root);
         foreach (var node in nodes)
         {
-            node.applyDeformToChildren(parameters);
+            node.ApplyDeformToChildren(Parameters);
         }
     }
 
@@ -758,8 +757,8 @@ public class Puppet
     /// </summary>
     /// <param name="reupdate"></param>
     /// <returns></returns>
-    public Vector4 getCombinedBounds(bool reupdate = false)
+    public Vector4 GetCombinedBounds(bool reupdate = false)
     {
-        return root.GetCombinedBounds(reupdate, true);
+        return Root.GetCombinedBounds(reupdate, true);
     }
 }

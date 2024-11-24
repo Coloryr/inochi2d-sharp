@@ -8,7 +8,7 @@ namespace Inochi2dSharp.Core.Nodes.Parts;
 [TypeId("AnimatedPart")]
 public class AnimatedPart : Part
 {
-    public override string typeId()
+    public override string TypeId()
     {
         return "AnimatedPart";
     }

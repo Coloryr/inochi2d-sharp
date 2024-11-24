@@ -2,9 +2,7 @@
 
 public static class Integration
 {
-    public static TextureBlob[] inCurrentPuppetTextureSlots;
-
-    public const string inPartMaskShader =
+    public const string PartMaskShader =
 """
 #version 330
 in vec2 texUVs;
@@ -21,7 +19,7 @@ void main() {
     outColor = vec4(1, 1, 1, 1);
 }
 """;
-    public const string inPartFragmentShader =
+    public const string PartFragmentShader =
 """
 #version 330
 in vec2 texUVs;
@@ -73,7 +71,7 @@ void main() {
     outBump = normal * outAlbedo.a;
 }
 """;
-    public const string inPartVertexShader =
+    public const string PartVertexShader =
 """
 #version 330
 uniform mat4 mvpModel;
@@ -95,7 +93,7 @@ void main() {
 }
 """;
 
-    public const string inCompositeMaskShader =
+    public const string CompositeMaskShader =
 """
 #version 330
 in vec2 texUVs;
@@ -111,7 +109,7 @@ void main() {
     outColor = vec4(1, 1, 1, 1);
 }
 """;
-    public const string inCompositeFragmentShader =
+    public const string CompositeFragmentShader =
 """
 #version 330
 in vec2 texUVs;
@@ -154,7 +152,7 @@ void main() {
     outBump = bmpColor;
 }
 """;
-    public const string inCompositeVertexShader =
+    public const string CompositeVertexShader =
 """
 #version 330
 
@@ -186,7 +184,7 @@ void main() {
 }
 """;
 
-    public const string inMaskFragmentShader =
+    public const string MaskFragmentShader =
 """
 #version 330
 out vec4 outColor;
@@ -195,7 +193,7 @@ void main() {
     outColor = vec4(0, 0, 0, 1);
 }
 """;
-    public const string inMaskVertexShader =
+    public const string MaskVertexShader =
 """
 #version 330
 uniform mat4 mvpModel;
@@ -211,7 +209,7 @@ void main() {
 }
 """;
 
-    public const string inDebugVert =
+    public const string DebugVert =
 """
 #version 330
 uniform mat4 mvp;
@@ -223,7 +221,7 @@ void main() {
     gl_Position = mvp * vec4(verts.x, verts.y, verts.z, 1);
 }
 """;
-    public const string inDebugLineFrag =
+    public const string DebugLineFrag =
 """
 #version 330
 layout(location = 0) out vec4 outColor;
@@ -234,7 +232,7 @@ void main() {
     outColor = color;
 }
 """;
-    public const string inDebugPointFrag =
+    public const string DebugPointFrag =
 """
 #version 330
 layout(location = 0) out vec4 outColor;
@@ -257,7 +255,7 @@ void main() {
     outColor = color * alpha;
 }
 """;
-    public const string inSceneFrag =
+    public const string SceneFrag =
 """
 #version 330
 in vec2 texUVs;
@@ -272,7 +270,7 @@ void main() {
     outColor = vec4(color.r, color.g, color.b, color.a);
 }
 """;
-    public const string inScencVert =
+    public const string ScencVert =
 """
 #version 330
 uniform mat4 mvpModel;
@@ -294,7 +292,7 @@ void main() {
     gl_Position = mvpProjection * mvpView * mvpModel * vec4(fragPosition, 1.0);
 }
 """;
-    public const string inLighingFrag =
+    public const string LighingFrag =
 """
 #version 330
 in vec2 texUVs;
@@ -375,7 +373,7 @@ void main() {
     outAlbedo = final;
 }
 """;
-    public const string inCompositeVert =
+    public const string CompositeVert =
 """
 #version 330
 
@@ -406,7 +404,7 @@ void main() {
     texUVs = uvs[gl_VertexID];
 }
 """;
-    public const string inCompositeFrag =
+    public const string CompositeFrag =
 """
 #version 330
 in vec2 texUVs;
@@ -449,7 +447,7 @@ void main() {
     outBump = bmpColor;
 }
 """;
-    public const string inCompositeMaskFrag =
+    public const string CompositeMaskFrag =
 """
 #version 330
 in vec2 texUVs;
@@ -465,7 +463,7 @@ void main() {
     outColor = vec4(1, 1, 1, 1);
 }
 """;
-    public const string inBasicFrag =
+    public const string BasicFrag =
 """
 #version 330
 in vec2 texUVs;
@@ -517,7 +515,7 @@ void main() {
     outBump = normal * outAlbedo.a;
 }
 """;
-    public const string inBasicVert =
+    public const string BasicVert =
 """
 #version 330
 uniform mat4 mvpModel;
@@ -538,7 +536,7 @@ void main() {
     gl_Position = mvpViewProjection * vertexCoord;
 }
 """;
-    public const string inBasicStage1 =
+    public const string BasicStage1 =
 """
 #version 330
 
@@ -579,7 +577,7 @@ void main() {
     outAlbedo = vec4(screenOut.xyz, texColor.a) * vec4(multColor.xyz, 1) * opacity;
 }
 """;
-    public const string inBasicStage2 =
+    public const string BasicStage2 =
 """
 #version 330
 in vec2 texUVs;
@@ -619,7 +617,7 @@ void main() {
     outBump = bmpColor * texColor.a;
 }
 """;
-    public const string inBasicMask =
+    public const string BasicMask =
 """
 #version 330
 in vec2 texUVs;

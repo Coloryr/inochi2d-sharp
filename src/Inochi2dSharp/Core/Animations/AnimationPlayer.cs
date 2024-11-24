@@ -41,7 +41,7 @@ public class AnimationPlayer(Puppet puppet)
         }
 
         // Create new playback
-        if (Puppet.animations.TryGetValue(name, out var anim))
+        if (Puppet.Animations.TryGetValue(name, out var anim))
         {
             PlayingAnimations.Add(new AnimationPlayback(this, anim, name));
             return PlayingAnimations[^1];

@@ -129,7 +129,7 @@ public class Part : Drawable
             {
                 if (texture != null)
                 {
-                    var index = Puppet.getTextureSlotIndexFor(texture);
+                    var index = Puppet.GetTextureSlotIndexFor(texture);
                     if (index >= 0)
                     {
                         list.Add(index);
@@ -324,7 +324,7 @@ public class Part : Drawable
         if (!float.IsNaN(offsetScreenTint.Y)) clampedScreen.Y = float.Clamp(screenTint.Y + offsetScreenTint.Y, 0, 1);
         if (!float.IsNaN(offsetScreenTint.Z)) clampedScreen.Z = float.Clamp(screenTint.Z + offsetScreenTint.Z, 0, 1);
 
-        var mModel = Puppet.transform.Matrix * matrix;
+        var mModel = Puppet.Transform.Matrix * matrix;
         var mViewProjection = CoreHelper.inCamera.Matrix();
 
         switch (stage)
@@ -468,7 +468,7 @@ public class Part : Drawable
 
         if (isMask)
         {
-            var mModel = Puppet.transform.Matrix * matrix;
+            var mModel = Puppet.Transform.Matrix * matrix;
             var mViewProjection = CoreHelper.inCamera.Matrix();
 
             PartHelper.partMaskShader.use();
@@ -720,7 +720,7 @@ public class Part : Drawable
         var validMasks = new List<MaskBinding>();
         for (int i = 0; i < masks.Count; i++)
         {
-            if (Puppet.find<Drawable>(masks[i].MaskSrcUUID) is { } nMask)
+            if (Puppet.Find<Drawable>(masks[i].MaskSrcUUID) is { } nMask)
             {
                 masks[i].maskSrc = nMask;
                 validMasks.Add(masks[i]);

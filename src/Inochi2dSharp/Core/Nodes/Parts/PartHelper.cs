@@ -53,15 +53,15 @@ public static class PartHelper
     private static uint sUVBuffer;
     private static uint sElementBuffer;
 
-    private static void inInitPart()
+    public static void inInitPart()
     {
         NodeHelper.RegisterNodeType<Part>();
         NodeHelper.RegisterNodeType<AnimatedPart>();
 
-        partShader = new Shader("part", Integration.inBasicVert, Integration.inBasicFrag);
-        partShaderStage1 = new Shader("part (stage 1)", Integration.inBasicVert, Integration.inBasicStage1);
-        partShaderStage2 = new Shader("part (stage 2)", Integration.inBasicVert, Integration.inBasicStage2);
-        partMaskShader = new Shader("part (mask)", Integration.inBasicVert, Integration.inBasicMask);
+        partShader = new Shader("part", Integration.BasicVert, Integration.BasicFrag);
+        partShaderStage1 = new Shader("part (stage 1)", Integration.BasicVert, Integration.BasicStage1);
+        partShaderStage2 = new Shader("part (stage 2)", Integration.BasicVert, Integration.BasicStage2);
+        partMaskShader = new Shader("part (mask)", Integration.BasicVert, Integration.BasicMask);
 
         NodeHelper.incDrawableBindVAO();
 

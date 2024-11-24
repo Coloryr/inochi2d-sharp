@@ -39,7 +39,7 @@ public record Deformation
         VertexOffsets = [.. new Vector2[length]];
     }
 
-    public void serialize(JArray serializer)
+    public void Serialize(JArray serializer)
     {
         foreach (var offset in VertexOffsets)
         {
@@ -47,7 +47,7 @@ public record Deformation
         }
     }
 
-    public void deserializeFromFghj(JArray data)
+    public void Deserialize(JArray data)
     {
         foreach (var elem in data)
         {

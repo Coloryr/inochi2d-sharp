@@ -19,8 +19,8 @@ public static class CompositeHelper
         NodeHelper.RegisterNodeType<Composite>();
 
         CShader = new Shader("composite",
-            Integration.inCompositeVert,
-            Integration.inCompositeFrag
+            Integration.CompositeVert,
+            Integration.CompositeFrag
         );
 
         CShader.use();
@@ -32,8 +32,8 @@ public static class CompositeHelper
         CShader.setUniform(CShader.getUniformLocation("bumpmap"), 2);
 
         CShaderMask = new Shader("composite (mask)",
-            Integration.inCompositeVert,
-            Integration.inCompositeMaskFrag
+            Integration.CompositeVert,
+            Integration.CompositeMaskFrag
         );
         CShaderMask.use();
         Mthreshold = CShader.getUniformLocation("threshold");

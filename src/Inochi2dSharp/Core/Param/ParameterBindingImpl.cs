@@ -8,38 +8,38 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <summary>
     /// Node reference (for deserialization)
     /// </summary>
-    protected uint nodeRef;
+    protected uint NodeRef;
 
     /// <summary>
     /// Parent Parameter owning this binding
     /// </summary>
-    public Parameter parameter;
+    public Parameter Parameter;
 
     /// <summary>
     /// Reference to what parameter we're binding to
     /// </summary>
-    public BindTarget target;
+    public BindTarget Target;
 
     /// <summary>
     /// Whether the value at each 2D keypoint is user-set
     /// </summary>
-    public List<List<bool>> isSet_;
+    public List<List<bool>> isSet;
 
     public ParameterBindingImpl(Parameter parameter)
     {
-        this.parameter = parameter;
+        Parameter = parameter;
     }
 
     public ParameterBindingImpl(Parameter parameter, Node targetNode, string paramName)
     {
-        this.parameter = parameter;
-        target = new()
+        Parameter = parameter;
+        Target = new()
         {
             node = targetNode,
             paramName = paramName
         };
 
-        clear();
+        Clear();
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override BindTarget getTarget()
     {
-        return target;
+        return Target;
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override string getName()
     {
-        return target.paramName;
+        return Target.paramName;
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override Node getNode()
     {
-        return target.node;
+        return Target.node;
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override uint getNodeUUID()
     {
-        return nodeRef;
+        return NodeRef;
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override List<List<bool>> getIsSet()
     {
-        return [.. isSet_];
+        return [.. isSet];
     }
 
     /// <summary>
@@ -94,11 +94,11 @@ public abstract class ParameterBindingImpl : ParameterBinding
     public override uint getSetCount()
     {
         uint count = 0;
-        for (int x = 0; x < isSet_.Count; x++)
+        for (int x = 0; x < isSet.Count; x++)
         {
-            for (int y = 0; y < isSet_[x].Count; y++)
+            for (int y = 0; y < isSet[x].Count; y++)
             {
-                if (isSet_[x][y]) count++;
+                if (isSet[x][y]) count++;
             }
         }
         return count;
@@ -116,7 +116,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     public override void finalize(Puppet puppet)
     {
         //        writefln("finalize binding %s", this.getName());
-        target.node = puppet.find<Node>(nodeRef)!;
+        Target.node = puppet.Find<Node>(NodeRef)!;
         //        writefln("node for %d = %x", nodeRef, &(target.node));
     }
 
@@ -124,11 +124,11 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Sets value at specified keypoint to the current value
     /// </summary>
     /// <param name="point"></param>
-    public override void setCurrent(Vector2Int point)
+    public override void SetCurrent(Vector2Int point)
     {
-        isSet_[point.X][point.Y] = true;
+        isSet[point.X][point.Y] = true;
 
-        reInterpolate();
+        ReInterpolate();
     }
 
     /// <summary>
@@ -136,8 +136,8 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public override bool isSet(Vector2Int index)
+    public override bool IsSet(Vector2Int index)
     {
-        return isSet_[index.X][index.Y];
+        return isSet[index.X][index.Y];
     }
 }

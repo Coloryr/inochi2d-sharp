@@ -41,8 +41,8 @@ public class AutomationBinding
     {
         return Axis switch
         {
-            0 => Param.value.X,
-            1 => Param.value.Y,
+            0 => Param.Value.X,
+            1 => Param.Value.Y,
             _ => float.NaN,
         };
     }
@@ -56,10 +56,10 @@ public class AutomationBinding
         switch (Axis)
         {
             case 0:
-                Param.value.X = value;
+                Param.Value.X = value;
                 break;
             case 1:
-                Param.value.Y = value;
+                Param.Value.Y = value;
                 break;
             default: throw new IndexOutOfRangeException("axis was out");
         }
@@ -71,7 +71,7 @@ public class AutomationBinding
     /// <param name="value"></param>
     public void AddAxisOffset(float value)
     {
-        Param.pushIOffsetAxis(Axis, value);
+        Param.PushIOffsetAxis(Axis, value);
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ public class AutomationBinding
     /// <param name="serializer"></param>
     public void Serialize(JObject serializer)
     {
-        serializer.Add("param", Param.name);
+        serializer.Add("param", Param.Name);
         serializer.Add("axis", Axis);
         serializer.Add("range", Range.ToToken());
     }
@@ -114,9 +114,9 @@ public class AutomationBinding
 
     public void Finalize(Puppet puppet)
     {
-        foreach (var parameter in puppet.parameters)
+        foreach (var parameter in puppet.Parameters)
         {
-            if (parameter.name == ParamId)
+            if (parameter.Name == ParamId)
             {
                 Param = parameter;
                 return;

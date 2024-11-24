@@ -1,13 +1,19 @@
 ﻿namespace Inochi2dSharp.Core.Nodes;
 
+[TypeId("Tmp")]
 public class TmpNode : Node
 {
-    protected override string TypeId()
+    public override string TypeId()
     {
         return "Tmp";
     }
 
-    public TmpNode(Node parent) : base(parent)
+    public TmpNode() : this(null)
+    { 
+        
+    }
+
+    public TmpNode(Node? parent = null) : base(parent)
     {
 
     }

@@ -38,7 +38,7 @@ public class AnimationLane
         serializer.Add("interpolation", Interpolation.ToString());
         if (ParamRef != null)
         {
-            serializer.Add("uuid", ParamRef.targetParam.uuid);
+            serializer.Add("uuid", ParamRef.targetParam.UUID);
             serializer.Add("target", ParamRef.targetAxis);
         }
         serializer.Add("keyframes", new JArray(Frames));
@@ -168,7 +168,7 @@ public class AnimationLane
 
     public void Finalize(Puppet puppet)
     {
-        if (ParamRef != null) ParamRef.targetParam = puppet.findParameter(_refuuid)!;
+        if (ParamRef != null) ParamRef.targetParam = puppet.FindParameter(_refuuid)!;
     }
 
     /// <summary>

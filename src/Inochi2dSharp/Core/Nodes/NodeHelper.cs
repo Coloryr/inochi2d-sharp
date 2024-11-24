@@ -16,10 +16,12 @@ public static class NodeHelper
     private static bool inAdvancedBlending;
     private static bool inAdvancedBlendingCoherent;
 
-    public static void Init()
+    public static void inInitNodes()
     {
         RegisterNodeType<SimplePhysics>();
         RegisterNodeType<Shapes>();
+        RegisterNodeType<Node>();
+        RegisterNodeType<TmpNode>();
     }
 
     public static void inSetBlendModeLegacy(BlendMode blendingMode)

@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes;
 
+[TypeId("Node")]
 public class Node : IDisposable
 {
     public Puppet Puppet
@@ -169,6 +170,11 @@ public class Node : IDisposable
         _puppet = puppet;
     }
 
+    public Node() : this(parent: null)
+    { 
+    
+    }
+
     /// <summary>
     /// Constructs a new node
     /// </summary>
@@ -293,7 +299,7 @@ public class Node : IDisposable
             if (!ignoreParam)
             {
                 if (LockToRoot)
-                    GlobalTransform = LocalTransform.CalcOffset(OffsetTransform) * Puppet.root.LocalTransform;
+                    GlobalTransform = LocalTransform.CalcOffset(OffsetTransform) * Puppet.Root.LocalTransform;
                 else if (Parent != null)
                     GlobalTransform = LocalTransform.CalcOffset(OffsetTransform) * Parent.Transform();
                 else
@@ -305,7 +311,7 @@ public class Node : IDisposable
             {
 
                 if (LockToRoot)
-                    GlobalTransform = LocalTransform * Puppet.root.LocalTransform;
+                    GlobalTransform = LocalTransform * Puppet.Root.LocalTransform;
                 else if (Parent != null)
                     GlobalTransform = LocalTransform * Parent.Transform();
                 else
@@ -511,7 +517,7 @@ public class Node : IDisposable
         {
             _parent.Children.Insert(offset, this);
         }
-        Puppet?.rescanNodes();
+        Puppet?.RescanNodes();
     }
 
     /// <summary>
@@ -872,8 +878,8 @@ public class Node : IDisposable
 
         if (countPuppet)
         {
-            var temp = Puppet.transform.Matrix.Multiply(new Vector4(combined.X, combined.Y, 0, 1));
-            var temp1 = Puppet.transform.Matrix.Multiply(new Vector4(combined.Z, combined.W, 0, 1));
+            var temp = Puppet.Transform.Matrix.Multiply(new Vector4(combined.X, combined.Y, 0, 1));
+            var temp1 = Puppet.Transform.Matrix.Multiply(new Vector4(combined.Z, combined.W, 0, 1));
             return new(temp.X, temp.Y, temp1.X, temp1.Y);
         }
         else
