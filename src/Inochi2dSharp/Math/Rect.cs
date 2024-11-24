@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp.Math;
+﻿namespace Inochi2dSharp.Math;
 
 public struct Rect
 {
@@ -14,8 +8,8 @@ public struct Rect
     public float Height;
 
     public Rect()
-    { 
-        
+    {
+
     }
 
     public Rect(float x, float y, float width, float height)
@@ -36,7 +30,7 @@ public struct Rect
         return X + Width;
     }
 
-    public float Top()  
+    public float Top()
     {
         return Y;
     }

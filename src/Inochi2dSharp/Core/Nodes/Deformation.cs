@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
 
@@ -11,16 +6,16 @@ namespace Inochi2dSharp.Core.Nodes;
 
 public record Deformation
 {
-    private List<Vector2> vertexOffsets;
+    public List<Vector2> VertexOffsets;
 
     public Deformation()
     {
-        vertexOffsets = [];
+        VertexOffsets = [];
     }
 
     public Deformation(Deformation rhs)
     {
-        vertexOffsets = [.. rhs.vertexOffsets];
+        VertexOffsets = [.. rhs.VertexOffsets];
     }
 
     public Deformation(Vector2[] data)
@@ -30,23 +25,23 @@ public record Deformation
 
     public Deformation(List<Vector2> data)
     {
-        vertexOffsets = [.. data];
+        VertexOffsets = [.. data];
     }
 
     public void Update(Vector2[] points)
     {
-        vertexOffsets.Clear();
-        vertexOffsets.AddRange(points);
+        VertexOffsets.Clear();
+        VertexOffsets.AddRange(points);
     }
 
     public void Clear(int length)
     {
-        vertexOffsets = [.. new Vector2[length]];
+        VertexOffsets = [.. new Vector2[length]];
     }
 
     public void serialize(JArray serializer)
     {
-        foreach (var offset in vertexOffsets)
+        foreach (var offset in VertexOffsets)
         {
             serializer.Add(offset.ToToken());
         }
@@ -56,16 +51,16 @@ public record Deformation
     {
         foreach (var elem in data)
         {
-            vertexOffsets.Add(elem.ToVector2());
+            VertexOffsets.Add(elem.ToVector2());
         }
     }
 
     public static Deformation operator -(Deformation v)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(-offset);
+            newDeformation.VertexOffsets.Add(-offset);
         }
         return newDeformation;
     }
@@ -73,9 +68,9 @@ public record Deformation
     public static Deformation operator *(Deformation v, Deformation other)
     {
         var newDeformation = new Deformation();
-        for (int i = 0; i < v.vertexOffsets.Count; i++)
+        for (int i = 0; i < v.VertexOffsets.Count; i++)
         {
-            newDeformation.vertexOffsets.Add(v.vertexOffsets[i] * other.vertexOffsets[i]);
+            newDeformation.VertexOffsets.Add(v.VertexOffsets[i] * other.VertexOffsets[i]);
         }
         return newDeformation;
     }
@@ -83,9 +78,9 @@ public record Deformation
     public static Deformation operator *(Deformation v, Vector2 other)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(offset * other);
+            newDeformation.VertexOffsets.Add(offset * other);
         }
         return newDeformation;
     }
@@ -93,9 +88,9 @@ public record Deformation
     public static Deformation operator *(Deformation v, float scalar)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(offset * scalar);
+            newDeformation.VertexOffsets.Add(offset * scalar);
         }
         return newDeformation;
     }
@@ -103,9 +98,9 @@ public record Deformation
     public static Deformation operator +(Deformation v, Deformation other)
     {
         var newDeformation = new Deformation();
-        for (int i = 0; i < v.vertexOffsets.Count; i++)
+        for (int i = 0; i < v.VertexOffsets.Count; i++)
         {
-            newDeformation.vertexOffsets.Add(v.vertexOffsets[i] + other.vertexOffsets[i]);
+            newDeformation.VertexOffsets.Add(v.VertexOffsets[i] + other.VertexOffsets[i]);
         }
         return newDeformation;
     }
@@ -113,9 +108,9 @@ public record Deformation
     public static Deformation operator +(Deformation v, Vector2 other)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(offset + other);
+            newDeformation.VertexOffsets.Add(offset + other);
         }
         return newDeformation;
     }
@@ -123,9 +118,9 @@ public record Deformation
     public static Deformation operator +(Deformation v, float scalar)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(new Vector2(offset.X + scalar, offset.Y + scalar));
+            newDeformation.VertexOffsets.Add(new Vector2(offset.X + scalar, offset.Y + scalar));
         }
         return newDeformation;
     }
@@ -133,9 +128,9 @@ public record Deformation
     public static Deformation operator -(Deformation v, Deformation other)
     {
         var newDeformation = new Deformation();
-        for (int i = 0; i < v.vertexOffsets.Count; i++)
+        for (int i = 0; i < v.VertexOffsets.Count; i++)
         {
-            newDeformation.vertexOffsets.Add(v.vertexOffsets[i] - other.vertexOffsets[i]);
+            newDeformation.VertexOffsets.Add(v.VertexOffsets[i] - other.VertexOffsets[i]);
         }
         return newDeformation;
     }
@@ -143,9 +138,9 @@ public record Deformation
     public static Deformation operator -(Deformation v, Vector2 other)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(offset - other);
+            newDeformation.VertexOffsets.Add(offset - other);
         }
         return newDeformation;
     }
@@ -153,9 +148,9 @@ public record Deformation
     public static Deformation operator -(Deformation v, float scalar)
     {
         var newDeformation = new Deformation();
-        foreach (var offset in v.vertexOffsets)
+        foreach (var offset in v.VertexOffsets)
         {
-            newDeformation.vertexOffsets.Add(new Vector2(offset.X - scalar, offset.Y - scalar));
+            newDeformation.VertexOffsets.Add(new Vector2(offset.X - scalar, offset.Y - scalar));
         }
         return newDeformation;
     }

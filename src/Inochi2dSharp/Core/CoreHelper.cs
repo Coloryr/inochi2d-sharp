@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Shaders;
 using SkiaSharp;
@@ -315,7 +310,7 @@ public static class CoreHelper
     {
         if (postProcessingStack.Count == 0) return;
 
-        bool targetBuffer  = false;
+        bool targetBuffer = false;
 
         // These are passed to glSetClearColor for transparent export
         inGetClearColor(out float r, out float g, out float b, out float a);
@@ -327,7 +322,7 @@ public static class CoreHelper
         );
 
         // Tell OpenGL the resolution to render at
-        float[] data = 
+        float[] data =
         [
             area.X,         area.Y+area.W,   0, 0,
             area.X,         area.Y,          0, 1,
@@ -355,7 +350,7 @@ public static class CoreHelper
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, fBuffer);
         gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
-        foreach (var shader in postProcessingStack) 
+        foreach (var shader in postProcessingStack)
         {
             targetBuffer = !targetBuffer;
 
@@ -407,7 +402,7 @@ public static class CoreHelper
     /// <param name="area"></param>
     public unsafe static void inDrawScene(Vector4 area)
     {
-        float[] data = 
+        float[] data =
         [
             area.X,         area.Y+area.W,  0, 0,
             area.X,         area.Y,         0, 1,
@@ -418,7 +413,7 @@ public static class CoreHelper
         ];
 
         gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, sceneVBO);
-        fixed (void * ptr = data)
+        fixed (void* ptr = data)
         {
             gl.BufferData(GlApi.GL_ARRAY_BUFFER, 24 * sizeof(float), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
@@ -855,7 +850,7 @@ public static class CoreHelper
     {
         if (channels < 4) return;
 
-        for (int i = 0; i < data.Length / channels; i++) 
+        for (int i = 0; i < data.Length / channels; i++)
         {
             var offsetPixel = i * channels;
             data[offsetPixel + 0] = (byte)(data[offsetPixel + 0] * data[offsetPixel + 3] / 255);

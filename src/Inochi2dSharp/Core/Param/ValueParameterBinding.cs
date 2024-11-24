@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
@@ -23,8 +18,8 @@ public class ValueParameterBinding : ParameterBindingImpl
     }
 
     public ValueParameterBinding(Parameter parameter, Node targetNode, string paramName) : base(parameter, targetNode, paramName)
-    { 
-        
+    {
+
     }
 
     /// <summary>
@@ -127,14 +122,14 @@ public class ValueParameterBinding : ParameterBindingImpl
                 values[x].Add(0);
                 var value = values[x][y];
                 clearValue(ref value);
-                values[x][y] = value; 
+                values[x][y] = value;
             }
         }
     }
 
     public void clearValue(ref float val)
     {
-        val = target.node.getDefaultValue(target.paramName);
+        val = target.node.GetDefaultValue(target.paramName);
     }
 
     /// <summary>
@@ -757,7 +752,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     public override void scaleValueAt(Vector2Int index, int axis, float scale)
     {
         /* Nodes know how to do axis-aware scaling */
-        setValue(index, target.node.scaleValue(target.paramName, getValue(index), axis, scale));
+        setValue(index, Node.ScaleValue(target.paramName, getValue(index), axis, scale));
     }
 
     public override void extrapolateValueAt(Vector2Int index, int axis)
@@ -826,11 +821,11 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <param name="value"></param>
     public void applyToTarget(float value)
     {
-        target.node.setValue(target.paramName, value);
+        target.node.SetValue(target.paramName, value);
     }
 
     public override bool isCompatibleWithNode(Node other)
     {
-        return other.hasParam(this.target.paramName);
+        return other.HasParam(this.target.paramName);
     }
 }

@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 using Inochi2dSharp.Core.Nodes.MeshGroups;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes;
 
-public class Node
+public class Node : IDisposable
 {
     public Puppet Puppet
-    { 
+    {
         get => _parent != null ? _parent.Puppet : _puppet;
         set => _puppet = value;
     }
@@ -24,10 +19,10 @@ public class Node
     /// <summary>
     /// The parent of this node
     /// </summary>
-    public Node? Parent 
-    { 
+    public Node? Parent
+    {
         get => _parent;
-        set => insertInto(value, OFFSET_END);
+        set => InsertInto(value, OFFSET_END);
     }
 
     private Node? _parent;
@@ -53,7 +48,7 @@ public class Node
     /// The basis zSort offset.
     /// </summary>
     public float ZSortBase
-    { 
+    {
         get => Parent != null ? Parent.ZSort : 0;
     }
 
@@ -62,7 +57,7 @@ public class Node
     /// </summary>
     public float ZSort
     {
-        get => ZSortBase + RelZSort + offsetSort;
+        get => ZSortBase + RelZSort + OffsetSort;
         set => _zsort = value;
     }
 
@@ -70,7 +65,7 @@ public class Node
     /// The Z sorting without parameter offsets
     /// </summary>
     public float ZSortNoOffset
-    { 
+    {
         get => ZSortBase + RelZSort;
     }
 
@@ -87,11 +82,11 @@ public class Node
             // Automatically handle converting lock space and proper world space.
             if (value && !_lockToRoot)
             {
-                localTransform.Translation = transformNoLock().Translation;
+                LocalTransform.Translation = TransformNoLock().Translation;
             }
             else if (!value && _lockToRoot)
             {
-                localTransform.Translation = localTransform.Translation - Parent!.transformNoLock().Translation;
+                LocalTransform.Translation = LocalTransform.Translation - Parent!.TransformNoLock().Translation;
             }
 
             _lockToRoot = value;
@@ -109,23 +104,23 @@ public class Node
     /// <summary>
     /// The offset to the transform to apply
     /// </summary>
-    protected Transform offsetTransform;
+    public Transform OffsetTransform;
 
     /// <summary>
     /// The offset to apply to sorting
     /// </summary>
-    protected float offsetSort = 0f;
+    protected float OffsetSort = 0f;
 
-    public Matrix4x4? oneTimeTransform;
+    public Matrix4x4? OneTimeTransform;
 
-    public MatrixHolder? overrideTransformMatrix = null;
+    public MatrixHolder? OverrideTransformMatrix = null;
 
-    public delegate (Vector2[]?, Matrix4x4?) ProcessFilter(List<Vector2> a, Vector2[]b, ref Matrix4x4 c);
+    public delegate (Vector2[]?, Matrix4x4?) ProcessFilter(List<Vector2> a, Vector2[] b, ref Matrix4x4 c);
 
     //Matrix4x4*
-    public ProcessFilter? preProcessFilter = null;
+    public ProcessFilter? PreProcessFilter = null;
     //Matrix4x4*
-    public ProcessFilter? postProcessFilter = null;
+    public ProcessFilter? PostProcessFilter = null;
 
     /// <summary>
     /// Whether the node is enabled for rendering
@@ -156,14 +151,14 @@ public class Node
     /// <summary>
     /// The local transform of the node
     /// </summary>
-    public Transform localTransform;
+    public Transform LocalTransform;
 
     /// <summary>
     /// The cached world space transform of the node
     /// </summary>
-    public Transform globalTransform;
+    public Transform GlobalTransform;
 
-    public bool recalculateTransform = true;
+    public bool RecalculateTransform = true;
 
     /// <summary>
     /// Constructs a new puppet root node
@@ -202,7 +197,7 @@ public class Node
         Parent?.ResetMask();
     }
 
-    protected void serializeSelfImpl(JObject obj, bool recursive = true)
+    protected virtual void SerializeSelfImpl(JObject obj, bool recursive = true)
     {
         obj.Add("uuid", UUID);
         obj.Add("name", name);
@@ -211,7 +206,7 @@ public class Node
         obj.Add("zsort", _zsort);
 
         var obj1 = new JObject();
-        localTransform.Serialize(obj1);
+        LocalTransform.Serialize(obj1);
         obj.Add("transform", obj1);
         obj.Add("lockToRoot", LockToRoot);
 
@@ -233,46 +228,46 @@ public class Node
 
     protected virtual void SerializeSelf(JObject obj)
     {
-        serializeSelfImpl(obj, true);
+        SerializeSelfImpl(obj, true);
     }
 
-    protected unsafe virtual void PreProcess()
+    public unsafe virtual void PreProcess()
     {
         if (preProcessed)
             return;
         preProcessed = true;
-        if (preProcessFilter != null)
+        if (PreProcessFilter != null)
         {
-            overrideTransformMatrix = null;
+            OverrideTransformMatrix = null;
             var matrix = Parent != null ? Parent.Transform().Matrix : Matrix4x4.Identity;
-            var temp = localTransform.Translation;
-            var temp1 = offsetTransform.Translation;
-            var filterResult = preProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], ref matrix);
+            var temp = LocalTransform.Translation;
+            var temp1 = OffsetTransform.Translation;
+            var filterResult = PreProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], ref matrix);
             if (filterResult.Item1?.Length > 0)
             {
-                offsetTransform.Translation = new(filterResult.Item1[0], offsetTransform.Translation.Z);
-                transformChanged();
+                OffsetTransform.Translation = new(filterResult.Item1[0], OffsetTransform.Translation.Z);
+                TransformChanged();
             }
         }
     }
 
-    protected virtual void PostProcess()
+    public virtual void PostProcess()
     {
         if (postProcessed)
             return;
         postProcessed = true;
-        if (postProcessFilter != null)
+        if (PostProcessFilter != null)
         {
-            overrideTransformMatrix = null;
+            OverrideTransformMatrix = null;
             var matrix = Parent != null ? Parent.Transform().Matrix : Matrix4x4.Identity;
-            var temp = localTransform.Translation;
-            var temp1 = offsetTransform.Translation;
-            var filterResult = postProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], ref matrix);
+            var temp = LocalTransform.Translation;
+            var temp1 = OffsetTransform.Translation;
+            var filterResult = PostProcessFilter([new(temp.X, temp.Y)], [new(temp1.X, temp1.Y)], ref matrix);
             if (filterResult.Item1?.Length > 0)
             {
-                offsetTransform.Translation = new(filterResult.Item1[0], offsetTransform.Translation.Z);
-                transformChanged();
-                overrideTransformMatrix = new MatrixHolder(Transform().Matrix);
+                OffsetTransform.Translation = new(filterResult.Item1[0], OffsetTransform.Translation.Z);
+                TransformChanged();
+                OverrideTransformMatrix = new MatrixHolder(Transform().Matrix);
             }
         }
     }
@@ -290,60 +285,60 @@ public class Node
     /// <returns></returns>
     public Transform Transform(bool ignoreParam = false)
     {
-        if (recalculateTransform)
+        if (RecalculateTransform)
         {
-            localTransform.Update();
-            offsetTransform.Update();
+            LocalTransform.Update();
+            OffsetTransform.Update();
 
             if (!ignoreParam)
             {
                 if (LockToRoot)
-                    globalTransform = localTransform.CalcOffset(offsetTransform) * Puppet.root.localTransform;
+                    GlobalTransform = LocalTransform.CalcOffset(OffsetTransform) * Puppet.root.LocalTransform;
                 else if (Parent != null)
-                    globalTransform = localTransform.CalcOffset(offsetTransform) * Parent.Transform();
+                    GlobalTransform = LocalTransform.CalcOffset(OffsetTransform) * Parent.Transform();
                 else
-                    globalTransform = localTransform.CalcOffset(offsetTransform);
+                    GlobalTransform = LocalTransform.CalcOffset(OffsetTransform);
 
-                recalculateTransform = false;
+                RecalculateTransform = false;
             }
             else
             {
 
                 if (LockToRoot)
-                    globalTransform = localTransform * Puppet.root.localTransform;
+                    GlobalTransform = LocalTransform * Puppet.root.LocalTransform;
                 else if (Parent != null)
-                    globalTransform = localTransform * Parent.Transform();
+                    GlobalTransform = LocalTransform * Parent.Transform();
                 else
-                    globalTransform = localTransform;
+                    GlobalTransform = LocalTransform;
 
-                recalculateTransform = false;
+                RecalculateTransform = false;
             }
         }
 
-        return globalTransform;
+        return GlobalTransform;
     }
 
     /// <summary>
     /// The transform in world space without locking
     /// </summary>
     /// <returns></returns>
-    public Transform transformLocal()
+    public Transform TransformLocal()
     {
-        localTransform.Update();
+        LocalTransform.Update();
 
-        return localTransform.CalcOffset(offsetTransform);
+        return LocalTransform.CalcOffset(OffsetTransform);
     }
 
     /// <summary>
     /// The transform in world space without locking
     /// </summary>
     /// <returns></returns>
-    public Transform transformNoLock()
+    public Transform TransformNoLock()
     {
-        localTransform.Update();
+        LocalTransform.Update();
 
-        if (Parent != null) return localTransform * Parent.Transform();
-        return localTransform;
+        if (Parent != null) return LocalTransform * Parent.Transform();
+        return LocalTransform;
     }
 
     /// <summary>
@@ -351,9 +346,9 @@ public class Node
     /// You should call this before reparenting nodes.
     /// </summary>
     /// <param name="to"></param>
-    public void setRelativeTo(Node to)
+    public void SetRelativeTo(Node to)
     {
-        setRelativeTo(to.transformNoLock().Matrix);
+        SetRelativeTo(to.TransformNoLock().Matrix);
         _zsort = ZSortNoOffset - to.ZSortNoOffset;
     }
 
@@ -362,10 +357,10 @@ public class Node
     /// This does not handle zSorting. Pass a Node for that.
     /// </summary>
     /// <param name="to"></param>
-    public void setRelativeTo(Matrix4x4 to)
+    public void SetRelativeTo(Matrix4x4 to)
     {
-        localTransform.Translation = getRelativePosition(to, transformNoLock().Matrix);
-        localTransform.Update();
+        LocalTransform.Translation = GetRelativePosition(to, TransformNoLock().Matrix);
+        LocalTransform.Update();
     }
 
     /// <summary>
@@ -374,7 +369,7 @@ public class Node
     /// <param name="m1"></param>
     /// <param name="m2"></param>
     /// <returns></returns>
-    public static Vector3 getRelativePosition(Matrix4x4 m1, Matrix4x4 m2)
+    public static Vector3 GetRelativePosition(Matrix4x4 m1, Matrix4x4 m2)
     {
         // Calculate the inverse of the first matrix
         Matrix4x4.Invert(m1, out var m1Inverse);
@@ -391,7 +386,7 @@ public class Node
     /// <param name="m1"></param>
     /// <param name="m2"></param>
     /// <returns></returns>
-    public static Vector3 getRelativePositionInv(Matrix4x4 m1, Matrix4x4 m2)
+    public static Vector3 GetRelativePositionInv(Matrix4x4 m1, Matrix4x4 m2)
     {
         // Calculate the inverse of the first matrix
         Matrix4x4.Invert(m1, out var m1Inverse);
@@ -405,7 +400,7 @@ public class Node
     /// Gets the path to the node.
     /// </summary>
     /// <returns></returns>
-    public string getNodePath()
+    public string GetNodePath()
     {
         if (NodePath.Length > 0) return NodePath;
 
@@ -426,7 +421,7 @@ public class Node
     /// Gets the depth of this node
     /// </summary>
     /// <returns></returns>
-    public int depth()
+    public int Depth()
     {
         int depthV = 0;
         Node? parent = this;
@@ -441,30 +436,30 @@ public class Node
     /// <summary>
     /// Removes all children from this node
     /// </summary>
-    public void clearChildren()
+    public void ClearChildren()
     {
-        foreach (var child in Children) 
+        foreach (var child in Children)
         {
             child._parent = null;
         }
-        this.Children = [];
+        Children = [];
     }
 
     /// <summary>
     ///  Adds a node as a child of this node.
     /// </summary>
     /// <param name="child"></param>
-    public void addChild(Node child)
+    public void AddChild(Node child)
     {
         child.Parent = this;
     }
 
-    public int getIndexInParent()
+    public int GetIndexInParent()
     {
         return _parent!.Children.IndexOf(this);
     }
 
-    public int getIndexInNode(Node n)
+    public int GetIndexInNode(Node n)
     {
         return n.Children.IndexOf(this);
     }
@@ -472,7 +467,7 @@ public class Node
     public int OFFSET_START = int.MinValue;
     public int OFFSET_END = int.MaxValue;
 
-    public void insertInto(Node? node, int offset)
+    public void InsertInto(Node? node, int offset)
     {
         NodePath = "";
         // Remove ourselves from our current parent if we are
@@ -500,7 +495,7 @@ public class Node
         }
 
         // Update our relationship with our new parent
-        Parent = node;
+        _parent = node;
 
         // Update position
         if (offset == OFFSET_START)
@@ -524,7 +519,7 @@ public class Node
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public virtual bool hasParam(string key)
+    public virtual bool HasParam(string key)
     {
         return key switch
         {
@@ -538,7 +533,7 @@ public class Node
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public virtual float getDefaultValue(string key)
+    public virtual float GetDefaultValue(string key)
     {
         return key switch
         {
@@ -554,44 +549,44 @@ public class Node
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public virtual bool setValue(string key, float value)
+    public virtual bool SetValue(string key, float value)
     {
         switch (key)
         {
             case "zSort":
-                offsetSort += value;
+                OffsetSort += value;
                 return true;
             case "transform.t.x":
-                offsetTransform.Translation.X += value;
-                transformChanged();
+                OffsetTransform.Translation.X += value;
+                TransformChanged();
                 return true;
             case "transform.t.y":
-                offsetTransform.Translation.Y += value;
-                transformChanged();
+                OffsetTransform.Translation.Y += value;
+                TransformChanged();
                 return true;
             case "transform.t.z":
-                offsetTransform.Translation.Z += value;
-                transformChanged();
+                OffsetTransform.Translation.Z += value;
+                TransformChanged();
                 return true;
             case "transform.r.x":
-                offsetTransform.Rotation.X += value;
-                transformChanged();
+                OffsetTransform.Rotation.X += value;
+                TransformChanged();
                 return true;
             case "transform.r.y":
-                offsetTransform.Rotation.Y += value;
-                transformChanged();
+                OffsetTransform.Rotation.Y += value;
+                TransformChanged();
                 return true;
             case "transform.r.z":
-                offsetTransform.Rotation.Z += value;
-                transformChanged();
+                OffsetTransform.Rotation.Z += value;
+                TransformChanged();
                 return true;
             case "transform.s.x":
-                offsetTransform.Scale.X *= value;
-                transformChanged();
+                OffsetTransform.Scale.X *= value;
+                TransformChanged();
                 return true;
             case "transform.s.y":
-                offsetTransform.Scale.Y *= value;
-                transformChanged();
+                OffsetTransform.Scale.Y *= value;
+                TransformChanged();
                 return true;
             default: return false;
         }
@@ -613,7 +608,7 @@ public class Node
     /// <param name="axis"></param>
     /// <param name="scale"></param>
     /// <returns></returns>
-    public float scaleValue(string key, float value, int axis, float scale)
+    public static float ScaleValue(string key, float value, int axis, float scale)
     {
         if (axis == -1) return value * scale;
 
@@ -637,19 +632,19 @@ public class Node
         return newVal;
     }
 
-    public virtual float getValue(string key)
+    public virtual float GetValue(string key)
     {
         return key switch
         {
-            "zSort" => offsetSort,
-            "transform.t.x" => offsetTransform.Translation.X,
-            "transform.t.y" => offsetTransform.Translation.Y,
-            "transform.t.z" => offsetTransform.Translation.Z,
-            "transform.r.x" => offsetTransform.Rotation.X,
-            "transform.r.y" => offsetTransform.Rotation.Y,
-            "transform.r.z" => offsetTransform.Rotation.Z,
-            "transform.s.x" => offsetTransform.Scale.X,
-            "transform.s.y" => offsetTransform.Scale.Y,
+            "zSort" => OffsetSort,
+            "transform.t.x" => OffsetTransform.Translation.X,
+            "transform.t.y" => OffsetTransform.Translation.Y,
+            "transform.t.z" => OffsetTransform.Translation.Z,
+            "transform.r.x" => OffsetTransform.Rotation.X,
+            "transform.r.y" => OffsetTransform.Rotation.Y,
+            "transform.r.z" => OffsetTransform.Rotation.Z,
+            "transform.s.x" => OffsetTransform.Scale.X,
+            "transform.s.y" => OffsetTransform.Scale.Y,
             _ => 0,
         };
     }
@@ -657,59 +652,59 @@ public class Node
     /// <summary>
     /// Draws this node and it's subnodes
     /// </summary>
-    public virtual void draw()
+    public virtual void Draw()
     {
         if (!RenderEnabled) return;
 
-        foreach (var child in Children) 
+        foreach (var child in Children)
         {
-            child.draw();
+            child.Draw();
         }
     }
 
     /// <summary>
     /// Draws this node.
     /// </summary>
-    public virtual void drawOne() { }
+    public virtual void DrawOne() { }
 
-    public void reconstruct()
+    public void Reconstruct()
     {
         foreach (var child in Children.ToArray())
         {
-            child.reconstruct();
+            child.Reconstruct();
         }
     }
 
     /// <summary>
     /// Finalizes this node and any children
     /// </summary>
-    public virtual void finalize()
+    public virtual void Dispose()
     {
         foreach (var child in Children)
         {
-            child.finalize();
+            child.Dispose();
         }
     }
 
-    public virtual void beginUpdate()
+    public virtual void BeginUpdate()
     {
         preProcessed = false;
         postProcessed = false;
 
-        offsetSort = 0;
-        offsetTransform.Clear();
+        OffsetSort = 0;
+        OffsetTransform.Clear();
 
         // Iterate through children
         foreach (var child in Children)
         {
-            child.beginUpdate();
+            child.BeginUpdate();
         }
     }
 
     /// <summary>
     /// Updates the node
     /// </summary>
-    public virtual void update()
+    public virtual void Update()
     {
         PreProcess();
 
@@ -717,7 +712,7 @@ public class Node
 
         foreach (var child in Children)
         {
-            child.update();
+            child.Update();
         }
         PostProcess();
     }
@@ -725,13 +720,13 @@ public class Node
     /// <summary>
     /// Marks this node's transform (and its descendents') as dirty
     /// </summary>
-    public void transformChanged()
+    public void TransformChanged()
     {
-        recalculateTransform = true;
+        RecalculateTransform = true;
 
         foreach (var child in Children)
         {
-            child.transformChanged();
+            child.TransformChanged();
         }
     }
 
@@ -745,9 +740,9 @@ public class Node
     /// Allows serializing a node (with pretty serializer)
     /// </summary>
     /// <param name=""></param>
-    public virtual void serializePartial(JObject obj, bool recursive = true)
+    public virtual void SerializePartial(JObject obj, bool recursive = true)
     {
-        serializeSelfImpl(obj, recursive);
+        SerializeSelfImpl(obj, recursive);
     }
 
     /// <summary>
@@ -786,8 +781,8 @@ public class Node
         {
             return;
         }
-        localTransform = new();
-        localTransform.Deserialize(obj);
+        LocalTransform = new();
+        LocalTransform.Deserialize(obj);
 
         temp = data["lockToRoot"];
         if (temp == null)
@@ -803,7 +798,7 @@ public class Node
         }
 
         // Pre-populate our children with the correct types
-        foreach (var child in array) 
+        foreach (var child in array)
         {
             if (child is not JObject obj1)
             {
@@ -827,14 +822,14 @@ public class Node
     /// THIS IS NOT A SAFE OPERATION.
     /// </summary>
     /// <param name="uuid"></param>
-    public void forceSetUUID(uint uuid)
+    public void ForceSetUUID(uint uuid)
     {
         UUID = uuid;
     }
 
-    public Rect getCombinedBoundsRect(bool reupdate = false, bool countPuppet = false)
+    public Rect GetCombinedBoundsRect(bool reupdate = false, bool countPuppet = false)
     {
-        var combinedBounds = getCombinedBounds(reupdate, countPuppet);
+        var combinedBounds = GetCombinedBounds(reupdate, countPuppet);
         return new(
             combinedBounds.X,
             combinedBounds.Y,
@@ -843,7 +838,7 @@ public class Node
         );
     }
 
-    public Vector4 getInitialBoundsSize()
+    public Vector4 GetInitialBoundsSize()
     {
         var tr = Transform();
         return new(tr.Translation.X, tr.Translation.Y, tr.Translation.X, tr.Translation.Y);
@@ -855,19 +850,20 @@ public class Node
     /// <param name="reupdate"></param>
     /// <param name="countPuppet"></param>
     /// <returns></returns>
-    public Vector4 getCombinedBounds(bool reupdate = false, bool countPuppet = false)
+    public Vector4 GetCombinedBounds(bool reupdate = false, bool countPuppet = false)
     {
-        var combined = getInitialBoundsSize();
+        var combined = GetInitialBoundsSize();
 
         // Get Bounds as drawable
         if (this is Drawable drawable)
         {
-            if (reupdate) drawable.updateBounds();
-            combined = drawable.bounds;
+            if (reupdate) drawable.UpdateBounds();
+            combined = drawable.Bounds;
         }
 
-        foreach (var child in Children) {
-            var cbounds = child.getCombinedBounds(reupdate);
+        foreach (var child in Children)
+        {
+            var cbounds = child.GetCombinedBounds(reupdate);
             if (cbounds.X < combined.X) combined.X = cbounds.X;
             if (cbounds.Y < combined.Y) combined.Y = cbounds.Y;
             if (cbounds.Z > combined.Z) combined.Z = cbounds.Z;
@@ -891,7 +887,7 @@ public class Node
     /// </summary>
     /// <param name="to"></param>
     /// <returns></returns>
-    public bool canReparent(Node to)
+    public bool CanReparent(Node to)
     {
         Node? tmp = to;
         while (tmp != null)
@@ -907,7 +903,7 @@ public class Node
     /// <summary>
     /// Draws orientation of the node
     /// </summary>
-    public void drawOrientation()
+    public void DrawOrientation()
     {
         var trans = Transform().Matrix;
         CoreHelper.inDbgLineWidth(4);
@@ -930,9 +926,9 @@ public class Node
     /// <summary>
     /// Draws bounds
     /// </summary>
-    public virtual void drawBounds()
+    public virtual void DrawBounds()
     {
-        var bounds = getCombinedBounds();
+        var bounds = GetCombinedBounds();
 
         float width = bounds.Z - bounds.X;
         float height = bounds.W - bounds.Y;
@@ -950,26 +946,26 @@ public class Node
             new Vector3(bounds.X, bounds.Y, 0),
         ]);
         CoreHelper.inDbgLineWidth(3);
-        if (oneTimeTransform != null)
-            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), oneTimeTransform.Value);
+        if (OneTimeTransform != null)
+            CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), OneTimeTransform.Value);
         else
             CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
         CoreHelper.inDbgLineWidth(1);
     }
 
-    public virtual void setOneTimeTransform(Matrix4x4 transform)
+    public virtual void SetOneTimeTransform(Matrix4x4 transform)
     {
-        oneTimeTransform = transform;
+        OneTimeTransform = transform;
 
-        foreach (var c in Children) 
+        foreach (var c in Children)
         {
-            c.setOneTimeTransform(transform);
+            c.SetOneTimeTransform(transform);
         }
     }
 
-    public unsafe Matrix4x4? getOneTimeTransform()
+    public unsafe Matrix4x4? GetOneTimeTransform()
     {
-        return oneTimeTransform;
+        return OneTimeTransform;
     }
 
     /// <summary>
@@ -977,43 +973,43 @@ public class Node
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="pOffset"></param>
-    public void reparent(Node parent, ulong pOffset)
+    public void Reparent(Node parent, ulong pOffset)
     {
-        void unsetGroup(Node node)
+        static void UnsetGroup(Node node)
         {
-            node.postProcessFilter = null;
-            node.preProcessFilter = null;
+            node.PostProcessFilter = null;
+            node.PreProcessFilter = null;
             if (node is not MeshGroup)
             {
                 foreach (var child in node.Children)
                 {
-                    unsetGroup(child);
+                    UnsetGroup(child);
                 }
             }
         }
 
-        unsetGroup(this);
+        UnsetGroup(this);
 
         if (parent != null)
-            setRelativeTo(parent);
-        insertInto(parent, (int)pOffset);
+            SetRelativeTo(parent);
+        InsertInto(parent, (int)pOffset);
         Node? c = this;
         for (var p = parent; p != null; p = p.Parent, c = c.Parent)
         {
-            p.setupChild(c);
+            p.SetupChild(c);
         }
     }
 
-    public virtual void setupChild(Node? child) 
+    public virtual void SetupChild(Node? child)
     {
-        
+
     }
 
-    public Matrix4x4 getDynamicMatrix()
+    public Matrix4x4 GetDynamicMatrix()
     {
-        if (overrideTransformMatrix != null)
+        if (OverrideTransformMatrix != null)
         {
-            return overrideTransformMatrix.Matrix;
+            return OverrideTransformMatrix.Matrix;
         }
         else
         {

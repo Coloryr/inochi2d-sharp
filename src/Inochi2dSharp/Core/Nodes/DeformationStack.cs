@@ -1,28 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace Inochi2dSharp.Core.Nodes;
 
-public class DeformationStack
+public class DeformationStack(Drawable parent)
 {
-    private Drawable parent;
-
-    public DeformationStack(Drawable parent)
-    {
-        this.parent = parent;
-    }
-
     public void Push(Deformation deformation)
     {
-        if (parent.Deformation.Count != deformation.VertexOffsets.Count)
+        if (parent.Deformation.Length != deformation.VertexOffsets.Count)
         {
             throw new InvalidOperationException("Mismatched lengths");
         }
 
-        for (int i = 0; i < parent.Deformation.Count; i++)
+        for (int i = 0; i < parent.Deformation.Length; i++)
         {
             parent.Deformation[i] += deformation.VertexOffsets[i];
         }
@@ -31,9 +20,9 @@ public class DeformationStack
 
     public void PreUpdate()
     {
-        for (int i = 0; i < parent.Deformation.Count; i++)
+        for (int i = 0; i < parent.Deformation.Length; i++)
         {
-            parent.Deformation[i] = new Vec2(0, 0);
+            parent.Deformation[i] = new Vector2(0, 0);
         }
     }
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp.Math;
+﻿namespace Inochi2dSharp.Math;
 
 public struct Vector2Int(int x, int y)
 {
@@ -12,8 +6,8 @@ public struct Vector2Int(int x, int y)
     public int Y = y;
 
     public Vector2Int(int value) : this(value, value)
-    { 
-        
+    {
+
     }
 
     public override readonly string ToString()

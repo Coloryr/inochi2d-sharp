@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 using SkiaSharp;
@@ -29,8 +24,8 @@ public class Texture : IDisposable
     private readonly SKBitmap? _image;
 
     public Texture(ShallowTexture shallow) : this(shallow.Data, shallow.Width, shallow.Height, shallow.Channels, shallow.ConvChannels)
-    { 
-        
+    {
+
     }
 
     /// <summary>
@@ -43,7 +38,7 @@ public class Texture : IDisposable
     /// </summary>
     /// <param name="file"></param>
     /// <param name="channels"></param>
-    public Texture(string file) 
+    public Texture(string file)
     {
         _image = SKBitmap.Decode(file);
 
@@ -256,7 +251,7 @@ public class Texture : IDisposable
     {
         if (unit > 31)
         {
-            throw new Exception("Outside maximum OpenGL texture unit value");   
+            throw new Exception("Outside maximum OpenGL texture unit value");
         }
         CoreHelper.gl.ActiveTexture(GlApi.GL_TEXTURE0 + (unit <= 31u ? unit : 31u));
         CoreHelper.gl.BindTexture(GlApi.GL_TEXTURE_2D, Id);

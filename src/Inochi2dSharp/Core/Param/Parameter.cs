@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
@@ -83,8 +78,8 @@ public class Parameter : IDisposable
     public List<ParameterBinding> bindings = [];
 
     public Parameter()
-    { 
-        
+    {
+
     }
 
     public Parameter(string name, bool isVec2)
@@ -211,7 +206,7 @@ public class Parameter : IDisposable
         temp = data["bindings"];
         if (temp is JArray array1)
         {
-            foreach (JObject child in array1.Cast<JObject>()) 
+            foreach (JObject child in array1.Cast<JObject>())
             {
                 var temp1 = child["param_name"];
                 // Skip empty children
@@ -237,7 +232,7 @@ public class Parameter : IDisposable
 
     public void reconstruct(Puppet puppet)
     {
-        foreach (var binding in bindings) 
+        foreach (var binding in bindings)
         {
             binding.reconstruct(puppet);
         }
@@ -253,9 +248,9 @@ public class Parameter : IDisposable
         value = defaults;
 
         var validBindingList = new List<ParameterBinding>();
-        foreach (var binding in bindings) 
+        foreach (var binding in bindings)
         {
-            if (puppet.find<Node>(binding.getNodeUUID()) != null) 
+            if (puppet.find<Node>(binding.getNodeUUID()) != null)
             {
                 binding.finalize(puppet);
                 validBindingList.Add(binding);
@@ -371,25 +366,25 @@ public class Parameter : IDisposable
     {
         if (oldidx <= 0 && oldidx >= this.axisPointCount(axis) - 1)
         {
-            throw new Exception("invalid point index");  
+            throw new Exception("invalid point index");
         }
         if (newoff <= 0 && newoff >= 1)
         {
             throw new Exception("offset out of bounds");
         }
-        if (isVec2 )
+        if (isVec2)
         {
             if (axis > 1)
             {
                 throw new Exception("bad axis");
             }
         }
-        else 
+        else
         {
             if (axis != 0)
             {
                 throw new Exception("bad axis");
-            } 
+            }
         }
 
         // Find the index at which to insert
@@ -417,7 +412,7 @@ public class Parameter : IDisposable
         }
 
         // Tell all bindings to reinterpolate
-        foreach (var binding in bindings) 
+        foreach (var binding in bindings)
         {
             binding.moveKeypoints(axis, oldidx, index);
         }
@@ -502,7 +497,7 @@ public class Parameter : IDisposable
         axisPoints[axis].RemoveAt(index);
 
         // Tell all bindings to remove it from their arrays
-        foreach (var binding in bindings) 
+        foreach (var binding in bindings)
         {
             binding.deleteKeypoints(axis, index);
         }
@@ -515,7 +510,7 @@ public class Parameter : IDisposable
     public void reverseAxis(int axis)
     {
         axisPoints[axis].Reverse();
-        for (var i=0;i<axisPoints[axis].Count;i++) 
+        for (var i = 0; i < axisPoints[axis].Count; i++)
         {
             axisPoints[axis][i] = 1 - axisPoints[axis][i];
         }
@@ -617,7 +612,7 @@ public class Parameter : IDisposable
         int closestPoint = 0;
         float closestDist = float.NegativeInfinity;
 
-        for(int i=0; i< axisPoints[axis].Count; i++) 
+        for (int i = 0; i < axisPoints[axis].Count; i++)
         {
             var pointVal = axisPoints[axis][i];
             float dist = float.Abs(pointVal - offset);
@@ -695,7 +690,7 @@ public class Parameter : IDisposable
     /// <returns></returns>
     public bool hasBinding(Node n, string bindingName)
     {
-        foreach (var binding in bindings) 
+        foreach (var binding in bindings)
         {
             if (binding.getNode() != n) continue;
             if (binding.getName() == bindingName) return true;
@@ -710,7 +705,7 @@ public class Parameter : IDisposable
     /// <returns></returns>
     public bool hasAnyBinding(Node n)
     {
-        foreach (var binding in bindings) 
+        foreach (var binding in bindings)
         {
             if (binding.getNode() == n) return true;
         }

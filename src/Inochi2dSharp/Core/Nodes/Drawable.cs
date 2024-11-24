@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
 
@@ -15,17 +10,17 @@ public abstract class Drawable : Node
     /// <summary>
     /// OpenGL Index Buffer Object
     /// </summary>
-    protected uint ibo;
+    protected uint Ibo;
 
     /// <summary>
     /// OpenGL Vertex Buffer Object
     /// </summary>
-    protected uint vbo;
+    protected uint Vbo;
 
     /// <summary>
     /// OpenGL Vertex Buffer Object for deformation
     /// </summary>
-    protected uint dbo;
+    protected uint Dbo;
 
     /// <summary>
     /// The mesh data of this part
@@ -33,26 +28,26 @@ public abstract class Drawable : Node
     /// NOTE: DO NOT MODIFY!
     /// The data in here is only to be used for reference.
     /// </summary>
-    protected MeshData data;
+    protected MeshData Data;
 
     /// <summary>
     /// Deformation offset to apply
     /// </summary>
-    public Vector2[] deformation;
+    public Vector2[] Deformation;
 
     /// <summary>
     /// The bounds of this drawable
     /// </summary>
-    public Vector4 bounds;
+    public Vector4 Bounds;
 
     /// <summary>
     /// Deformation stack
     /// </summary>
-    public DeformationStack deformStack;
+    public DeformationStack DeformStack;
 
     public List<Vector2> Vertices { get; set; }
 
-    public abstract void renderMask(bool dodge = false);
+    public abstract void RenderMask(bool dodge = false);
 
     /// <summary>
     /// Constructs a new drawable surface
@@ -61,12 +56,12 @@ public abstract class Drawable : Node
     public Drawable(Node? parent = null) : base(parent)
     {
         // Generate the buffers
-        CoreHelper.gl.GenBuffers(1, out vbo);
-        CoreHelper.gl.GenBuffers(1, out ibo);
-        CoreHelper.gl.GenBuffers(1, out dbo);
+        CoreHelper.gl.GenBuffers(1, out Vbo);
+        CoreHelper.gl.GenBuffers(1, out Ibo);
+        CoreHelper.gl.GenBuffers(1, out Dbo);
 
         // Create deformation stack
-        this.deformStack = new DeformationStack(this);
+        DeformStack = new DeformationStack(this);
     }
 
     /// <summary>
@@ -74,7 +69,8 @@ public abstract class Drawable : Node
     /// </summary>
     /// <param name="data"></param>
     /// <param name="parent"></param>
-    public Drawable(MeshData data, Node? parent = null) : this(data, NodeHelper.InCreateUUID(), parent) {
+    public Drawable(MeshData data, Node? parent = null) : this(data, NodeHelper.InCreateUUID(), parent)
+    {
 
     }
 
@@ -86,37 +82,36 @@ public abstract class Drawable : Node
     /// <param name="parent"></param>
     public Drawable(MeshData data, uint uuid, Node? parent = null) : base(uuid, parent)
     {
-        this.data = data;
-        this.deformStack = new DeformationStack(this);
+        Data = data;
+        DeformStack = new DeformationStack(this);
 
         // Set the deformable points to their initial position
         Vertices = [.. data.Vertices];
 
         // Generate the buffers
-        CoreHelper.gl.GenBuffers(1, out vbo);
-        CoreHelper.gl.GenBuffers(1, out ibo);
-        CoreHelper.gl.GenBuffers(1, out dbo);
+        CoreHelper.gl.GenBuffers(1, out Vbo);
+        CoreHelper.gl.GenBuffers(1, out Ibo);
+        CoreHelper.gl.GenBuffers(1, out Dbo);
 
         // Update indices and vertices
-        updateIndices();
-        updateVertices();
+        UpdateIndices();
+        UpdateVertices();
     }
 
-    private unsafe void updateIndices()
+    private unsafe void UpdateIndices()
     {
-        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, ibo);
-        var temp = data.Indices.ToArray();
+        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        var temp = Data.Indices.ToArray();
         fixed (void* ptr = temp)
         {
             CoreHelper.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, temp.Length * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
     }
 
-
-    private unsafe void updateVertices()
+    private unsafe void UpdateVertices()
     {
         // Important check since the user can change this every frame
-        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, vbo);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
         var temp = Vertices.ToArray();
         fixed (void* ptr = temp)
         {
@@ -124,42 +119,42 @@ public abstract class Drawable : Node
         }
 
         // Zero-fill the deformation delta
-        deformation = new Vector2[Vertices.Count];
-        for (int i = 0; i < deformation.Length; i++)
+        Deformation = new Vector2[Vertices.Count];
+        for (int i = 0; i < Deformation.Length; i++)
         {
-            deformation[i] = new(0, 0);
+            Deformation[i] = new(0, 0);
         }
-        updateDeform();
+        UpdateDeform();
     }
 
-    protected unsafe void updateDeform()
+    protected unsafe void UpdateDeform()
     {
         // Important check since the user can change this every frame
-        if (deformation.Length != Vertices.Count)
+        if (Deformation.Length != Vertices.Count)
         {
-            throw new Exception($"Data length mismatch for {name}, deformation length={deformation.Length} whereas vertices.length={Vertices.Count}, if you want to change the mesh you need to change its data with Part.rebuffer.");
+            throw new Exception($"Data length mismatch for {name}, deformation length={Deformation.Length} whereas vertices.length={Vertices.Count}, if you want to change the mesh you need to change its data with Part.rebuffer.");
         }
 
         PostProcess();
 
-        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, dbo);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
 
-        fixed (void* ptr = deformation)
+        fixed (void* ptr = Deformation)
         {
-            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, deformation.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
+            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Deformation.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
 
-        updateBounds();
+        UpdateBounds();
     }
 
     /// <summary>
     /// Binds Index Buffer for rendering
     /// </summary>
-    protected void bindIndex()
+    protected void BindIndex()
     {
         // Bind element array and draw our mesh
-        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, ibo);
-        CoreHelper.gl.DrawElements(GlApi.GL_TRIANGLES, data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        CoreHelper.gl.DrawElements(GlApi.GL_TRIANGLES, Data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
     }
 
     /// <summary>
@@ -167,11 +162,11 @@ public abstract class Drawable : Node
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="recursive"></param>
-    protected override void SerializeSelf(JObject serializer)
+    protected override void SerializeSelfImpl(JObject serializer, bool recursive = true)
     {
-        base.SerializeSelf(serializer);
+        base.SerializeSelfImpl(serializer, recursive);
         var obj = new JObject();
-        data.Serialize(obj);
+        Data.Serialize(obj);
         serializer.Add("mesh", obj);
     }
 
@@ -184,113 +179,114 @@ public abstract class Drawable : Node
             return;
         }
 
-        data = new();
-        data.Deserialize(obj1);
+        Data = new();
+        Data.Deserialize(obj1);
 
-        Vertices = [.. data.Vertices];
+        Vertices = [.. Data.Vertices];
 
         // Update indices and vertices
-        updateIndices();
-        updateVertices();
+        UpdateIndices();
+        UpdateVertices();
     }
 
-    protected void onDeformPushed(ref Deformation deform)
+    protected void OnDeformPushed(Deformation deform)
     {
 
     }
 
-    protected override void PreProcess()
+    public override void PreProcess()
     {
         if (preProcessed)
             return;
         preProcessed = true;
-        if (preProcessFilter != null)
+        if (PreProcessFilter != null)
         {
-            overrideTransformMatrix = null;
+            OverrideTransformMatrix = null;
             var matrix = this.Transform().Matrix;
-            var filterResult = preProcessFilter?.Invoke(Vertices, deformation, ref matrix);
+            var filterResult = PreProcessFilter?.Invoke(Vertices, Deformation, ref matrix);
             if (filterResult?.Item1 is { } item1 && item1.Length != 0)
             {
-                deformation = item1;
+                Deformation = item1;
             }
             if (filterResult?.Item2 is { } item2)
             {
-                overrideTransformMatrix = new MatrixHolder(item2);
+                OverrideTransformMatrix = new MatrixHolder(item2);
             }
         }
     }
 
-    protected override void PostProcess()
+    public override void PostProcess()
     {
         if (postProcessed)
             return;
         postProcessed = true;
-        if (postProcessFilter != null)
+        if (PostProcessFilter != null)
         {
-            overrideTransformMatrix = null;
+            OverrideTransformMatrix = null;
             var matrix = Transform().Matrix;
-            var filterResult = postProcessFilter(Vertices, deformation, ref matrix);
+            var filterResult = PostProcessFilter(Vertices, Deformation, ref matrix);
             if (filterResult.Item1 is { } item1 && item1.Length != 0)
             {
-                deformation = item1;
+                Deformation = item1;
             }
             if (filterResult.Item2 is { } item2)
             {
-                overrideTransformMatrix = new MatrixHolder(item2);
+                OverrideTransformMatrix = new MatrixHolder(item2);
             }
         }
     }
 
-    protected void notifyDeformPushed(ref Deformation deform)
+    public void NotifyDeformPushed(Deformation deform)
     {
-        onDeformPushed(ref deform);
+        OnDeformPushed(deform);
     }
 
     /// <summary>
     /// Refreshes the drawable, updating its vertices
     /// </summary>
-    public void refresh()
+    public void Refresh()
     {
-        this.updateVertices();
+        UpdateVertices();
     }
 
     /// <summary>
     /// Refreshes the drawable, updating its deformation deltas
     /// </summary>
-    public void refreshDeform()
+    public void RefreshDeform()
     {
-        this.updateDeform();
+        UpdateDeform();
     }
 
-    public override void beginUpdate()
+    public override void BeginUpdate()
     {
-        deformStack.PreUpdate();
-        base.beginUpdate();
+        DeformStack.PreUpdate();
+        base.BeginUpdate();
     }
 
     /// <summary>
     /// Updates the drawable
     /// </summary>
-    public override void update()
+    public override void Update()
     {
         PreProcess();
-        deformStack.Update();
-        base.update();
-        updateDeform();
+        DeformStack.Update();
+        base.Update();
+        UpdateDeform();
     }
 
     /// <summary>
     /// Draws the drawable
     /// </summary>
-    public override void drawOne()
+    public override void DrawOne()
     {
-        base.drawOne();
+        base.DrawOne();
     }
 
-    /**
-        Draws the drawable without any processing
-    */
-    public virtual void drawOneDirect(bool forMasking) { }
+    /// <summary>
+    /// Draws the drawable without any processing
+    /// </summary>
+    /// <param name="forMasking"></param>
+    public virtual void DrawOneDirect(bool forMasking) { }
 
     public override string TypeId()
     {
@@ -300,52 +296,52 @@ public abstract class Drawable : Node
     /// <summary>
     /// Updates the drawable's bounds
     /// </summary>
-    public void updateBounds()
+    public void UpdateBounds()
     {
         if (!NodeHelper.doGenerateBounds) return;
 
         // Calculate bounds
         var wtransform = Transform();
         var temp = wtransform.Translation;
-        bounds = new(temp.X, temp.Y, temp.X, temp.Y);
-        var matrix = getDynamicMatrix();
+        Bounds = new(temp.X, temp.Y, temp.X, temp.Y);
+        var matrix = GetDynamicMatrix();
         for (int i = 0; i < Vertices.Count; i++)
         {
             var vertex = Vertices[i];
-            var temp1 = matrix.Multiply(new Vector4(vertex + deformation[i], 0, 1));
+            var temp1 = matrix.Multiply(new Vector4(vertex + Deformation[i], 0, 1));
             var vertOriented = new Vector2(temp1.X, temp1.Y);
-            if (vertOriented.X < bounds.X) bounds.X = vertOriented.X;
-            if (vertOriented.Y < bounds.Y) bounds.Y = vertOriented.Y;
-            if (vertOriented.X > bounds.Z) bounds.Z = vertOriented.X;
-            if (vertOriented.Y > bounds.W) bounds.W = vertOriented.Y;
+            if (vertOriented.X < Bounds.X) Bounds.X = vertOriented.X;
+            if (vertOriented.Y < Bounds.Y) Bounds.Y = vertOriented.Y;
+            if (vertOriented.X > Bounds.Z) Bounds.Z = vertOriented.X;
+            if (vertOriented.Y > Bounds.W) Bounds.W = vertOriented.Y;
         }
     }
 
     /// <summary>
     /// Draws bounds
     /// </summary>
-    public override void drawBounds()
+    public override void DrawBounds()
     {
         if (!NodeHelper.doGenerateBounds) return;
         if (Vertices.Count == 0) return;
 
-        float width = bounds.Z - bounds.X;
-        float height = bounds.W - bounds.Y;
+        float width = Bounds.Z - Bounds.X;
+        float height = Bounds.W - Bounds.Y;
         CoreHelper.inDbgSetBuffer([
-            new Vector3(bounds.X, bounds.Y, 0),
-            new Vector3(bounds.X + width, bounds.Y, 0),
+            new Vector3(Bounds.X, Bounds.Y, 0),
+            new Vector3(Bounds.X + width, Bounds.Y, 0),
 
-            new Vector3(bounds.X + width, bounds.Y, 0),
-            new Vector3(bounds.X + width, bounds.Y+height, 0),
+            new Vector3(Bounds.X + width, Bounds.Y, 0),
+            new Vector3(Bounds.X + width, Bounds.Y+height, 0),
 
-            new Vector3(bounds.X + width, bounds.Y+height, 0),
-            new Vector3(bounds.X, bounds.Y+height, 0),
+            new Vector3(Bounds.X + width, Bounds.Y+height, 0),
+            new Vector3(Bounds.X, Bounds.Y+height, 0),
 
-            new Vector3(bounds.X, bounds.Y+height, 0),
-            new Vector3(bounds.X, bounds.Y, 0),
+            new Vector3(Bounds.X, Bounds.Y+height, 0),
+            new Vector3(Bounds.X, Bounds.Y, 0),
         ]);
         CoreHelper.inDbgLineWidth(3);
-        if (oneTimeTransform is { } mat)
+        if (OneTimeTransform is { } mat)
             CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), mat);
         else
             CoreHelper.inDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
@@ -355,13 +351,13 @@ public abstract class Drawable : Node
     /// <summary>
     /// Draws line of mesh
     /// </summary>
-    public void drawMeshLines()
+    public void DrawMeshLines()
     {
         if (Vertices.Count == 0) return;
 
-        var trans = getDynamicMatrix();
+        var trans = GetDynamicMatrix();
 
-        var indices = data.Indices;
+        var indices = Data.Indices;
 
         var points = new Vector3[indices.Count * 2];
         for (int i = 0; i < indices.Count / 3; i++)
@@ -370,14 +366,14 @@ public abstract class Drawable : Node
             var iy = ix * 2;
             var indice = indices[ix];
 
-            points[iy + 0] = new Vector3(Vertices[indice] - data.Origin + deformation[indice], 0);
-            points[iy + 1] = new Vector3(Vertices[indices[ix + 1]] - data.Origin + deformation[indices[ix + 1]], 0);
+            points[iy + 0] = new Vector3(Vertices[indice] - Data.Origin + Deformation[indice], 0);
+            points[iy + 1] = new Vector3(Vertices[indices[ix + 1]] - Data.Origin + Deformation[indices[ix + 1]], 0);
 
-            points[iy + 2] = new Vector3(Vertices[indices[ix + 1]] - data.Origin + deformation[indices[ix + 1]], 0);
-            points[iy + 3] = new Vector3(Vertices[indices[ix + 2]] - data.Origin + deformation[indices[ix + 2]], 0);
+            points[iy + 2] = new Vector3(Vertices[indices[ix + 1]] - Data.Origin + Deformation[indices[ix + 1]], 0);
+            points[iy + 3] = new Vector3(Vertices[indices[ix + 2]] - Data.Origin + Deformation[indices[ix + 2]], 0);
 
-            points[iy + 4] = new Vector3(Vertices[indices[ix + 2]] - data.Origin + deformation[indices[ix + 2]], 0);
-            points[iy + 5] = new Vector3(Vertices[indice] - data.Origin + deformation[indice], 0);
+            points[iy + 4] = new Vector3(Vertices[indices[ix + 2]] - Data.Origin + Deformation[indices[ix + 2]], 0);
+            points[iy + 5] = new Vector3(Vertices[indice] - Data.Origin + Deformation[indice], 0);
         }
 
         CoreHelper.inDbgSetBuffer(points);
@@ -387,16 +383,16 @@ public abstract class Drawable : Node
     /// <summary>
     /// Draws the points of the mesh
     /// </summary>
-    public void drawMeshPoints()
+    public void DrawMeshPoints()
     {
         if (Vertices.Count == 0) return;
 
-        var trans = getDynamicMatrix();
+        var trans = GetDynamicMatrix();
         var points = new Vector3[Vertices.Count];
         for (int i = 0; i < Vertices.Count; i++)
         {
             var point = Vertices[i];
-            points[i] = new Vector3(point - data.Origin + deformation[i], 0);
+            points[i] = new Vector3(point - Data.Origin + Deformation[i], 0);
         }
 
         CoreHelper.inDbgSetBuffer(points);
@@ -410,28 +406,28 @@ public abstract class Drawable : Node
     /// Returns the mesh data for this Part.
     /// </summary>
     /// <returns></returns>
-    public MeshData getMesh()
+    public MeshData GetMesh()
     {
-        return data;
+        return Data;
     }
 
     /// <summary>
     /// Changes this mesh's data
     /// </summary>
     /// <param name="data"></param>
-    public virtual void rebuffer(MeshData data)
+    public virtual void Rebuffer(MeshData data)
     {
-        this.data = data;
-        this.updateIndices();
-        this.updateVertices();
+        this.Data = data;
+        this.UpdateIndices();
+        this.UpdateVertices();
     }
 
     /// <summary>
     /// Resets the vertices of this drawable
     /// </summary>
-    public void reset()
+    public void Reset()
     {
-        Vertices = [.. data.Vertices];
+        Vertices = [.. Data.Vertices];
     }
 
     /// <summary>
@@ -443,7 +439,7 @@ public abstract class Drawable : Node
     /// This also clears whatever old mask there was.
     /// </summary>
     /// <param name="hasMasks"></param>
-    public void inBeginMask(bool hasMasks)
+    public void InBeginMask(bool hasMasks)
     {
         // Enable and clear the stencil buffer so we can write our mask to it
         CoreHelper.gl.Enable(GlApi.GL_STENCIL_TEST);
@@ -456,7 +452,7 @@ public abstract class Drawable : Node
     /// 
     /// Once masking is ended content will no longer be masked by the defined mask.
     /// </summary>
-    public void inEndMask()
+    public void InEndMask()
     {
         // We're done stencil testing, disable it again so that we don't accidentally mask more stuff out
         CoreHelper.gl.StencilMask(0xFF);
@@ -469,7 +465,7 @@ public abstract class Drawable : Node
     /// 
     /// NOTE: This have to be run within a inBeginMask and inEndMask block!
     /// </summary>
-    public void inBeginMaskContent()
+    public void InBeginMaskContent()
     {
         CoreHelper.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
         CoreHelper.gl.StencilMask(0x00);

@@ -1,14 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using Inochi2dSharp.Core.Nodes;
+﻿using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Param;
 
@@ -39,7 +30,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
         this.parameter = parameter;
     }
 
-    public ParameterBindingImpl(Parameter parameter, Node targetNode, string paramName) 
+    public ParameterBindingImpl(Parameter parameter, Node targetNode, string paramName)
     {
         this.parameter = parameter;
         target = new()
@@ -114,8 +105,8 @@ public abstract class ParameterBindingImpl : ParameterBinding
     }
 
     public override void reconstruct(Puppet puppet)
-    { 
-    
+    {
+
     }
 
     /// <summary>

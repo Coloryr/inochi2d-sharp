@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp.Shaders;
+﻿namespace Inochi2dSharp.Shaders;
 
 public static class Integration
 {
     public static TextureBlob[] inCurrentPuppetTextureSlots;
 
-    public const string inPartMaskShader = 
+    public const string inPartMaskShader =
 """
 #version 330
 in vec2 texUVs;
@@ -27,7 +21,7 @@ void main() {
     outColor = vec4(1, 1, 1, 1);
 }
 """;
-    public const string inPartFragmentShader = 
+    public const string inPartFragmentShader =
 """
 #version 330
 in vec2 texUVs;

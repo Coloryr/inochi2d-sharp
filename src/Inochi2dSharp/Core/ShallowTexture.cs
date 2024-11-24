@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SkiaSharp;
+﻿using SkiaSharp;
 
 namespace Inochi2dSharp.Core;
 
@@ -52,7 +47,7 @@ public class ShallowTexture
         var fData = File.ReadAllBytes(file);
 
         // Load image from disk, as <channels> 8-bit
-        _image  = SKBitmap.Decode(fData);
+        _image = SKBitmap.Decode(fData);
 
         // Copy data from IFImage to this ShallowTexture
         Data = _image.GetPixels();
@@ -91,7 +86,7 @@ public class ShallowTexture
     /// <param name="w"></param>
     /// <param name="h"></param>
     /// <param name="channels"></param>
-    public ShallowTexture(byte[] buffer, int w, int h, int channels = 4) 
+    public ShallowTexture(byte[] buffer, int w, int h, int channels = 4)
     {
         _image = SKBitmap.Decode(buffer);
         Data = _image.GetPixels();
@@ -111,7 +106,7 @@ public class ShallowTexture
     /// <param name="h"></param>
     /// <param name="channels"></param>
     /// <param name="convChannels"></param>
-    public ShallowTexture(byte[] buffer, int w, int h, int channels = 4, int convChannels = 4) 
+    public ShallowTexture(byte[] buffer, int w, int h, int channels = 4, int convChannels = 4)
     {
         _image = SKBitmap.Decode(buffer);
         Data = _image.GetPixels();

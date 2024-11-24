@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 using Inochi2dSharp.Core.Animations;
 using Inochi2dSharp.Core.Automations;
 using Inochi2dSharp.Core.Nodes;
@@ -141,7 +137,7 @@ public class Puppet
         if (node is Driver part)
         {
             drivers.Add(part);
-            foreach (Parameter param in part.getAffectedParameters())
+            foreach (Parameter param in part.GetAffectedParameters())
             {
                 drivenParameters[param] = part;
             }
@@ -153,7 +149,7 @@ public class Puppet
             if (node is Composite composite)
             {
                 // Composite nodes handle and keep their own root node list, as such we should just draw them directly
-                composite.scanParts();
+                composite.ScanParts();
                 rootParts.Add(composite);
 
                 // For this subtree, only look for Drivers
@@ -197,7 +193,7 @@ public class Puppet
         if (reparent)
         {
             if (puppetRootNode != null)
-                puppetRootNode.clearChildren();
+                puppetRootNode.ClearChildren();
             node.Parent = puppetRootNode;
         }
     }
@@ -229,7 +225,8 @@ public class Puppet
         if (n.UUID == uuid) return n;
 
         // Recurse through children
-        foreach (var child in n.Children) {
+        foreach (var child in n.Children)
+        {
             if (findNode(child, uuid) is { } c) return c;
         }
 
@@ -247,16 +244,17 @@ public class Puppet
         // Update Automators
         foreach (var auto_ in automation)
         {
-            auto_.update();
+            auto_.Update();
         }
 
-        root.beginUpdate();
+        root.BeginUpdate();
 
         if (renderParameters)
         {
 
             // Update parameters
-            foreach (var parameter in parameters) {
+            foreach (var parameter in parameters)
+            {
 
                 if (!enableDrivers || !drivenParameters.ContainsKey(parameter))
                     parameter.update();
@@ -264,19 +262,19 @@ public class Puppet
         }
 
         // Ensure the transform tree is updated
-        root.transformChanged();
+        root.TransformChanged();
 
         if (renderParameters && enableDrivers)
         {
             // Update parameter/node driver nodes (e.g. physics)
             foreach (var driver in drivers)
             {
-                driver.updateDriver();
+                driver.UpdateDriver();
             }
         }
 
         // Update nodes
-        root.update();
+        root.Update();
     }
 
     /// <summary>
@@ -286,7 +284,7 @@ public class Puppet
     {
         foreach (var driver in drivers)
         {
-            driver.reset();
+            driver.Reset();
         }
 
         // Update so that the timestep gets reset.
@@ -352,7 +350,7 @@ public class Puppet
         foreach (var rootPart in rootParts)
         {
             if (!rootPart.RenderEnabled) continue;
-            rootPart.drawOne();
+            rootPart.DrawOne();
         }
     }
 
@@ -589,7 +587,7 @@ public class Puppet
         serializer.Add("meta", new JObject(meta));
         serializer.Add("physics", new JObject(physics));
         var obj = new JObject();
-        root.serializePartial(obj);
+        root.SerializePartial(obj);
         serializer.Add("nodes", obj);
         var list = new JArray();
         foreach (var item in parameters)
@@ -603,7 +601,7 @@ public class Puppet
         foreach (var item in automation)
         {
             var obj1 = new JObject();
-            item.serialize(obj1);
+            item.Serialize(obj1);
             list.Add(obj1);
         }
         serializer.Add("automation", list);
@@ -611,7 +609,7 @@ public class Puppet
         foreach (var item in animations)
         {
             var obj1 = new JObject();
-            item.Value.serialize(obj1);
+            item.Value.Serialize(obj1);
             list.Add(new JProperty(item.Key, obj1));
         }
         serializer.Add("animations", list);
@@ -674,7 +672,7 @@ public class Puppet
                 if (AutomationHelper.HasAutomationType(type))
                 {
                     var auto_ = AutomationHelper.InstantiateAutomation(type, this);
-                    auto_.deserialize(key);
+                    auto_.Deserialize(key);
                     automation.Add(auto_);
                 }
             }
@@ -686,7 +684,7 @@ public class Puppet
             foreach (JProperty obj1 in temp.Cast<JProperty>())
             {
                 var item = new Animation();
-                item.deserialize(obj1.Value as JObject);
+                item.Deserialize((obj1.Value as JObject)!);
                 animations.Add(obj1.Name, item);
             }
         }
@@ -695,18 +693,18 @@ public class Puppet
 
     public void reconstruct()
     {
-        root.reconstruct();
+        root.Reconstruct();
         foreach (var parameter in parameters.ToArray())
         {
             parameter.reconstruct(this);
         }
         foreach (var automation_ in automation.ToArray())
         {
-            automation_.reconstruct(this);
+            automation_.Reconstruct(this);
         }
         foreach (var animation in animations.ToArray())
         {
-            animation.Value.reconstruct(this);
+            animation.Value.Reconstruct(this);
         }
     }
 
@@ -717,18 +715,18 @@ public class Puppet
         puppetRootNode = new Node(this);
 
         // Finally update link etc.
-        root.finalize();
+        root.Dispose();
         foreach (var parameter in parameters)
         {
             parameter.finalize(this);
         }
         foreach (var automation_ in automation)
         {
-            automation_.finalize(this);
+            automation_.Finalize(this);
         }
         foreach (var animation in animations)
         {
-            animation.Value.finalize(this);
+            animation.Value.Finalize(this);
         }
         scanParts(root, true);
         selfSort();
@@ -749,7 +747,7 @@ public class Puppet
     public void applyDeformToChildren()
     {
         var nodes = findNodesType<MeshGroup>(root);
-        foreach (var node in nodes) 
+        foreach (var node in nodes)
         {
             node.applyDeformToChildren(parameters);
         }
@@ -762,6 +760,6 @@ public class Puppet
     /// <returns></returns>
     public Vector4 getCombinedBounds(bool reupdate = false)
     {
-        return root.getCombinedBounds(reupdate, true);
+        return root.GetCombinedBounds(reupdate, true);
     }
 }

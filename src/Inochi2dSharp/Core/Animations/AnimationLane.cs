@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Inochi2dSharp.Core.Param;
+﻿using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
 
@@ -11,69 +6,69 @@ namespace Inochi2dSharp.Core.Animations;
 
 public class AnimationLane
 {
-    private uint refuuid;
+    private uint _refuuid;
 
     /// <summary>
     /// Reference to parameter if any
     /// </summary>
-    public AnimationParameterRef? paramRef;
+    public AnimationParameterRef ParamRef;
 
     /// <summary>
     /// List of frames in the lane
     /// </summary>
-    public List<Keyframe> frames = [];
+    public List<Keyframe> Frames = [];
 
     /// <summary>
     /// The interpolation between each frame in the lane
     /// </summary>
-    public InterpolateMode interpolation;
+    public InterpolateMode Interpolation;
 
     /// <summary>
     /// Merging mode of the lane
     /// <see cref = "ParamMergeMode" />
     /// </summary>
-    public string mergeMode = ParamMergeMode.Forced;
+    public string MergeMode = ParamMergeMode.Forced;
 
     /// <summary>
     /// Serialization function
     /// </summary>
     /// <param name="serializer"></param>
-    public void serialize(JObject serializer)
+    public void Serialize(JObject serializer)
     {
-        serializer.Add("interpolation", interpolation.ToString());
-        if (paramRef != null)
+        serializer.Add("interpolation", Interpolation.ToString());
+        if (ParamRef != null)
         {
-            serializer.Add("uuid", paramRef.targetParam.uuid);
-            serializer.Add("target", paramRef.targetAxis);
+            serializer.Add("uuid", ParamRef.targetParam.uuid);
+            serializer.Add("target", ParamRef.targetAxis);
         }
-        serializer.Add("keyframes", new JArray(frames));
-        serializer.Add("merge_mode", mergeMode);
+        serializer.Add("keyframes", new JArray(Frames));
+        serializer.Add("merge_mode", MergeMode);
     }
 
     /// <summary>
     /// Deserialization function
     /// </summary>
     /// <param name="data"></param>
-    public void deserialize(JObject data)
+    public void Deserialize(JObject data)
     {
         var temp = data["interpolation"];
         if (temp != null)
         {
-            interpolation = Enum.Parse<InterpolateMode>(temp.ToString());
+            Interpolation = Enum.Parse<InterpolateMode>(temp.ToString());
         }
 
         temp = data["uuid"];
         if (temp != null)
         {
-            refuuid = (uint)temp;
+            _refuuid = (uint)temp;
         }
 
-        paramRef = new AnimationParameterRef();
+        ParamRef = new AnimationParameterRef();
 
         temp = data["target"];
         if (temp != null)
         {
-            paramRef.targetAxis = (int)temp;
+            ParamRef.targetAxis = (int)temp;
         }
 
         temp = data["keyframes"];
@@ -81,14 +76,14 @@ public class AnimationLane
         {
             foreach (var item in array)
             {
-                frames.Add(item.ToObject<Keyframe>()!);
+                Frames.Add(item.ToObject<Keyframe>()!);
             }
         }
 
         temp = data["merge_mode"];
         if (temp != null)
         {
-            mergeMode = temp.ToString();
+            MergeMode = temp.ToString();
         }
     }
 
@@ -99,55 +94,55 @@ public class AnimationLane
     /// <param name="frame"></param>
     /// <param name="snapSubframes"></param>
     /// <returns></returns>
-    public float get(float frame, bool snapSubframes = false)
+    public float Get(float frame, bool snapSubframes = false)
     {
-        if (frames.Count > 0)
+        if (Frames.Count > 0)
         {
             // If subframe snapping is turned on then we'll only run at the framerate
             // of the animation, without any smooth interpolation on faster app rates.
             if (snapSubframes) frame = MathF.Floor(frame);
 
             // Fallback if there's only 1 frame
-            if (frames.Count == 1) return frames[0].Value;
+            if (Frames.Count == 1) return Frames[0].Value;
 
-            for (int i = 0; i < frames.Count; i++)
+            for (int i = 0; i < Frames.Count; i++)
             {
-                if (frames[i].Frame < frame) continue;
+                if (Frames[i].Frame < frame) continue;
 
                 // Fallback to not try to index frame -1
-                if (i == 0) return frames[0].Value;
+                if (i == 0) return Frames[0].Value;
 
                 // Interpolation "time" 0->1
                 // Note we use floats here in case you're running the
                 // update step faster than the timestep of the animation
                 // This way it won't look choppy
-                float tonext = frames[i].Frame - frame;
-                float ilen = frames[i].Frame - (float)frames[i - 1].Frame;
+                float tonext = Frames[i].Frame - frame;
+                float ilen = Frames[i].Frame - (float)Frames[i - 1].Frame;
                 float t = 1 - (tonext / ilen);
 
                 // Interpolation tension 0->1
-                float tension = frames[i].Tension;
+                float tension = Frames[i].Tension;
 
-                switch (interpolation)
+                switch (Interpolation)
                 {
                     // Nearest - Snap to the closest frame
                     case InterpolateMode.Nearest:
-                        return t > 0.5 ? frames[i].Value : frames[i - 1].Value;
+                        return t > 0.5 ? Frames[i].Value : Frames[i - 1].Value;
 
                     // Stepped - Snap to the current active keyframe
                     case InterpolateMode.Stepped:
-                        return frames[i - 1].Value;
+                        return Frames[i - 1].Value;
 
                     // Linear - Linearly interpolate between frame A and B
                     case InterpolateMode.Linear:
-                        return float.Lerp(frames[i - 1].Value, frames[i].Value, t);
+                        return float.Lerp(Frames[i - 1].Value, Frames[i].Value, t);
 
                     // Cubic - Smoothly in a curve between frame A and B
                     case InterpolateMode.Cubic:
-                        float prev = frames[int.Max(i - 2, 0)].Value;
-                        float curr = frames[int.Max(i - 1, 0)].Value;
-                        float next1 = frames[int.Min(i, frames.Count - 1)].Value;
-                        float next2 = frames[int.Min(i + 1, frames.Count - 1)].Value;
+                        float prev = Frames[int.Max(i - 2, 0)].Value;
+                        float curr = Frames[int.Max(i - 1, 0)].Value;
+                        float next1 = Frames[int.Min(i, Frames.Count - 1)].Value;
+                        float next2 = Frames[int.Min(i + 1, Frames.Count - 1)].Value;
 
                         // TODO: Switch formulae, catmullrom interpolation
                         return MathHelper.Cubic(prev, curr, next1, next2, t);
@@ -155,12 +150,12 @@ public class AnimationLane
                     // Bezier - Allows the user to specify beziér curves.
                     case InterpolateMode.Bezier:
                         // TODO: Switch formulae, Beziér curve
-                        return float.Lerp(frames[i - 1].Value, frames[i].Value, float.Clamp(MathHelper.Hermite(0, 2 * tension, 1, 2 * tension, t), 0, 1));
+                        return float.Lerp(Frames[i - 1].Value, Frames[i].Value, float.Clamp(MathHelper.Hermite(0, 2 * tension, 1, 2 * tension, t), 0, 1));
 
                     default: throw new Exception("interpolation out");
                 }
             }
-            return frames[^1].Value;
+            return Frames[^1].Value;
         }
 
         // Fallback, no values.
@@ -169,18 +164,18 @@ public class AnimationLane
         return 0;
     }
 
-    public void reconstruct(Puppet puppet) { }
+    public void Reconstruct(Puppet puppet) { }
 
-    public void finalize(Puppet puppet)
+    public void Finalize(Puppet puppet)
     {
-        if (paramRef != null) paramRef.targetParam = puppet.findParameter(refuuid)!;
+        if (ParamRef != null) ParamRef.targetParam = puppet.findParameter(_refuuid)!;
     }
 
     /// <summary>
     /// Updates the order of the keyframes
     /// </summary>
-    public void updateFrames()
+    public void UpdateFrames()
     {
-        frames.Sort((a, b) => a.Frame.CompareTo(b.Frame));
+        Frames.Sort((a, b) => a.Frame.CompareTo(b.Frame));
     }
 }

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Inochi2dSharp.Core.Nodes.Drivers;
+using Inochi2dSharp.Core.Nodes.Shape;
 
 namespace Inochi2dSharp.Core.Nodes;
 
@@ -19,11 +16,16 @@ public static class NodeHelper
     private static bool inAdvancedBlending;
     private static bool inAdvancedBlendingCoherent;
 
+    public static void Init()
+    {
+        RegisterNodeType<SimplePhysics>();
+        RegisterNodeType<Shapes>();
+    }
+
     public static void inSetBlendModeLegacy(BlendMode blendingMode)
     {
         switch (blendingMode)
         {
-
             // If the advanced blending extension is not supported, force to Normal blending
             default:
                 CoreHelper.gl.BlendEquation(GlApi.GL_FUNC_ADD);
@@ -110,47 +112,37 @@ public static class NodeHelper
     public static bool inIsAdvancedBlendMode(BlendMode mode)
     {
         if (!inAdvancedBlending) return false;
-        switch (mode)
+        return mode switch
         {
-            case BlendMode.Multiply:
-            case BlendMode.Screen:
-            case BlendMode.Overlay:
-            case BlendMode.Darken:
-            case BlendMode.Lighten:
-            case BlendMode.ColorDodge:
-            case BlendMode.ColorBurn:
-            case BlendMode.HardLight:
-            case BlendMode.SoftLight:
-            case BlendMode.Difference:
-            case BlendMode.Exclusion:
-                return true;
-
+            BlendMode.Multiply or BlendMode.Screen or BlendMode.Overlay or BlendMode.Darken or BlendMode.Lighten or BlendMode.ColorDodge or BlendMode.ColorBurn or BlendMode.HardLight or BlendMode.SoftLight or BlendMode.Difference or BlendMode.Exclusion => true,
             // Fallback to legacy
-            default:
-                return false;
-        }
+            _ => false,
+        };
     }
 
     public static void inSetBlendMode(BlendMode blendingMode, bool legacyOnly = false)
     {
         if (!inAdvancedBlending || legacyOnly) inSetBlendModeLegacy(blendingMode);
-        else switch (blendingMode)
+        else
+        {
+            switch (blendingMode)
             {
-                case BlendMode.Multiply: CoreHelper.gl.BlendEquation(GL_MULTIPLY_KHR); break;
-                case BlendMode.Screen: CoreHelper.gl.BlendEquation(GL_SCREEN_KHR); break;
-                case BlendMode.Overlay: CoreHelper.gl.BlendEquation(GL_OVERLAY_KHR); break;
-                case BlendMode.Darken: CoreHelper.gl.BlendEquation(GL_DARKEN_KHR); break;
-                case BlendMode.Lighten: CoreHelper.gl.BlendEquation(GL_LIGHTEN_KHR); break;
-                case BlendMode.ColorDodge: CoreHelper.gl.BlendEquation(GL_COLORDODGE_KHR); break;
-                case BlendMode.ColorBurn:  CoreHelper.gl.BlendEquation(GL_COLORBURN_KHR); break;
-                case BlendMode.HardLight:  CoreHelper.gl.BlendEquation(GL_HARDLIGHT_KHR); break;
-                case BlendMode.SoftLight: CoreHelper.gl.BlendEquation(GL_SOFTLIGHT_KHR); break;
-                case BlendMode.Difference: CoreHelper.gl.BlendEquation(GL_DIFFERENCE_KHR); break;
-                case BlendMode.Exclusion: CoreHelper.gl.BlendEquation(GL_EXCLUSION_KHR); break;
+                case BlendMode.Multiply: CoreHelper.gl.BlendEquation(GlApi.GL_MULTIPLY_KHR); break;
+                case BlendMode.Screen: CoreHelper.gl.BlendEquation(GlApi.GL_SCREEN_KHR); break;
+                case BlendMode.Overlay: CoreHelper.gl.BlendEquation(GlApi.GL_OVERLAY_KHR); break;
+                case BlendMode.Darken: CoreHelper.gl.BlendEquation(GlApi.GL_DARKEN_KHR); break;
+                case BlendMode.Lighten: CoreHelper.gl.BlendEquation(GlApi.GL_LIGHTEN_KHR); break;
+                case BlendMode.ColorDodge: CoreHelper.gl.BlendEquation(GlApi.GL_COLORDODGE_KHR); break;
+                case BlendMode.ColorBurn: CoreHelper.gl.BlendEquation(GlApi.GL_COLORBURN_KHR); break;
+                case BlendMode.HardLight: CoreHelper.gl.BlendEquation(GlApi.GL_HARDLIGHT_KHR); break;
+                case BlendMode.SoftLight: CoreHelper.gl.BlendEquation(GlApi.GL_SOFTLIGHT_KHR); break;
+                case BlendMode.Difference: CoreHelper.gl.BlendEquation(GlApi.GL_DIFFERENCE_KHR); break;
+                case BlendMode.Exclusion: CoreHelper.gl.BlendEquation(GlApi.GL_EXCLUSION_KHR); break;
 
                 // Fallback to legacy
                 default: inSetBlendModeLegacy(blendingMode); break;
             }
+        }
     }
 
     public static void inBlendModeBarrier(BlendMode mode)
@@ -235,5 +227,46 @@ public static class NodeHelper
     public static bool HasNodeType(string id)
     {
         return s_typeFactories.ContainsKey(id);
+    }
+
+    /// <summary>
+    /// Begins a mask
+    /// 
+    /// This causes the next draw calls until inBeginMaskContent/inBeginDodgeContent or inEndMask
+    /// to be written to the current mask.
+    /// 
+    /// This also clears whatever old mask there was.
+    /// </summary>
+    /// <param name="hasMasks"></param>
+    public static void inBeginMask(bool hasMasks)
+    {
+        // Enable and clear the stencil buffer so we can write our mask to it
+        CoreHelper.gl.Enable(GlApi.GL_STENCIL_TEST);
+        CoreHelper.gl.ClearStencil(hasMasks ? 0 : 1);
+        CoreHelper.gl.Clear(GlApi.GL_STENCIL_BUFFER_BIT);
+    }
+
+    /// <summary>
+    /// End masking
+    /// 
+    /// Once masking is ended content will no longer be masked by the defined mask.
+    /// </summary>
+    public static void inEndMask()
+    {
+        // We're done stencil testing, disable it again so that we don't accidentally mask more stuff out
+        CoreHelper.gl.StencilMask(0xFF);
+        CoreHelper.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
+        CoreHelper.gl.Disable(GlApi.GL_STENCIL_TEST);
+    }
+
+    /// <summary>
+    /// Starts masking content
+    /// 
+    /// NOTE: This have to be run within a inBeginMask and inEndMask block!
+    /// </summary>
+    public static void inBeginMaskContent()
+    {
+        CoreHelper.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
+        CoreHelper.gl.StencilMask(0x00);
     }
 }

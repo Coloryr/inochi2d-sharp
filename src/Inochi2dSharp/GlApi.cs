@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp;
+﻿namespace Inochi2dSharp;
 
 public abstract class GlApi
 {
@@ -78,6 +72,17 @@ public abstract class GlApi
     public const uint GL_COLOR_ATTACHMENT2 = 0x8CE2;
     public const uint GL_FRAMEBUFFER = 0x8D40;
     public const uint GL_BLEND_ADVANCED_COHERENT_KHR = 0x9285;
+    public const uint GL_MULTIPLY_KHR = 0x9294;
+    public const uint GL_SCREEN_KHR = 0x9295;
+    public const uint GL_OVERLAY_KHR = 0x9296;
+    public const uint GL_DARKEN_KHR = 0x9297;
+    public const uint GL_LIGHTEN_KHR = 0x9298;
+    public const uint GL_COLORDODGE_KHR = 0x9299;
+    public const uint GL_COLORBURN_KHR = 0x929A;
+    public const uint GL_HARDLIGHT_KHR = 0x929B;
+    public const uint GL_SOFTLIGHT_KHR = 0x929C;
+    public const uint GL_DIFFERENCE_KHR = 0x929E;
+    public const uint GL_EXCLUSION_KHR = 0x92A0;
 
     public abstract uint CreateShader(uint type);
     public abstract void ShaderSource(uint shader, string code);

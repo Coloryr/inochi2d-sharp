@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Inochi2dSharp.Fmt;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
@@ -76,6 +71,11 @@ public class Part : Drawable
     /// <param name="textures"></param>
     /// <param name="parent"></param>
     public Part(MeshData data, Texture[] textures, Node? parent = null) : this(data, textures, NodeHelper.InCreateUUID(), parent)
+    {
+
+    }
+
+    public Part() : this(null)
     {
 
     }
@@ -267,9 +267,9 @@ public class Part : Drawable
         updateUVs();
     }
 
-    public override void serializePartial(JObject obj, bool recursive = true)
+    public override void SerializePartial(JObject obj, bool recursive = true)
     {
-        base.serializePartial(obj, recursive);
+        base.SerializePartial(obj, recursive);
         var list = new JArray();
         foreach (var texture in textures)
         {
@@ -305,10 +305,10 @@ public class Part : Drawable
     private unsafe void updateUVs()
     {
         CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
-        var temp = data.Uvs.ToArray();
+        var temp = Data.Uvs.ToArray();
         fixed (void* ptr = temp)
         {
-            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, data.Uvs.Count * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
+            CoreHelper.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Data.Uvs.Count * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
     }
 
@@ -335,7 +335,7 @@ public class Part : Drawable
                 CoreHelper.gl.DrawBuffers(1, [GlApi.GL_COLOR_ATTACHMENT0]);
 
                 PartHelper.partShaderStage1.use();
-                PartHelper.partShaderStage1.setUniform(PartHelper.gs1offset, data.Origin);
+                PartHelper.partShaderStage1.setUniform(PartHelper.gs1offset, Data.Origin);
                 PartHelper.partShaderStage1.setUniform(PartHelper.gs1MvpModel, mModel);
                 PartHelper.partShaderStage1.setUniform(PartHelper.gs1MvpViewProjection, mViewProjection);
                 PartHelper.partShaderStage1.setUniform(PartHelper.gs1opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
@@ -351,7 +351,7 @@ public class Part : Drawable
                 CoreHelper.gl.DrawBuffers(2, [GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
                 PartHelper.partShaderStage2.use();
-                PartHelper.partShaderStage2.setUniform(PartHelper.gs2offset, data.Origin);
+                PartHelper.partShaderStage2.setUniform(PartHelper.gs2offset, Data.Origin);
                 PartHelper.partShaderStage2.setUniform(PartHelper.gs2MvpModel, mModel);
                 PartHelper.partShaderStage2.setUniform(PartHelper.gs2MvpViewProjection, mViewProjection);
                 PartHelper.partShaderStage2.setUniform(PartHelper.gs2opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
@@ -371,7 +371,7 @@ public class Part : Drawable
                 CoreHelper.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
                 PartHelper.partShader.use();
-                PartHelper.partShader.setUniform(PartHelper.offset, data.Origin);
+                PartHelper.partShader.setUniform(PartHelper.offset, Data.Origin);
                 PartHelper.partShader.setUniform(PartHelper.mvpModel, mModel);
                 PartHelper.partShader.setUniform(PartHelper.mvpViewProjection, mViewProjection);
                 PartHelper.partShader.setUniform(PartHelper.gopacity, float.Clamp(offsetOpacity * opacity, 0, 1));
@@ -402,7 +402,7 @@ public class Part : Drawable
     {
         // Enable points array
         CoreHelper.gl.EnableVertexAttribArray(0);
-        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, vbo);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
         CoreHelper.gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable UVs array
@@ -412,11 +412,11 @@ public class Part : Drawable
 
         // Enable deform array
         CoreHelper.gl.EnableVertexAttribArray(2); // deforms
-        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, dbo);
+        CoreHelper.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
         CoreHelper.gl.VertexAttribPointer(2, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Bind index buffer
-        bindIndex();
+        BindIndex();
 
         // Disable the vertex attribs after use
         CoreHelper.gl.DisableVertexAttribArray(0);
@@ -443,9 +443,9 @@ public class Part : Drawable
 
         // Calculate matrix
         var matrix = Transform().Matrix;
-        if (overrideTransformMatrix != null)
-            matrix = overrideTransformMatrix.Matrix;
-        if (oneTimeTransform is { } mat)
+        if (OverrideTransformMatrix != null)
+            matrix = OverrideTransformMatrix.Matrix;
+        if (OneTimeTransform is { } mat)
             matrix = mat * matrix;
 
         // Make sure we check whether we're already bound
@@ -472,7 +472,7 @@ public class Part : Drawable
             var mViewProjection = CoreHelper.inCamera.Matrix();
 
             PartHelper.partMaskShader.use();
-            PartHelper.partMaskShader.setUniform(PartHelper.offset, data.Origin);
+            PartHelper.partMaskShader.setUniform(PartHelper.offset, Data.Origin);
             PartHelper.partMaskShader.setUniform(PartHelper.mMvpModel, mModel);
             PartHelper.partMaskShader.setUniform(PartHelper.mMvpViewProjection, mViewProjection);
             PartHelper.partMaskShader.setUniform(PartHelper.mthreshold, float.Clamp(offsetMaskThreshold + maskAlphaThreshold, 0, 1));
@@ -523,7 +523,7 @@ public class Part : Drawable
         return textures[0];
     }
 
-    public override void renderMask(bool dodge = false)
+    public override void RenderMask(bool dodge = false)
     {
         // Enable writing to stencil buffer and disable writing to color buffer
         CoreHelper.gl.ColorMask(false, false, false, false);
@@ -538,9 +538,9 @@ public class Part : Drawable
         CoreHelper.gl.ColorMask(true, true, true, true);
     }
 
-    public override bool hasParam(string key)
+    public override bool HasParam(string key)
     {
-        if (base.hasParam(key)) return true;
+        if (base.HasParam(key)) return true;
 
         return key switch
         {
@@ -549,10 +549,10 @@ public class Part : Drawable
         };
     }
 
-    public override float getDefaultValue(string key)
+    public override float GetDefaultValue(string key)
     {
         // Skip our list of our parent already handled it
-        float def = base.getDefaultValue(key);
+        float def = base.GetDefaultValue(key);
         if (!float.IsNaN(def)) return def;
 
         return key switch
@@ -565,10 +565,10 @@ public class Part : Drawable
         };
     }
 
-    public override bool setValue(string key, float value)
+    public override bool SetValue(string key, float value)
     {
         // Skip our list of our parent already handled it
-        if (base.setValue(key, value)) return true;
+        if (base.SetValue(key, value)) return true;
 
         switch (key)
         {
@@ -603,7 +603,7 @@ public class Part : Drawable
         }
     }
 
-    public override float getValue(string key)
+    public override float GetValue(string key)
     {
         return key switch
         {
@@ -616,7 +616,7 @@ public class Part : Drawable
             "screenTint.g" => offsetScreenTint.Y,
             "screenTint.b" => offsetScreenTint.Z,
             "emissionStrength" => offsetEmissionStrength,
-            _ => base.getValue(key),
+            _ => base.GetValue(key),
         };
     }
 
@@ -650,77 +650,78 @@ public class Part : Drawable
         return -1;
     }
 
-    public override void beginUpdate()
+    public override void BeginUpdate()
     {
         offsetMaskThreshold = 0;
         offsetOpacity = 1;
         offsetTint = new(1, 1, 1);
         offsetScreenTint = new(0, 0, 0);
         offsetEmissionStrength = 1;
-        base.beginUpdate();
+        base.BeginUpdate();
     }
 
-    public override void rebuffer(MeshData data)
+    public override void Rebuffer(MeshData data)
     {
-        base.rebuffer(data);
+        base.Rebuffer(data);
         this.updateUVs();
     }
 
-    public override void draw()
+    public override void Draw()
     {
         if (!enabled) return;
-        this.drawOne();
+        this.DrawOne();
 
         foreach (var child in Children)
         {
-            child.draw();
+            child.Draw();
         }
     }
 
-    public override void drawOne()
+    public override void DrawOne()
     {
         if (!enabled) return;
-        if (!data.IsReady()) return; // Yeah, don't even try
+        if (!Data.IsReady()) return; // Yeah, don't even try
 
         var cMasks = maskCount();
 
         if (masks.Count > 0)
         {
-            inBeginMask(cMasks > 0);
+            InBeginMask(cMasks > 0);
 
             foreach (var mask in masks)
             {
-                mask.maskSrc.renderMask(mask.Mode == MaskingMode.DodgeMask);
+                mask.maskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
 
-            inBeginMaskContent();
+            InBeginMaskContent();
 
             // We are the content
             this.drawSelf();
 
-            inEndMask();
+            InEndMask();
             return;
         }
 
         // No masks, draw normally
         this.drawSelf();
-        base.drawOne();
+        base.DrawOne();
     }
 
-    public override void drawOneDirect(bool forMasking)
+    public override void DrawOneDirect(bool forMasking)
     {
         if (forMasking) this.drawSelf(true);
         else this.drawSelf(false);
     }
 
-    public override void finalize()
+    public override void Dispose()
     {
-        base.finalize();
+        base.Dispose();
 
         var validMasks = new List<MaskBinding>();
         for (int i = 0; i < masks.Count; i++)
         {
-            if (Puppet.find<Drawable>(masks[i].MaskSrcUUID) is { } nMask) {
+            if (Puppet.find<Drawable>(masks[i].MaskSrcUUID) is { } nMask)
+            {
                 masks[i].maskSrc = nMask;
                 validMasks.Add(masks[i]);
             }
@@ -730,12 +731,12 @@ public class Part : Drawable
         masks = validMasks;
     }
 
-    public override void setOneTimeTransform(Matrix4x4 transform) 
+    public override void SetOneTimeTransform(Matrix4x4 transform)
     {
-        base.setOneTimeTransform(transform);
-        foreach (var m in masks) 
+        base.SetOneTimeTransform(transform);
+        foreach (var m in masks)
         {
-            m.maskSrc.oneTimeTransform = transform;
+            m.maskSrc.OneTimeTransform = transform;
         }
     }
 }

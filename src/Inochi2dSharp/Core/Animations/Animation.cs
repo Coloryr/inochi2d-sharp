@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Animations;
 
@@ -49,25 +44,25 @@ public class Animation
     /// </summary>
     public int LeadOut = -1;
 
-    public void reconstruct(Puppet puppet)
+    public void Reconstruct(Puppet puppet)
     {
-        foreach (var lane in Lanes.ToArray()) lane.reconstruct(puppet);
+        foreach (var lane in Lanes.ToArray()) lane.Reconstruct(puppet);
     }
 
     /// <summary>
     /// Finalizes the animation
     /// </summary>
     /// <param name="puppet"></param>
-    public void finalize(Puppet puppet)
+    public void Finalize(Puppet puppet)
     {
-        foreach (var lane in Lanes) lane.finalize(puppet);
+        foreach (var lane in Lanes) lane.Finalize(puppet);
     }
 
     /// <summary>
     /// Serialization function
     /// </summary>
     /// <param name="serializer"></param>
-    public void serialize(JObject serializer)
+    public void Serialize(JObject serializer)
     {
         serializer.Add("timestep", Timestep);
         serializer.Add("additive", Additive);
@@ -79,12 +74,9 @@ public class Animation
         var list = new JArray();
         foreach (var lane in Lanes)
         {
-            if (lane.paramRef?.targetParam != null)
-            {
-                var obj = new JObject();
-                lane.serialize(obj);
-                list.Add(obj);
-            }
+            var obj = new JObject();
+            lane.Serialize(obj);
+            list.Add(obj);
         }
         serializer.Add("lanes", list);
     }
@@ -93,7 +85,7 @@ public class Animation
     /// Deserialization function
     /// </summary>
     /// <param name="data"></param>
-    public void deserialize(JObject data)
+    public void Deserialize(JObject data)
     {
         var temp = data["timestep"];
         if (temp != null)
@@ -137,7 +129,7 @@ public class Animation
             foreach (JObject item in array.Cast<JObject>())
             {
                 var land = new AnimationLane();
-                land.deserialize(item);
+                land.Deserialize(item);
                 Lanes.Add(land);
             }
         }

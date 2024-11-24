@@ -1,55 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using Inochi2dSharp.Core.Animations;
+﻿using System.Numerics;
 using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Automations;
 
-public class Automation
+public class Automation(Puppet puppet)
 {
-    private Puppet parent;
+    private Puppet Parent = puppet;
 
-    protected List<AutomationBinding> bindings = [];
+    protected List<AutomationBinding> Bindings = [];
 
     /// <summary>
     /// Human readable name of automation
     /// </summary>
-    public string name;
+    public string Name;
 
     /// <summary>
     /// Whether the automation is enabled
     /// </summary>
-    public bool enabled = true;
+    public bool Enabled = true;
 
     /// <summary>
     /// Type ID of the automation
     /// </summary>
-    public string typeId;
-
-    public Automation(Puppet puppet)
-    {
-        this.parent = puppet;
-    }
+    public string TypeId;
 
     /// <summary>
     /// Adds a binding
     /// </summary>
     /// <param name="binding"></param>
-    public void bind(AutomationBinding binding)
+    public virtual void Bind(AutomationBinding binding)
     {
-        this.bindings.Add(binding);
+        Bindings.Add(binding);
     }
 
-
-    public void reconstruct(Puppet puppet)
+    public void Reconstruct(Puppet puppet)
     {
-        foreach (var binding in bindings.ToArray()) 
-            {
-            binding.reconstruct(parent);
+        foreach (var binding in Bindings.ToArray())
+        {
+            binding.Reconstruct(Parent);
         }
     }
 
@@ -57,12 +45,12 @@ public class Automation
     /// Finalizes the loading of the automation
     /// </summary>
     /// <param name="parent"></param>
-    public void finalize(Puppet parent)
+    public void Finalize(Puppet parent)
     {
-        this.parent = parent;
-        foreach (var binding in bindings)
+        Parent = parent;
+        foreach (var binding in Bindings)
         {
-            binding.finalize(parent);
+            binding.Finalize(parent);
         }
     }
 
@@ -70,48 +58,60 @@ public class Automation
     /// Updates and applies the automation to all the parameters
     /// that this automation is bound to
     /// </summary>
-    public void update()
+    public void Update()
     {
-        if (!enabled) return;
-        this.onUpdate();
+        if (!Enabled) return;
+        OnUpdate();
     }
 
     /// <summary>
     /// Serializes a parameter
     /// </summary>
     /// <param name="serializer"></param>
-    public void serialize(JObject serializer)
+    public void Serialize(JObject serializer)
     {
-        serializer.Add("type", typeId);
-        serializer.Add("name", name);
-        var list = new JArray(bindings);
+        serializer.Add("type", TypeId);
+        serializer.Add("name", Name);
+        var list = new JArray();
+        foreach (var item in Bindings)
+        {
+            var obj = new JObject();
+            item.Serialize(obj);
+            list.Add(obj);
+        }
         serializer.Add("bindings", list);
-        serializeSelf(serializer);
+        SerializeSelf(serializer);
     }
 
     /// <summary>
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void deserialize(JObject data)
+    public void Deserialize(JObject data)
     {
         var temp = data["name"];
         if (temp != null)
         {
-            name = temp.ToString();
+            Name = temp.ToString();
+        }
+
+        temp = data["type"];
+        if (temp != null)
+        {
+            TypeId = temp.ToString();
         }
 
         temp = data["bindings"];
         if (temp is JArray array)
         {
-            foreach (JObject obj in temp)
+            foreach (JObject obj in array.Cast<JObject>())
             {
                 var item = new AutomationBinding();
-                item.deserialize(obj);
-                bindings.Add(item);
+                item.Deserialize(obj);
+                Bindings.Add(item);
             }
         }
-        deserializeSelf(data);
+        DeserializeSelf(data);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public class Automation
     /// <param name="value"></param>
     /// <param name="range"></param>
     /// <returns></returns>
-    protected float remapRange(float value, Vector2 range)
+    protected float RemapRange(float value, Vector2 range)
     {
         return range.X + value * (range.Y - range.X);
     }
@@ -133,10 +133,8 @@ public class Automation
     /// Use deltaTime() to get delta time
     /// Use binding.range to get the range to apply the automation within.
     /// </summary>
-    protected void onUpdate() { }
+    protected virtual void OnUpdate() { }
 
-    protected void serializeSelf(JObject serializer) { }
-    protected void deserializeSelf(JObject data) { }
-
-
+    protected virtual void SerializeSelf(JObject serializer) { }
+    protected virtual void DeserializeSelf(JObject data) { }
 }

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Inochi2dSharp.Core.Automations;
+using Inochi2dSharp.Core.Nodes;
 
 namespace Inochi2dSharp;
 
@@ -10,23 +7,29 @@ public static class Inochi2d
 {
     public const string Version = "0.8.7";
 
-    public static double currentTime_ = 0;
-    public static double lastTime_ = 0;
-    public static double deltaTime_ = 0;
-    internal static Func<double> tfunc_;
+    public static float currentTime_ = 0;
+    public static float lastTime_ = 0;
+    public static float deltaTime_ = 0;
+    internal static Func<float> tfunc_;
+
+    public static void Init()
+    {
+        AutomationHelper.Init();
+        NodeHelper.Init();
+    }
 
     /// <summary>
     /// Initializes Inochi2D
     /// Run this after OpenGL context has been set current
     /// </summary>
     /// <param name="timeFunc"></param>
-    public static void inInit(Func<double> timeFunc)
+    public static void inInit(Func<float> timeFunc)
     {
         initRenderer();
         tfunc_ = timeFunc;
     }
 
-    public static void inSetTimingFunc(Func<double> timeFunc)
+    public static void inSetTimingFunc(Func<float> timeFunc)
     {
         tfunc_ = timeFunc;
     }
@@ -45,7 +48,7 @@ public static class Inochi2d
     /// Gets the time difference between the last frame and the current frame
     /// </summary>
     /// <returns></returns>
-    public static double deltaTime()
+    public static float deltaTime()
     {
         return deltaTime_;
     }
@@ -54,7 +57,7 @@ public static class Inochi2d
     /// Gets the last frame's time step
     /// </summary>
     /// <returns></returns>
-    public static double lastTime()
+    public static float lastTime()
     {
         return lastTime_;
     }
@@ -63,7 +66,7 @@ public static class Inochi2d
     /// Gets the current time step
     /// </summary>
     /// <returns></returns>
-    public static double currentTime()
+    public static float currentTime()
     {
         return currentTime_;
     }

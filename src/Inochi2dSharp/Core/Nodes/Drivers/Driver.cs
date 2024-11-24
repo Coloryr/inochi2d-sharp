@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Inochi2dSharp.Core.Nodes;
-using Inochi2dSharp.Core.Param;
+﻿using Inochi2dSharp.Core.Param;
 
 namespace Inochi2dSharp.Core.Nodes.Drivers;
 
+[TypeId("Driver")]
 public abstract class Driver : Node
 {
     protected Driver()
@@ -26,35 +21,36 @@ public abstract class Driver : Node
     }
 
 
-    public override void beginUpdate()
+    public override void BeginUpdate()
     {
-        base.beginUpdate();
+        base.BeginUpdate();
     }
 
-    public override void update()
+    public override void Update()
     {
-        base.update();
+        base.Update();
     }
 
-    public Parameter[] getAffectedParameters()
+    public virtual Parameter[] GetAffectedParameters()
     {
         return [];
     }
 
-    public bool affectsParameter(Parameter param)
+    public bool AffectsParameter(Parameter param)
     {
-        foreach (var p in getAffectedParameters())
+        foreach (var p in GetAffectedParameters())
         {
             if (p.uuid == param.uuid) return true;
         }
         return false;
     }
 
-    public abstract void updateDriver();
+    public abstract void UpdateDriver();
 
-    public abstract void reset();
+    public abstract void Reset();
 
-    public void drawDebug()
+    public virtual void DrawDebug()
     {
+
     }
 }

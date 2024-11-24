@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace Inochi2dSharp.Phys;
 
 public abstract class PhysicsSystem
 {
     //float*
-    private Dictionary<IntPtr, ulong> variableMap = [];
+    private readonly Dictionary<IntPtr, ulong> variableMap = [];
     //float*
-    private List<IntPtr> refs = [];
+    private readonly List<IntPtr> refs = [];
+
     private float[] derivative = [];
 
     private float t;
@@ -22,12 +18,12 @@ public abstract class PhysicsSystem
     /// </summary>
     /// <param name="var"></param>
     /// <returns></returns>
-    protected ulong addVariable(IntPtr var)
+    protected unsafe ulong AddVariable(float* var)
     {
         ulong index = (ulong)refs.Count;
 
         variableMap[new(var)] = index;
-        refs.Add(var);
+        refs.Add(new nint(var));
 
         return index;
     }
@@ -37,10 +33,10 @@ public abstract class PhysicsSystem
     /// </summary>
     /// <param name="var"></param>
     /// <returns></returns>
-    protected unsafe ulong addVariable(Vector2* var)
+    protected unsafe ulong AddVariable(Vector2* var)
     {
-        ulong index = addVariable(new nint(&var[0].X));
-        addVariable(new nint(&var[0].Y));
+        ulong index = AddVariable(&var[0].X);
+        AddVariable(&var[0].Y);
         return index;
     }
 
@@ -49,7 +45,7 @@ public abstract class PhysicsSystem
     /// </summary>
     /// <param name="index"></param>
     /// <param name="value"></param>
-    protected void setD(ulong index, float value)
+    protected void SetD(ulong index, float value)
     {
         derivative[(int)index] = value;
     }
@@ -59,10 +55,10 @@ public abstract class PhysicsSystem
     /// </summary>
     /// <param name="var"></param>
     /// <param name="value"></param>
-    protected void setD(IntPtr var, float value)
+    protected unsafe void SetD(float* var, float value)
     {
-        ulong index = variableMap[var];
-        setD(index, value);
+        ulong index = variableMap[new nint(&var)];
+        SetD(index, value);
     }
 
     /// <summary>
@@ -70,13 +66,13 @@ public abstract class PhysicsSystem
     /// </summary>
     /// <param name="var"></param>
     /// <param name="value"></param>
-    protected unsafe void setD(Vector2* var, Vector2 value)
+    protected unsafe void SetD(Vector2* var, Vector2* value)
     {
-        setD(new nint(&var->X), value.X);
-        setD(new nint(&var->Y), value.Y);
+        SetD(&var->X, value->X);
+        SetD(&var->Y, value->Y);
     }
 
-    protected unsafe List<float> getState()
+    protected unsafe List<float> GetState()
     {
         var vals = new List<float>();
 
@@ -88,7 +84,7 @@ public abstract class PhysicsSystem
         return vals;
     }
 
-    protected unsafe void setState(float[] vals)
+    protected unsafe void SetState(float[] vals)
     {
         for (int idx = 0; idx < refs.Count; idx++)
         {
@@ -101,15 +97,15 @@ public abstract class PhysicsSystem
     /// Evaluate the simulation at a given time
     /// </summary>
     /// <param name="t"></param>
-    protected abstract void eval(float t);
+    protected abstract void Eval(float t);
 
     /// <summary>
     /// Run a simulation tick (Runge-Kutta method)
     /// </summary>
     /// <param name="h"></param>
-    public unsafe void tick(float h)
+    public unsafe virtual void Tick(float h)
     {
-        var cur = getState();
+        var cur = GetState();
         var tmp = new float[cur.Count];
         derivative = new float[cur.Count];
         for (var i = 0; i < cur.Count; i++)
@@ -117,22 +113,22 @@ public abstract class PhysicsSystem
             derivative[i] = 0;
         }
 
-        eval(t);
+        Eval(t);
         float[] k1 = [.. derivative];
 
         for (int i = 0; i < cur.Count; i++)
             *(float*)refs[i] = cur[i] + h * k1[i] / 2f;
-        eval(t + h / 2f);
+        Eval(t + h / 2f);
         float[] k2 = [.. derivative];
 
         for (int i = 0; i < cur.Count; i++)
             *(float*)refs[i] = cur[i] + h * k2[i] / 2f;
-        eval(t + h / 2f);
+        Eval(t + h / 2f);
         float[] k3 = [.. derivative];
 
         for (int i = 0; i < cur.Count; i++)
             *(float*)refs[i] = cur[i] + h * k3[i];
-        eval(t + h);
+        Eval(t + h);
         float[] k4 = [.. derivative];
 
         for (int i = 0; i < cur.Count; i++)
@@ -153,11 +149,11 @@ public abstract class PhysicsSystem
     /// <summary>
     /// Updates the anchor for the physics system
     /// </summary>
-    public abstract void updateAnchor();
+    public abstract void UpdateAnchor();
 
     /// <summary>
     /// Draw debug
     /// </summary>
     /// <param name="trans"></param>
-    public abstract void drawDebug(Matrix4x4 trans);
+    public abstract void DrawDebug(Matrix4x4 trans);
 }

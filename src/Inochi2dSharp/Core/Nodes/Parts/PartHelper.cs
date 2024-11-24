@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Shaders;
 
@@ -61,6 +56,7 @@ public static class PartHelper
     private static void inInitPart()
     {
         NodeHelper.RegisterNodeType<Part>();
+        NodeHelper.RegisterNodeType<AnimatedPart>();
 
         partShader = new Shader("part", Integration.inBasicVert, Integration.inBasicFrag);
         partShaderStage1 = new Shader("part (stage 1)", Integration.inBasicVert, Integration.inBasicStage1);

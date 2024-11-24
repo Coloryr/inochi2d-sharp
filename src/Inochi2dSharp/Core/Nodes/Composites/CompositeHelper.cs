@@ -1,47 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Inochi2dSharp.Shaders;
+﻿using Inochi2dSharp.Shaders;
 
 namespace Inochi2dSharp.Core.Nodes.Composites;
 
 public static class CompositeHelper
 {
-    private static Shader cShader;
-    private static Shader cShaderMask;
+    public static Shader CShader;
+    public static Shader CShaderMask;
 
-    private static int gopacity;
-    private static int gMultColor;
-    private static int gScreenColor;
+    public static int Gopacity;
+    public static int GMultColor;
+    public static int GScreenColor;
 
-    private static int mthreshold;
-    private static int mopacity;
+    public static int Mthreshold;
+    public static int Mopacity;
 
     public static void inInitComposite()
     {
         NodeHelper.RegisterNodeType<Composite>();
 
-        cShader = new Shader("composite",
+        CShader = new Shader("composite",
             Integration.inCompositeVert,
             Integration.inCompositeFrag
         );
 
-        cShader.use();
-        gopacity = cShader.getUniformLocation("opacity");
-        gMultColor = cShader.getUniformLocation("multColor");
-        gScreenColor = cShader.getUniformLocation("screenColor");
-        cShader.setUniform(cShader.getUniformLocation("albedo"), 0);
-        cShader.setUniform(cShader.getUniformLocation("emissive"), 1);
-        cShader.setUniform(cShader.getUniformLocation("bumpmap"), 2);
+        CShader.use();
+        Gopacity = CShader.getUniformLocation("opacity");
+        GMultColor = CShader.getUniformLocation("multColor");
+        GScreenColor = CShader.getUniformLocation("screenColor");
+        CShader.setUniform(CShader.getUniformLocation("albedo"), 0);
+        CShader.setUniform(CShader.getUniformLocation("emissive"), 1);
+        CShader.setUniform(CShader.getUniformLocation("bumpmap"), 2);
 
-        cShaderMask = new Shader("composite (mask)",
+        CShaderMask = new Shader("composite (mask)",
             Integration.inCompositeVert,
             Integration.inCompositeMaskFrag
         );
-        cShaderMask.use();
-        mthreshold = cShader.getUniformLocation("threshold");
-        mopacity = cShader.getUniformLocation("opacity");
+        CShaderMask.use();
+        Mthreshold = CShader.getUniformLocation("threshold");
+        Mopacity = CShader.getUniformLocation("opacity");
     }
 }

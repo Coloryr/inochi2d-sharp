@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 using Newtonsoft.Json.Linq;
@@ -74,7 +69,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
         {
             interpolateMode = InterpolateMode.Linear;
         }
-        else 
+        else
         {
             interpolateMode = _interpolateMode;
         }
@@ -134,7 +129,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     public void clearValue(ref Deformation val)
     {
         // Reset deformation to identity, with the right vertex count
-        if (target.node is Drawable d) 
+        if (target.node is Drawable d)
         {
             val.Clear(d.vertices.length);
         }
@@ -839,24 +834,26 @@ public class DeformationParameterBinding : ParameterBindingImpl
             throw new Exception("paramName is not deform");
         }
 
-        if (target.node is Drawable d) 
+        if (target.node is Drawable d)
         {
-            d.deformStack.push(value);
+            d.DeformStack.push(value);
         }
     }
 
     public override bool isCompatibleWithNode(Node other)
     {
-        if (target.node is Drawable d) 
+        if (target.node is Drawable d)
         {
-            if (other is Drawable o) 
+            if (other is Drawable o)
             {
                 return d.Vertices.length == o.vertices.length;
-            } else
+            }
+            else
             {
                 return false;
             }
-        } else
+        }
+        else
         {
             return false;
         }

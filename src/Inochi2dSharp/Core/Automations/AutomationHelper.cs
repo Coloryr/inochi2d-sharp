@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Inochi2dSharp.Core.Nodes;
-
-namespace Inochi2dSharp.Core.Automations;
+﻿namespace Inochi2dSharp.Core.Automations;
 
 public static class AutomationHelper
 {
-    private static Dictionary<string, Func<Puppet, Automation>> typeFactories = new Dictionary<string, Func<Puppet, Automation>>();
+    private static Dictionary<string, Func<Puppet, Automation>> typeFactories = [];
+
+    public static void Init()
+    {
+        RegisterAutomationType<PhysicsAutomation>();
+        RegisterAutomationType<SineAutomation>();
+    }
 
     public static void RegisterAutomationType<T>() where T : Automation
     {
         var typeId = GetTypeId<T>();
-        typeFactories[typeId] = (Puppet parent) => Activator.CreateInstance(typeof(T), parent) as Automation;
+        typeFactories.Add(typeId, (Puppet parent) => (Activator.CreateInstance(typeof(T), parent) as Automation)!);
     }
 
     public static Automation InstantiateAutomation(string id, Puppet parent)

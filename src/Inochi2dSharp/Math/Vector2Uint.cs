@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp.Math;
+﻿namespace Inochi2dSharp.Math;
 
 public struct Vector2Uint(uint x, uint y)
 {
