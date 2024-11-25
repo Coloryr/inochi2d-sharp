@@ -6,7 +6,7 @@ using Inochi2dSharp.Shaders;
 
 namespace Inochi2dSharp;
 
-public partial class I2dCore
+public partial class I2dCore : IDisposable
 {
     internal readonly I2dTime I2dTime;
 
@@ -58,12 +58,10 @@ public partial class I2dCore
     /// </summary>
     public Vector3 InSceneLightDirection = new(0, 0, 1);
 
-    public int IndiceCount;
-
-    public uint cVBO;
-
-    public int mvpId;
-    public int colorId;
+    private int _indiceCount;
+    private uint _cVBO;
+    private int _mvpId;
+    private int _colorId;
 
     /// <summary>
     /// Initializes the renderer
@@ -75,6 +73,7 @@ public partial class I2dCore
         // Set the viewport and by extension set the textures
         InSetViewport(640, 480);
 
+        var error = gl.GetError();
         // Initialize dynamic meshes
         InInitBlending();
         InInitDrawable();
@@ -82,37 +81,49 @@ public partial class I2dCore
         InInitComposite();
         InInitDebug();
 
+        error = gl.GetError();
+
         // Some defaults that should be changed by app writer
-        InCamera = new Camera();
+        InCamera = new Camera(this);
 
         _inClearColor = new(0, 0, 0, 0);
         // Shader for scene
-        _basicSceneShader = new PostProcessingShader(new Shader("scene", Integration.ScencVert, Integration.SceneFrag));
-        gl.GenVertexArrays(1, out _sceneVAO);
-        gl.GenBuffers(1, out _sceneVBO);
+        _basicSceneShader = new PostProcessingShader(new Shader(this, "scene", Integration.ScencVert, Integration.SceneFrag));
+        _sceneVAO = gl.GenVertexArray();
+        _sceneVBO = gl.GenBuffer();
 
         // Generate the framebuffer we'll be using to render the model and composites
-        gl.GenFramebuffers(1, out _fBuffer);
-        gl.GenFramebuffers(1, out _cfBuffer);
+        _fBuffer = gl.GenFramebuffer();
+        _cfBuffer = gl.GenFramebuffer();
 
         // Generate the color and stencil-depth textures needed
         // Note: we're not using the depth buffer but OpenGL 3.4 does not support stencil-only buffers
-        gl.GenTextures(1, out _fAlbedo);
-        gl.GenTextures(1, out _fEmissive);
-        gl.GenTextures(1, out _fBump);
-        gl.GenTextures(1, out _fStencil);
+        _fAlbedo = gl.GenTexture();
+        _fEmissive = gl.GenTexture();
+        _fBump = gl.GenTexture();
+        _fStencil = gl.GenTexture();
 
-        gl.GenTextures(1, out _cfAlbedo);
-        gl.GenTextures(1, out _cfEmissive);
-        gl.GenTextures(1, out _cfBump);
-        gl.GenTextures(1, out _cfStencil);
+        _cfAlbedo = gl.GenTexture();
+        _cfEmissive = gl.GenTexture();
+        _cfBump = gl.GenTexture();
+        _cfStencil = gl.GenTexture();
+
+        error = gl.GetError();
 
         // Attach textures to framebuffer
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _fBuffer);
+
+        error = gl.GetError();
+
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, _fAlbedo, 0);
+
+        error = gl.GetError();
+
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_TEXTURE_2D, _fEmissive, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT2, GlApi.GL_TEXTURE_2D, _fBump, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_DEPTH_STENCIL_ATTACHMENT, GlApi.GL_TEXTURE_2D, _fStencil, 0);
+
+        error = gl.GetError();
 
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _cfBuffer);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, _cfAlbedo, 0);
@@ -122,6 +133,8 @@ public partial class I2dCore
 
         // go back to default fb
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, 0);
+
+        error = gl.GetError();
     }
 
     public void RenderScene(Vector4 area, PostProcessingShader shaderToUse, uint albedo, uint emissive, uint bump)
@@ -137,33 +150,33 @@ public partial class I2dCore
         gl.BlendEquation(GlApi.GL_FUNC_ADD);
         gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
 
-        shaderToUse.shader.use();
-        shaderToUse.shader.setUniform(shaderToUse.getUniform("mvpModel"),
+        shaderToUse.shader.Use();
+        shaderToUse.shader.SetUniform(shaderToUse.GetUniform("mvpModel"),
             Matrix4x4.Identity
         );
-        shaderToUse.shader.setUniform(shaderToUse.getUniform("mvpView"),
+        shaderToUse.shader.SetUniform(shaderToUse.GetUniform("mvpView"),
             Matrix4x4.CreateTranslation(area.X, area.Y, 0)
         );
-        shaderToUse.shader.setUniform(shaderToUse.getUniform("mvpProjection"),
+        shaderToUse.shader.SetUniform(shaderToUse.GetUniform("mvpProjection"),
            Matrix4x4.CreateOrthographicOffCenter(0, area.Z, area.W, 0, 0, float.Max(area.Z, area.W))
         );
 
         // Ambient light
-        int ambientLightUniform = shaderToUse.getUniform("ambientLight");
-        if (ambientLightUniform != -1) shaderToUse.shader.setUniform(ambientLightUniform, InSceneAmbientLight);
+        int ambientLightUniform = shaderToUse.GetUniform("ambientLight");
+        if (ambientLightUniform != -1) shaderToUse.shader.SetUniform(ambientLightUniform, InSceneAmbientLight);
 
 
         // Light direction
-        int lightDirectionUniform = shaderToUse.getUniform("lightDirection");
-        if (lightDirectionUniform != -1) shaderToUse.shader.setUniform(lightDirectionUniform, InSceneLightDirection);
+        int lightDirectionUniform = shaderToUse.GetUniform("lightDirection");
+        if (lightDirectionUniform != -1) shaderToUse.shader.SetUniform(lightDirectionUniform, InSceneLightDirection);
 
         // Colored light
-        int lightColorUniform = shaderToUse.getUniform("lightColor");
-        if (lightColorUniform != -1) shaderToUse.shader.setUniform(lightColorUniform, InSceneLightColor);
+        int lightColorUniform = shaderToUse.GetUniform("lightColor");
+        if (lightColorUniform != -1) shaderToUse.shader.SetUniform(lightColorUniform, InSceneLightColor);
 
         // framebuffer size
-        int fbSizeUniform = shaderToUse.getUniform("fbSize");
-        if (fbSizeUniform != -1) shaderToUse.shader.setUniform(fbSizeUniform, new Vector2(_inViewportWidth, _inViewportHeight));
+        int fbSizeUniform = shaderToUse.GetUniform("fbSize");
+        if (fbSizeUniform != -1) shaderToUse.shader.SetUniform(fbSizeUniform, new Vector2(_inViewportWidth, _inViewportHeight));
 
         // Bind the texture
         gl.ActiveTexture(GlApi.GL_TEXTURE0);
@@ -378,7 +391,7 @@ public partial class I2dCore
     public void InPostProcessingAddBasicLighting()
     {
         PostProcessingStack.Add(new PostProcessingShader(
-            new Shader("scene+lighting",
+            new Shader(this, "scene+lighting",
                 Integration.ScencVert,
                 Integration.LighingFrag
             )
@@ -591,5 +604,15 @@ public partial class I2dCore
         g = _inClearColor.Y;
         b = _inClearColor.Z;
         a = _inClearColor.W;
+    }
+
+    public void InUpdate()
+    {
+        I2dTime.InUpdate();
+    }
+
+    public void Dispose()
+    {
+        
     }
 }

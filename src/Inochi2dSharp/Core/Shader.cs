@@ -4,10 +4,13 @@ namespace Inochi2dSharp.Core;
 
 public class Shader : IDisposable
 {
-    private string name;
-    private uint shaderProgram;
-    private uint fragShader;
-    private uint vertShader;
+    private readonly string _name;
+
+    private uint _shaderProgram;
+    private uint _fragShader;
+    private uint _vertShader;
+
+    private readonly I2dCore _core;
 
     /// <summary>
     /// Creates a new shader object from source
@@ -16,103 +19,104 @@ public class Shader : IDisposable
     /// <param name="name"></param>
     /// <param name="vertex"></param>
     /// <param name="fragment"></param>
-    public Shader(string name, string vertex, string fragment)
+    public Shader(I2dCore core, string name, string vertex, string fragment)
     {
-        this.name = name;
-        compileShaders(vertex, fragment);
+        _core = core;
+        _name = name;
+        CompileShaders(vertex, fragment);
     }
 
     /// <summary>
     /// Use the shader
     /// </summary>
-    public void use()
+    public void Use()
     {
-        I2dCore.gl.UseProgram(shaderProgram);
+        _core.gl.UseProgram(_shaderProgram);
     }
 
     public int GetUniformLocation(string name)
     {
-        return I2dCore.gl.GetUniformLocation(shaderProgram, name);
+        return _core.gl.GetUniformLocation(_shaderProgram, name);
     }
 
-    public void setUniform(int uniform, bool value)
+    public void SetUniform(int uniform, bool value)
     {
-        I2dCore.gl.Uniform1(uniform, value ? 1 : 0);
+        _core.gl.Uniform1(uniform, value ? 1 : 0);
     }
 
-    public void setUniform(int uniform, int value)
+    public void SetUniform(int uniform, int value)
     {
-        I2dCore.gl.Uniform1(uniform, value);
+        _core.gl.Uniform1(uniform, value);
     }
 
-    public void setUniform(int uniform, float value)
+    public void SetUniform(int uniform, float value)
     {
-        I2dCore.gl.Uniform1(uniform, value);
+        _core.gl.Uniform1(uniform, value);
     }
 
-    public void setUniform(int uniform, Vector2 value)
+    public void SetUniform(int uniform, Vector2 value)
     {
-        I2dCore.gl.Uniform2(uniform, value.X, value.Y);
+        _core.gl.Uniform2(uniform, value.X, value.Y);
     }
 
-    public void setUniform(int uniform, Vector3 value)
+    public void SetUniform(int uniform, Vector3 value)
     {
-        I2dCore.gl.Uniform3(uniform, value.X, value.Y, value.Z);
+        _core.gl.Uniform3(uniform, value.X, value.Y, value.Z);
     }
 
-    public void setUniform(int uniform, Vector4 value)
+    public void SetUniform(int uniform, Vector4 value)
     {
-        I2dCore.gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
+        _core.gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
     }
 
-    public unsafe void setUniform(int uniform, Matrix4x4 value)
+    public unsafe void SetUniform(int uniform, Matrix4x4 value)
     {
-        I2dCore.gl.UniformMatrix4(uniform, 1, true, new(&value));
+        _core.gl.UniformMatrix4(uniform, 1, true, new(&value));
     }
 
-    private void compileShaders(string vertex, string fragment)
+    private void CompileShaders(string vertex, string fragment)
     {
         // Compile vertex shader
-        vertShader = I2dCore.gl.CreateShader(GlApi.GL_VERTEX_SHADER);
-        I2dCore.gl.ShaderSource(vertShader, vertex);
-        I2dCore.gl.CompileShader(vertShader);
-        verifyShader(vertShader);
+        _vertShader = _core.gl.CreateShader(GlApi.GL_VERTEX_SHADER);
+        _core.gl.ShaderSource(_vertShader, vertex);
+        _core.gl.CompileShader(_vertShader);
+        VerifyShader(_vertShader);
 
         // Compile fragment shader
-        fragShader = I2dCore.gl.CreateShader(GlApi.GL_FRAGMENT_SHADER);
-        I2dCore.gl.ShaderSource(fragShader, fragment);
-        I2dCore.gl.CompileShader(fragShader);
-        verifyShader(fragShader);
+        _fragShader = _core.gl.CreateShader(GlApi.GL_FRAGMENT_SHADER);
+        _core.gl.ShaderSource(_fragShader, fragment);
+        _core.gl.CompileShader(_fragShader);
+        VerifyShader(_fragShader);
 
         // Attach and link them
-        shaderProgram = I2dCore.gl.CreateProgram();
-        I2dCore.gl.AttachShader(shaderProgram, vertShader);
-        I2dCore.gl.AttachShader(shaderProgram, fragShader);
-        I2dCore.gl.LinkProgram(shaderProgram);
-        verifyProgram();
+        _shaderProgram = _core.gl.CreateProgram();
+        _core.gl.AttachShader(_shaderProgram, _vertShader);
+        _core.gl.AttachShader(_shaderProgram, _fragShader);
+        _core.gl.LinkProgram(_shaderProgram);
+        VerifyProgram();
     }
 
-    private void verifyShader(uint shader)
+    private void VerifyShader(uint shader)
     {
-        string shaderType = shader == fragShader ? "fragment" : "vertex";
+        string shaderType = shader == _fragShader ? "fragment" : "vertex";
 
-        I2dCore.gl.GetShader(shader, GlApi.GL_COMPILE_STATUS, out int compileStatus);
+        var compileStatus = _core.gl.GetShader(shader, GlApi.GL_COMPILE_STATUS);
         if (compileStatus == 0)
         {
             // Fetch the error log
-            I2dCore.gl.GetShaderInfoLog(shader, out var log);
+            var log = _core.gl.GetShaderInfoLog(shader);
 
-            throw new Exception($"Compilation error for {name}->{shaderType}:\n\n{log}");
+            throw new Exception($"Compilation error for {_name}->{shaderType}:\n\n{log}");
         }
     }
 
-    private void verifyProgram()
+    private void VerifyProgram()
     {
-        I2dCore.gl.GetProgram(shaderProgram, GlApi.GL_LINK_STATUS, out var linkStatus);
+        var linkStatus = _core.gl.GetProgram(_shaderProgram, GlApi.GL_LINK_STATUS);
         if (linkStatus == 0)
         {
             // Fetch the error log
-            I2dCore.gl.GetProgramInfoLog(shaderProgram, out var log);
+            var log = _core.gl.GetProgramInfoLog(_shaderProgram);
 
             throw new Exception(log);
         }
@@ -120,11 +124,11 @@ public class Shader : IDisposable
 
     public void Dispose()
     {
-        I2dCore.gl.DetachShader(shaderProgram, vertShader);
-        I2dCore.gl.DetachShader(shaderProgram, fragShader);
-        I2dCore.gl.DeleteProgram(shaderProgram);
+        _core.gl.DetachShader(_shaderProgram, _vertShader);
+        _core.gl.DetachShader(_shaderProgram, _fragShader);
+        _core.gl.DeleteProgram(_shaderProgram);
 
-        I2dCore.gl.DeleteShader(fragShader);
-        I2dCore.gl.DeleteShader(vertShader);
+        _core.gl.DeleteShader(_fragShader);
+        _core.gl.DeleteShader(_vertShader);
     }
 }

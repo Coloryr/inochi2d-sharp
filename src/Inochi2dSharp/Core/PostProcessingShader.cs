@@ -2,7 +2,7 @@
 
 public class PostProcessingShader
 {
-    private Dictionary<string, int> uniformCache = [];
+    private readonly Dictionary<string, int> _uniformCache = [];
 
     public Shader shader;
 
@@ -10,10 +10,10 @@ public class PostProcessingShader
     {
         this.shader = shader;
 
-        shader.use();
-        shader.setUniform(shader.GetUniformLocation("albedo"), 0);
-        shader.setUniform(shader.GetUniformLocation("emissive"), 1);
-        shader.setUniform(shader.GetUniformLocation("bumpmap"), 2);
+        shader.Use();
+        shader.SetUniform(shader.GetUniformLocation("albedo"), 0);
+        shader.SetUniform(shader.GetUniformLocation("emissive"), 1);
+        shader.SetUniform(shader.GetUniformLocation("bumpmap"), 2);
     }
 
     /// <summary>
@@ -21,11 +21,11 @@ public class PostProcessingShader
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public int getUniform(string name)
+    public int GetUniform(string name)
     {
-        if (hasUniform(name)) return uniformCache[name];
+        if (HasUniform(name)) return _uniformCache[name];
         int element = shader.GetUniformLocation(name);
-        uniformCache[name] = element;
+        _uniformCache[name] = element;
         return element;
     }
 
@@ -34,8 +34,8 @@ public class PostProcessingShader
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public bool hasUniform(string name)
+    public bool HasUniform(string name)
     {
-        return uniformCache.ContainsKey(name);
+        return _uniformCache.ContainsKey(name);
     }
 }

@@ -12,14 +12,23 @@ public class Pendulum : PhysicsSystem
     private readonly unsafe float* _angle = (float*)Marshal.AllocHGlobal(sizeof(float));
     private readonly unsafe float* _dAngle = (float*)Marshal.AllocHGlobal(sizeof(float));
 
-    public unsafe Pendulum(SimplePhysics driver)
+    private readonly I2dCore _core;
+
+    public unsafe Pendulum(I2dCore core, SimplePhysics driver)
     {
         _driver = driver;
+        _core = core;
 
         _bob = driver._anchor + new Vector2(0, driver.Length);
 
         AddVariable(_angle);
         AddVariable(_dAngle);
+    }
+
+    public override unsafe void Dispose()
+    {
+        Marshal.FreeHGlobal(new nint(_angle));
+        Marshal.FreeHGlobal(new nint(_dAngle));
     }
 
     public override unsafe void Tick(float h)
@@ -45,9 +54,9 @@ public class Pendulum : PhysicsSystem
             new Vector3(_bob.X, _bob.Y, 0),
         ];
 
-        I2dCore.InDbgSetBuffer(points);
-        I2dCore.InDbgLineWidth(3);
-        I2dCore.InDbgDrawLines(new Vector4(1, 0, 1, 1), trans);
+        _core.InDbgSetBuffer(points);
+        _core.InDbgLineWidth(3);
+        _core.InDbgDrawLines(new Vector4(1, 0, 1, 1), trans);
     }
 
     public override void UpdateAnchor()

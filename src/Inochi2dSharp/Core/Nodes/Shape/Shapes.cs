@@ -3,28 +3,18 @@
 namespace Inochi2dSharp.Core.Nodes.Shape;
 
 [TypeId("Shapes")]
-public class Shapes : Node
+public class Shapes(I2dCore core, Node? parent = null) : Node(core, parent)
 {
     public const float MAX_DIST = 1.5f;
     /// <summary>
     /// A list of the shape offsets to apply per part
     /// </summary>
-    public Dictionary<Drawable, ShapeNode[]> shapes;
+    private readonly Dictionary<Drawable, ShapeNode[]> _shapes = [];
 
     /// <summary>
     /// The cursor inside the Shapes node
     /// </summary>
     public Vector2 selector;
-
-    public Shapes() : this(null)
-    {
-
-    }
-
-    public Shapes(Node? parent = null) : base(parent)
-    {
-
-    }
 
     public override string TypeId()
     {
@@ -33,7 +23,7 @@ public class Shapes : Node
 
     public override void Update()
     {
-        foreach (var item in shapes)
+        foreach (var item in _shapes)
         {
             var part = item.Key;
             var nodes = item.Value;

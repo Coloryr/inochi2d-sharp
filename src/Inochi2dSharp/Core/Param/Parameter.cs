@@ -7,8 +7,8 @@ namespace Inochi2dSharp.Core.Param;
 
 public class Parameter : IDisposable
 {
-    private Combinator _iadd;
-    private Combinator _imul;
+    private readonly Combinator _iadd = new();
+    private readonly Combinator _imul = new();
 
     /// <summary>
     /// Unique ID of parameter
@@ -77,14 +77,18 @@ public class Parameter : IDisposable
     /// </summary>
     public List<ParameterBinding> Bindings = [];
 
-    public Parameter()
-    {
+    private readonly I2dCore _core;
 
+    public Parameter(I2dCore core)
+    {
+        _core = core;
     }
 
-    public Parameter(string name, bool isVec2)
+    public Parameter(I2dCore core, string name, bool isVec2)
     {
-        UUID = NodeHelper.InCreateUUID();
+        _core = core;
+
+        UUID = core.InCreateUUID();
         Name = name;
         IsVec2 = isVec2;
         if (!isVec2)
@@ -121,7 +125,7 @@ public class Parameter : IDisposable
     /// <returns></returns>
     public Parameter Copy()
     {
-        var newParam = new Parameter(Name + " (Copy)", IsVec2)
+        var newParam = new Parameter(_core, Name + " (Copy)", IsVec2)
         {
             Min = Min,
             Max = Max,
@@ -131,11 +135,11 @@ public class Parameter : IDisposable
         foreach (var binding in Bindings)
         {
             var newBinding = newParam.CreateBinding(
-                binding.getNode(),
-                binding.getName(),
+                binding.GetNode(),
+                binding.GetName(),
                 false
             );
-            newBinding.interpolateMode = binding.interpolateMode;
+            newBinding.InterpolateMode = binding.InterpolateMode;
             for (int x = 0; x < AxisPointCount(0); x++)
             {
                 for (int y = 0; y < AxisPointCount(1); y++)
@@ -234,7 +238,7 @@ public class Parameter : IDisposable
     {
         foreach (var binding in Bindings)
         {
-            binding.reconstruct(puppet);
+            binding.Reconstruct(puppet);
         }
     }
 
@@ -250,9 +254,9 @@ public class Parameter : IDisposable
         var validBindingList = new List<ParameterBinding>();
         foreach (var binding in Bindings)
         {
-            if (puppet.Find<Node>(binding.getNodeUUID()) != null)
+            if (puppet.Find<Node>(binding.GetNodeUUID()) != null)
             {
-                binding.finalize(puppet);
+                binding.Finalize(puppet);
                 validBindingList.Add(binding);
             }
         }
@@ -300,8 +304,8 @@ public class Parameter : IDisposable
         }
 
         // Reset combinatorics
-        _iadd.clear();
-        _imul.clear();
+        _iadd.Clear();
+        _imul.Clear();
     }
 
     public void PushIOffset(Vector2 offset, string mode = ParamMergeMode.Passthrough, float weight = 1)
@@ -676,8 +680,8 @@ public class Parameter : IDisposable
     {
         foreach (var binding in Bindings)
         {
-            if (binding.getNode() != n) continue;
-            if (binding.getName() == bindingName) return binding;
+            if (binding.GetNode() != n) continue;
+            if (binding.GetName() == bindingName) return binding;
         }
         return null;
     }
@@ -692,8 +696,8 @@ public class Parameter : IDisposable
     {
         foreach (var binding in Bindings)
         {
-            if (binding.getNode() != n) continue;
-            if (binding.getName() == bindingName) return true;
+            if (binding.GetNode() != n) continue;
+            if (binding.GetName() == bindingName) return true;
         }
         return false;
     }
@@ -707,7 +711,7 @@ public class Parameter : IDisposable
     {
         foreach (var binding in Bindings)
         {
-            if (binding.getNode() == n) return true;
+            if (binding.GetNode() == n) return true;
         }
         return false;
     }
@@ -765,7 +769,7 @@ public class Parameter : IDisposable
     /// <param name="binding"></param>
     public void AddBinding(ParameterBinding binding)
     {
-        if (HasBinding(binding.getNode(), binding.getName()))
+        if (HasBinding(binding.GetNode(), binding.GetName()))
         {
             throw new Exception("binding is exist");
         }
@@ -812,6 +816,6 @@ public class Parameter : IDisposable
 
     public void Dispose()
     {
-        NodeHelper.InUnloadUUID(UUID);
+        _core.InUnloadUUID(UUID);
     }
 }

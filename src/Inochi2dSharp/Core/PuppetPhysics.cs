@@ -8,7 +8,8 @@ namespace Inochi2dSharp.Core;
 public record PuppetPhysics
 {
     [JsonProperty("pixelsPerMeter")]
-    public float pixelsPerMeter = 1000;
+    public float PixelsPerMeter = 1000;
+
     [JsonProperty("gravity")]
-    public float gravity = 9.8f;
+    public float Gravity = 9.8f;
 }

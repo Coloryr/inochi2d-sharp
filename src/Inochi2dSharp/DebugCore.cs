@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using Inochi2dSharp.Core;
 using Inochi2dSharp.Shaders;
 
 namespace Inochi2dSharp;
@@ -18,14 +19,14 @@ public partial class I2dCore
 
     private void InInitDebug()
     {
-        DbgShaderLine = new Shader("debug line", Integration.DebugVert, Integration.DebugLineFrag);
-        DbgShaderPoint = new Shader("debug point", Integration.DebugVert, Integration.DebugPointFrag);
-        gl.GenVertexArrays(1, out DbgVAO);
-        gl.GenBuffers(1, out DbgVBO);
-        gl.GenBuffers(1, out DbgIBO);
+        DbgShaderLine = new Shader(this, "debug line", Integration.DebugVert, Integration.DebugLineFrag);
+        DbgShaderPoint = new Shader(this, "debug point", Integration.DebugVert, Integration.DebugPointFrag);
+        DbgVAO = gl.GenVertexArray();
+        DbgVBO = gl.GenBuffer();
+        DbgIBO = gl.GenBuffer();
 
-        mvpId = DbgShaderLine.getUniformLocation("mvp");
-        colorId = DbgShaderLine.getUniformLocation("color");
+        _mvpId = DbgShaderLine.GetUniformLocation("mvp");
+        _colorId = DbgShaderLine.GetUniformLocation("color");
     }
 
     private void InUpdateDbgVerts(Vector3[] points)
@@ -51,9 +52,9 @@ public partial class I2dCore
             gl.BufferData(GlApi.GL_ARRAY_BUFFER, points.Length * Marshal.SizeOf<Vector3>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
 
-        cVBO = DbgVBO;
+        _cVBO = DbgVBO;
 
-        IndiceCount = indices.Length;
+        _indiceCount = indices.Length;
         gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, DbgIBO);
         fixed (void* ptr = indices)
         {
@@ -98,9 +99,9 @@ public partial class I2dCore
     {
         gl.BindVertexArray(DbgVAO);
         gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, vbo);
-        cVBO = vbo;
+        _cVBO = vbo;
         gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, ibo);
-        IndiceCount = count;
+        _indiceCount = count;
     }
 
     /// <summary>
@@ -130,15 +131,15 @@ public partial class I2dCore
 
         gl.BindVertexArray(DbgVAO);
 
-        DbgShaderPoint.use();
-        DbgShaderPoint.setUniform(mvpId, InCamera.Matrix() * transform);
-        DbgShaderPoint.setUniform(colorId, color);
+        DbgShaderPoint.Use();
+        DbgShaderPoint.SetUniform(_mvpId, InCamera.Matrix() * transform);
+        DbgShaderPoint.SetUniform(_colorId, color);
 
         gl.EnableVertexAttribArray(0);
-        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, cVBO);
+        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, _cVBO);
         gl.VertexAttribPointer(0, 3, GlApi.GL_FLOAT, false, 0, 0);
 
-        gl.DrawElements(GlApi.GL_POINTS, IndiceCount, GlApi.GL_UNSIGNED_SHORT, 0);
+        gl.DrawElements(GlApi.GL_POINTS, _indiceCount, GlApi.GL_UNSIGNED_SHORT, 0);
         gl.DisableVertexAttribArray(0);
 
         gl.BlendFuncSeparate(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA, GlApi.GL_ONE, GlApi.GL_ONE);
@@ -162,15 +163,15 @@ public partial class I2dCore
 
         gl.BindVertexArray(DbgVAO);
 
-        DbgShaderLine.use();
-        DbgShaderLine.setUniform(mvpId, InCamera.Matrix() * transform);
-        DbgShaderLine.setUniform(colorId, color);
+        DbgShaderLine.Use();
+        DbgShaderLine.SetUniform(_mvpId, InCamera.Matrix() * transform);
+        DbgShaderLine.SetUniform(_colorId, color);
 
         gl.EnableVertexAttribArray(0);
-        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, cVBO);
+        gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, _cVBO);
         gl.VertexAttribPointer(0, 3, GlApi.GL_FLOAT, false, 0, 0);
 
-        gl.DrawElements(GlApi.GL_LINES, IndiceCount, GlApi.GL_UNSIGNED_SHORT, 0);
+        gl.DrawElements(GlApi.GL_LINES, _indiceCount, GlApi.GL_UNSIGNED_SHORT, 0);
         gl.DisableVertexAttribArray(0);
 
         gl.BlendFuncSeparate(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA, GlApi.GL_ONE, GlApi.GL_ONE);

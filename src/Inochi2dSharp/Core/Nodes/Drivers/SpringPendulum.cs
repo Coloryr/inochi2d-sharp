@@ -11,8 +11,11 @@ public class SpringPendulum : PhysicsSystem
     private readonly unsafe Vector2* _bob = (Vector2*)Marshal.AllocHGlobal(Marshal.SizeOf<Vector2>());
     private readonly unsafe Vector2* _dBob = (Vector2*)Marshal.AllocHGlobal(Marshal.SizeOf<Vector2>());
 
-    public unsafe SpringPendulum(SimplePhysics driver)
+    private readonly I2dCore _core;
+
+    public unsafe SpringPendulum(I2dCore core, SimplePhysics driver)
     {
+        _core = core;
         _driver = driver;
 
         *_bob = driver._anchor + new Vector2(0, driver.Length);
@@ -37,9 +40,9 @@ public class SpringPendulum : PhysicsSystem
             new Vector3(_bob->X, _bob->Y, 0),
         ];
 
-        I2dCore.InDbgSetBuffer(points);
-        I2dCore.InDbgLineWidth(3);
-        I2dCore.InDbgDrawLines(new Vector4(1, 0, 1, 1), trans);
+        _core.InDbgSetBuffer(points);
+        _core.InDbgLineWidth(3);
+        _core.InDbgDrawLines(new Vector4(1, 0, 1, 1), trans);
     }
 
     public override unsafe void UpdateAnchor()
@@ -87,5 +90,11 @@ public class SpringPendulum : PhysicsSystem
         ddBob += ddBobDamping;
 
         SetD(_dBob, &ddBob);
+    }
+
+    public override unsafe void Dispose()
+    {
+        Marshal.FreeHGlobal(new nint(_bob));
+        Marshal.FreeHGlobal(new nint(_dBob));
     }
 }

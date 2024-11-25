@@ -17,10 +17,9 @@ public partial class I2dCore
     /// <summary>
     /// Loads a puppet from a file
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="file"></param>
     /// <returns></returns>
-    public T InLoadPuppet<T>(string file) where T : Puppet
+    public Puppet InLoadPuppet(string file)
     {
         try
         {
@@ -33,14 +32,14 @@ public partial class I2dCore
                     {
                         throw new Exception("Invalid data format for INP puppet");
                     }
-                    return InLoadINPPuppet<T>(buffer);
+                    return InLoadINPPuppet(buffer);
 
                 case ".inx":
                     if (!BinFmt.InVerifyMagicBytes(buffer))
                     {
                         throw new Exception("Invalid data format for Inochi Creator INX");
                     }
-                    return InLoadINPPuppet<T>(buffer);
+                    return InLoadINPPuppet(buffer);
 
                 default:
                     throw new Exception($"Invalid file format of {Path.GetExtension(file)} at path {file}");
@@ -49,7 +48,7 @@ public partial class I2dCore
         catch (Exception ex)
         {
             InEndTextureLoading(false);
-            throw ex;
+            throw new Exception("load error", ex);
         }
     }
 
@@ -62,7 +61,7 @@ public partial class I2dCore
     {
         var temp = Encoding.UTF8.GetString(data);
         var obj = JObject.Parse(temp);
-        var puppet = new Puppet(I2dTime);
+        var puppet = new Puppet(this);
         puppet.Deserialize(obj);
         return puppet;
     }
@@ -83,7 +82,7 @@ public partial class I2dCore
     /// </summary>
     /// <param name=""></param>
     /// <returns></returns>
-    public T InLoadINPPuppet<T>(Stream buffer) where T : Puppet
+    public Puppet InLoadINPPuppet(Stream buffer)
     {
         IsLoadingINP = true;
 
@@ -140,7 +139,7 @@ public partial class I2dCore
             slots.Add(InGetLatestTexture());
         }
 
-        var puppet = new Puppet(I2dTime);
+        var puppet = new Puppet(this);
         var obj = new JObject(puppetData);
         puppet.Deserialize(obj);
         puppet.TextureSlots = slots;
@@ -179,7 +178,7 @@ public partial class I2dCore
         }
 
         // We're done!
-        return (T)puppet;
+        return puppet;
     }
 
     /// <summary>

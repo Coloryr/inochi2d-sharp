@@ -32,7 +32,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         serializer.Add("param_name", Target.paramName);
         serializer.Add("values", values.ToToken());
         serializer.Add("isSet", isSet.ToToken());
-        serializer.Add("interpolate_mode", interpolateMode.ToString());
+        serializer.Add("interpolate_mode", InterpolateMode.ToString());
     }
 
     /// <summary>
@@ -67,11 +67,11 @@ public class ValueParameterBinding : ParameterBindingImpl
         temp = data["interpolate_mode"];
         if (temp == null || !Enum.TryParse<InterpolateMode>(temp.ToString(), out var _interpolateMode))
         {
-            interpolateMode = InterpolateMode.Linear;
+            InterpolateMode = InterpolateMode.Linear;
         }
         else
         {
-            interpolateMode = _interpolateMode;
+            InterpolateMode = _interpolateMode;
         }
 
         int xCount = Parameter.AxisPointCount(0);
@@ -545,7 +545,7 @@ public class ValueParameterBinding : ParameterBindingImpl
 
     public float Interpolate(Vector2Int leftKeypoint, Vector2 offset)
     {
-        return interpolateMode switch
+        return InterpolateMode switch
         {
             InterpolateMode.Nearest => InterpolateNearest(leftKeypoint, offset),
             InterpolateMode.Linear => InterpolateLinear(leftKeypoint, offset),

@@ -22,32 +22,32 @@ public class Composite : Node
     /// <summary>
     /// The blending mode
     /// </summary>
-    public BlendMode BlendingMode;
+    private BlendMode _blendingMode;
 
     /// <summary>
     /// The opacity of the composite
     /// </summary>
-    public float Opacity = 1;
+    private float _opacity = 1;
 
     /// <summary>
     /// The threshold for rendering masks
     /// </summary>
-    public float Threshold = 0.5f;
+    private float _threshold = 0.5f;
 
     /// <summary>
     /// Multiplicative tint color
     /// </summary>
-    public Vector3 Tint = new(1, 1, 1);
+    private Vector3 _tint = new(1, 1, 1);
 
     /// <summary>
     /// Screen tint color
     /// </summary>
-    public Vector3 ScreenTint = new(0, 0, 0);
+    private Vector3 _screenTint = new(0, 0, 0);
 
     /// <summary>
     /// List of masks to apply
     /// </summary>
-    public List<MaskBinding> Masks = [];
+    private List<MaskBinding> _masks = [];
 
     /// <summary>
     /// Constructs a new mask
@@ -142,7 +142,7 @@ public class Composite : Node
 
     public bool IsMaskedBy(Drawable drawable)
     {
-        foreach (var mask in Masks)
+        foreach (var mask in _masks)
         {
             if (mask.maskSrc.UUID == drawable.UUID) return true;
         }
@@ -152,9 +152,9 @@ public class Composite : Node
     public int GetMaskIdx(Drawable drawable)
     {
         if (drawable is null) return -1;
-        for (int i = 0; i < Masks.Count; i++)
+        for (int i = 0; i < _masks.Count; i++)
         {
-            var mask = Masks[i];
+            var mask = _masks[i];
             if (mask.maskSrc.UUID == drawable.UUID) return i;
         }
         return -1;
@@ -162,9 +162,9 @@ public class Composite : Node
 
     public int GetMaskIdx(uint uuid)
     {
-        for (int i = 0; i < Masks.Count; i++)
+        for (int i = 0; i < _masks.Count; i++)
         {
-            var mask = Masks[i];
+            var mask = _masks[i];
             if (mask.maskSrc.UUID == uuid) return i;
         }
         return -1;
@@ -187,11 +187,11 @@ public class Composite : Node
 
         var cMasks = MaskCount();
 
-        if (Masks.Count > 0)
+        if (_masks.Count > 0)
         {
             _core.InBeginMask(cMasks > 0);
 
-            foreach (var mask in Masks)
+            foreach (var mask in _masks)
             {
                 mask.maskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
@@ -221,17 +221,17 @@ public class Composite : Node
         base.Dispose();
 
         var validMasks = new List<MaskBinding>();
-        for (int i = 0; i < Masks.Count; i++)
+        for (int i = 0; i < _masks.Count; i++)
         {
-            if (Puppet.Find<Drawable>(Masks[i].MaskSrcUUID) is { } nMask)
+            if (Puppet.Find<Drawable>(_masks[i].MaskSrcUUID) is { } nMask)
             {
-                Masks[i].maskSrc = nMask;
-                validMasks.Add(Masks[i]);
+                _masks[i].maskSrc = nMask;
+                validMasks.Add(_masks[i]);
             }
         }
 
         // Remove invalid masks
-        Masks = validMasks;
+        _masks = validMasks;
     }
 
     /// <summary>
@@ -272,22 +272,22 @@ public class Composite : Node
 
         _core.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
-        _core.CShader.use();
-        _core.CShader.setUniform(_core.Gopacity, float.Clamp(_offsetOpacity * Opacity, 0, 1));
+        _core.CShader.Use();
+        _core.CShader.SetUniform(_core.Gopacity, float.Clamp(_offsetOpacity * _opacity, 0, 1));
         _core.IncCompositePrepareRender();
 
-        var clampedColor = Tint;
-        if (!float.IsNaN(_offsetTint.X)) clampedColor.X = float.Clamp(Tint.X * _offsetTint.X, 0, 1);
-        if (!float.IsNaN(_offsetTint.Y)) clampedColor.Y = float.Clamp(Tint.Y * _offsetTint.Y, 0, 1);
-        if (!float.IsNaN(_offsetTint.Z)) clampedColor.Z = float.Clamp(Tint.Z * _offsetTint.Z, 0, 1);
-        _core.CShader.setUniform(_core.GMultColor, clampedColor);
+        var clampedColor = _tint;
+        if (!float.IsNaN(_offsetTint.X)) clampedColor.X = float.Clamp(_tint.X * _offsetTint.X, 0, 1);
+        if (!float.IsNaN(_offsetTint.Y)) clampedColor.Y = float.Clamp(_tint.Y * _offsetTint.Y, 0, 1);
+        if (!float.IsNaN(_offsetTint.Z)) clampedColor.Z = float.Clamp(_tint.Z * _offsetTint.Z, 0, 1);
+        _core.CShader.SetUniform(_core.GMultColor, clampedColor);
 
-        clampedColor = ScreenTint;
-        if (!float.IsNaN(_offsetScreenTint.X)) clampedColor.X = float.Clamp(ScreenTint.X + _offsetScreenTint.X, 0, 1);
-        if (!float.IsNaN(_offsetScreenTint.Y)) clampedColor.Y = float.Clamp(ScreenTint.Y + _offsetScreenTint.Y, 0, 1);
-        if (!float.IsNaN(_offsetScreenTint.Z)) clampedColor.Z = float.Clamp(ScreenTint.Z + _offsetScreenTint.Z, 0, 1);
-        _core.CShader.setUniform(_core.GScreenColor, clampedColor);
-        _core.InSetBlendMode(BlendingMode, true);
+        clampedColor = _screenTint;
+        if (!float.IsNaN(_offsetScreenTint.X)) clampedColor.X = float.Clamp(_screenTint.X + _offsetScreenTint.X, 0, 1);
+        if (!float.IsNaN(_offsetScreenTint.Y)) clampedColor.Y = float.Clamp(_screenTint.Y + _offsetScreenTint.Y, 0, 1);
+        if (!float.IsNaN(_offsetScreenTint.Z)) clampedColor.Z = float.Clamp(_screenTint.Z + _offsetScreenTint.Z, 0, 1);
+        _core.CShader.SetUniform(_core.GScreenColor, clampedColor);
+        _core.InSetBlendMode(_blendingMode, true);
 
         // Bind the texture
         _core.gl.DrawArrays(GlApi.GL_TRIANGLES, 0, 6);
@@ -344,9 +344,9 @@ public class Composite : Node
         _core.gl.ColorMask(true, true, true, true);
         _core.InEndComposite();
 
-        _core.CShaderMask.use();
-        _core.CShaderMask.setUniform(_core.Mopacity, Opacity);
-        _core.CShaderMask.setUniform(_core.Mthreshold, Threshold);
+        _core.CShaderMask.Use();
+        _core.CShaderMask.SetUniform(_core.Mopacity, _opacity);
+        _core.CShaderMask.SetUniform(_core.Mthreshold, _threshold);
         _core.gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
 
         _core.gl.ActiveTexture(GlApi.GL_TEXTURE0);
@@ -358,17 +358,17 @@ public class Composite : Node
     {
         base.SerializeSelfImpl(serializer, recursive);
 
-        serializer.Add("blend_mode", BlendingMode.ToString());
-        serializer.Add("tint", Tint.ToToken());
-        serializer.Add("screenTint", ScreenTint.ToToken());
-        serializer.Add("mask_threshold", Threshold);
-        serializer.Add("opacity", Opacity);
+        serializer.Add("blend_mode", _blendingMode.ToString());
+        serializer.Add("tint", _tint.ToToken());
+        serializer.Add("screenTint", _screenTint.ToToken());
+        serializer.Add("mask_threshold", _threshold);
+        serializer.Add("opacity", _opacity);
         serializer.Add("propagate_meshgroup", PropagateMeshGroup);
 
-        if (Masks.Count > 0)
+        if (_masks.Count > 0)
         {
             var list = new JArray();
-            foreach (var m in Masks)
+            foreach (var m in _masks)
             {
                 var obj = new JObject(m);
                 list.Add(obj);
@@ -383,31 +383,31 @@ public class Composite : Node
         var temp = data["opacity"];
         if (temp != null)
         {
-            Opacity = (float)temp;
+            _opacity = (float)temp;
         }
 
         temp = data["mask_threshold"];
         if (temp != null)
         {
-            Threshold = (float)temp;
+            _threshold = (float)temp;
         }
 
         temp = data["tint"];
         if (temp != null)
         {
-            Tint = temp.ToVector3();
+            _tint = temp.ToVector3();
         }
 
         temp = data["screenTint"];
         if (temp != null)
         {
-            ScreenTint = temp.ToVector3();
+            _screenTint = temp.ToVector3();
         }
 
         temp = data["blend_mode"];
         if (temp != null)
         {
-            BlendingMode = Enum.Parse<BlendMode>(temp.ToString());
+            _blendingMode = Enum.Parse<BlendMode>(temp.ToString());
         }
 
         temp = data["propagate_meshgroup"];
@@ -425,7 +425,7 @@ public class Composite : Node
         {
             foreach (JObject item in array.Cast<JObject>())
             {
-                Masks.Add(item.ToObject<MaskBinding>()!);
+                _masks.Add(item.ToObject<MaskBinding>()!);
             }
         }
 
@@ -441,14 +441,14 @@ public class Composite : Node
     protected int MaskCount()
     {
         int c = -0;
-        foreach (var m in Masks) if (m.Mode == MaskingMode.Mask) c++;
+        foreach (var m in _masks) if (m.Mode == MaskingMode.Mask) c++;
         return c;
     }
 
     protected int DodgeCount()
     {
         int c = 0;
-        foreach (var m in Masks) if (m.Mode == MaskingMode.DodgeMask) c++;
+        foreach (var m in _masks) if (m.Mode == MaskingMode.DodgeMask) c++;
         return c;
     }
 

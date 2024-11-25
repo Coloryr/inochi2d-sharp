@@ -14,12 +14,12 @@ public abstract class ParameterBinding
     /// Restructure object before finalization
     /// </summary>
     /// <param name="puppet"></param>
-    public abstract void reconstruct(Puppet puppet);
+    public abstract void Reconstruct(Puppet puppet);
 
     /**
         Finalize loading of parameter
     */
-    public abstract void finalize(Puppet puppet);
+    public abstract void Finalize(Puppet puppet);
 
     /// <summary>
     /// Apply a binding to the model at the given parameter value
@@ -104,13 +104,13 @@ public abstract class ParameterBinding
     /// Returns isSet_
     /// </summary>
     /// <returns></returns>
-    public abstract List<List<bool>> getIsSet();
+    public abstract List<List<bool>> GetIsSet();
 
     /// <summary>
     /// Gets how many breakpoints this binding is set to
     /// </summary>
     /// <returns></returns>
-    public abstract uint getSetCount();
+    public abstract uint GetSetCount();
 
     /// <summary>
     /// Move keypoints to a new axis point
@@ -138,25 +138,25 @@ public abstract class ParameterBinding
     /// Gets target of binding
     /// </summary>
     /// <returns></returns>
-    public abstract BindTarget getTarget();
+    public abstract BindTarget GetTarget();
 
     /// <summary>
     /// Gets name of binding
     /// </summary>
     /// <returns></returns>
-    public abstract string getName();
+    public abstract string GetName();
 
     /// <summary>
     /// Gets the node of the binding
     /// </summary>
     /// <returns></returns>
-    public abstract Node getNode();
+    public abstract Node GetNode();
 
     /// <summary>
     /// Gets the uuid of the node of the binding
     /// </summary>
     /// <returns></returns>
-    public abstract uint getNodeUUID();
+    public abstract uint GetNodeUUID();
 
     /// <summary>
     /// Checks whether a binding is compatible with another node
@@ -169,7 +169,7 @@ public abstract class ParameterBinding
     /// The interpolation mode
     /// </summary>
     /// <returns></returns>
-    public InterpolateMode interpolateMode { get; set; }
+    public InterpolateMode InterpolateMode { get; set; }
 
     /// <summary>
     /// Serialize

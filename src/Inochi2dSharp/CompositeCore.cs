@@ -17,25 +17,25 @@ public partial class I2dCore
 
     public void InInitComposite()
     {
-        CShader = new Shader("composite",
+        CShader = new Shader(this, "composite",
             Integration.CompositeVert,
             Integration.CompositeFrag
         );
 
-        CShader.use();
+        CShader.Use();
         Gopacity = CShader.GetUniformLocation("opacity");
         GMultColor = CShader.GetUniformLocation("multColor");
         GScreenColor = CShader.GetUniformLocation("screenColor");
-        CShader.setUniform(CShader.GetUniformLocation("albedo"), 0);
-        CShader.setUniform(CShader.GetUniformLocation("emissive"), 1);
-        CShader.setUniform(CShader.GetUniformLocation("bumpmap"), 2);
+        CShader.SetUniform(CShader.GetUniformLocation("albedo"), 0);
+        CShader.SetUniform(CShader.GetUniformLocation("emissive"), 1);
+        CShader.SetUniform(CShader.GetUniformLocation("bumpmap"), 2);
 
-        CShaderMask = new Shader("composite (mask)",
+        CShaderMask = new Shader(this, "composite (mask)",
             Integration.CompositeVert,
             Integration.CompositeMaskFrag
         );
-        CShaderMask.use();
-        Mthreshold = CShader.GetUniformLocation("threshold");
-        Mopacity = CShader.GetUniformLocation("opacity");
+        CShaderMask.Use();
+        Mthreshold = CShaderMask.GetUniformLocation("threshold");
+        Mopacity = CShaderMask.GetUniformLocation("opacity");
     }
 }

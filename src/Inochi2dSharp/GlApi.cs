@@ -7,6 +7,7 @@ public abstract class GlApi
     public const uint GL_ZERO = 0;
     public const uint GL_ONE = 1;
     public const uint GL_TRIANGLES = 0x0004;
+    public const uint GL_DEPTH_BUFFER_BIT = 0x0100;
     public const uint GL_EQUAL = 0x0202;
     public const uint GL_ALWAYS = 0x0207;
     public const uint GL_STENCIL_BUFFER_BIT = 0x0400;
@@ -87,10 +88,10 @@ public abstract class GlApi
     public abstract uint CreateShader(uint type);
     public abstract void ShaderSource(uint shader, string code);
     public abstract void CompileShader(uint shaderObj);
-    public abstract void GetShader(uint shader, uint pname, out int res);
-    public abstract void GetShaderInfoLog(uint shader, out string info);
-    public abstract void GetProgram(uint program, uint pname, out int res);
-    public abstract void GetProgramInfoLog(uint program, out string info);
+    public abstract int GetShader(uint shader, uint pname);
+    public abstract string GetShaderInfoLog(uint shader);
+    public abstract int GetProgram(uint program, uint pname);
+    public abstract string GetProgramInfoLog(uint program);
     public abstract uint CreateProgram();
     public abstract void AttachShader(uint program, uint shader);
     public abstract void LinkProgram(uint program);
@@ -161,11 +162,11 @@ public abstract class GlApi
     public abstract bool HasKHRBlendEquationAdvancedCoherent();
     public abstract void BindBuffer(uint target, uint buffer);
     public abstract void BufferData(uint target, int size, nint data, uint usage);
-    public abstract void GenBuffers(int n, out uint buffers);
+    public abstract uint GenBuffer();
     public abstract void DrawElements(uint mode, int count, uint type, int indices);
-    public abstract void GenVertexArrays(int n, out uint arrays);
-    public abstract void GenFramebuffers(int n, out uint framebuffers);
-    public abstract void GenTextures(int n, out uint textures);
+    public abstract uint GenVertexArray();
+    public abstract uint GenFramebuffer();
+    public abstract uint GenTexture();
     public abstract void BindFramebuffer(uint target, uint framebuffer);
     public abstract void FramebufferTexture2D(uint target, uint attachment, uint textarget, uint texture, int level);
     /// <summary>
@@ -192,7 +193,6 @@ public abstract class GlApi
     public abstract void PointSize(float size);
     public abstract void LineWidth(float width);
     public abstract void DeleteTexture(uint textures);
-    public abstract void TexParameterI(uint target, uint pname, ref uint arg);
     /// <summary>
     /// TexParameterf
     /// </summary>
@@ -212,7 +212,7 @@ public abstract class GlApi
     /// <param name="pname"></param>
     /// <param name="index"></param>
     /// <param name="res"></param>
-    public abstract void GetFloat(uint pname, out float res);
+    public abstract float GetFloat(uint pname);
     /// <summary>
     /// TexParameterfv
     /// </summary>
@@ -227,4 +227,5 @@ public abstract class GlApi
     public abstract void BlendBarrierKHR();
     public abstract void ColorMask(bool red, bool green, bool blue, bool alpha);
     public abstract void StencilOp(uint fail, uint zfail, uint zpass);
+    public abstract int GetError();
 }

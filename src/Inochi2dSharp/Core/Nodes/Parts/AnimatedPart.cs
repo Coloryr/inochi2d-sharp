@@ -6,7 +6,7 @@ namespace Inochi2dSharp.Core.Nodes.Parts;
 /// Parts which contain spritesheet animation
 /// </summary>
 [TypeId("AnimatedPart")]
-public class AnimatedPart : Part
+public class AnimatedPart(I2dCore core, Node? parent = null) : Part(core, parent)
 {
     public override string TypeId()
     {

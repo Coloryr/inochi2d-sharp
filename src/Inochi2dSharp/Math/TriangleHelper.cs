@@ -7,7 +7,6 @@ public static class TriangleHelper
 {
     public static bool IsPointInTriangle(Vector2 pt, Vector2[] triangle)
     {
-
         var p1 = triangle[0];
         var p2 = triangle[1];
         var p3 = triangle[2];

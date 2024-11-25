@@ -155,7 +155,7 @@ public partial class I2dCore
 
     public void InInitDrawable()
     {
-        gl.GenVertexArrays(1, out _drawableVAO);
+        _drawableVAO = gl.GenVertexArray();
     }
 
     /// <summary>

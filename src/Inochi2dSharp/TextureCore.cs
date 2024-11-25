@@ -13,8 +13,7 @@ public partial class I2dCore
     /// <returns></returns>
     public float IncGetMaxAnisotropy()
     {
-        gl.GetFloat(GlApi.GL_MAX_TEXTURE_MAX_ANISOTROPY, out float max);
-        return max;
+        return gl.GetFloat(GlApi.GL_MAX_TEXTURE_MAX_ANISOTROPY);
     }
 
     /// <summary>
@@ -60,7 +59,7 @@ public partial class I2dCore
     /// <param name="data"></param>
     public void InAddTextureBinary(ShallowTexture data)
     {
-        _textureBindings.Add(new Texture(data));
+        _textureBindings.Add(new Texture(this, data));
     }
 
     /// <summary>

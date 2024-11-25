@@ -10,7 +10,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <summary>
     /// The value at each 2D keypoint
     /// </summary>
-    public List<List<Deformation>> values = [];
+    public List<List<Deformation>> Values = [];
 
     public DeformationParameterBinding(Parameter parameter) : base(parameter)
     {
@@ -31,7 +31,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
         serializer.Add("node", Target.node.UUID);
         serializer.Add("param_name", Target.paramName);
         var list = new JArray();
-        foreach (var item in values)
+        foreach (var item in Values)
         {
             var list1 = new JArray();
             foreach (var item1 in item)
@@ -44,7 +44,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
         serializer.Add("values", list);
         serializer.Add("isSet", isSet.ToToken());
-        serializer.Add("interpolate_mode", interpolateMode.ToString());
+        serializer.Add("interpolate_mode", InterpolateMode.ToString());
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
                     item2.Deserialize(item1);
                     list.Add(item2);
                 }
-                values.Add(list);
+                Values.Add(list);
             }
         }
 
@@ -89,21 +89,21 @@ public class DeformationParameterBinding : ParameterBindingImpl
         temp = data["interpolate_mode"];
         if (temp == null || !Enum.TryParse<InterpolateMode>(temp.ToString(), out var _interpolateMode))
         {
-            interpolateMode = InterpolateMode.Linear;
+            InterpolateMode = InterpolateMode.Linear;
         }
         else
         {
-            interpolateMode = _interpolateMode;
+            InterpolateMode = _interpolateMode;
         }
 
         int xCount = Parameter.AxisPointCount(0);
         int yCount = Parameter.AxisPointCount(1);
 
-        if (values.Count != xCount)
+        if (Values.Count != xCount)
         {
             throw new Exception("Mismatched X value count");
         }
-        foreach (var i in values)
+        foreach (var i in Values)
         {
             if (i.Count != yCount)
             {
@@ -132,18 +132,18 @@ public class DeformationParameterBinding : ParameterBindingImpl
         int xCount = Parameter.AxisPointCount(0);
         int yCount = Parameter.AxisPointCount(1);
 
-        values = [];
+        Values = [];
         isSet = [];
         for (int x = 0; x < xCount; x++)
         {
             isSet.Add([]);
-            values.Add([]);
+            Values.Add([]);
             for (int y = 0; y < yCount; y++)
             {
                 isSet[x].Add(false);
                 var value = new Deformation();
                 ClearValue(value);
-                values[x].Add(value);
+                Values[x].Add(value);
             }
         }
     }
@@ -164,7 +164,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <returns></returns>
     public Deformation GetValue(Vector2Int point)
     {
-        return values[point.X][point.Y];
+        return Values[point.X][point.Y];
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <param name="value"></param>
     public void SetValue(Vector2Int point, Deformation value)
     {
-        values[point.X][point.Y] = value;
+        Values[point.X][point.Y] = value;
         isSet[point.X][point.Y] = true;
 
         ReInterpolate();
@@ -186,7 +186,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <param name="point"></param>
     public override void Unset(Vector2Int point)
     {
-        ClearValue(values[point.X][point.Y]);
+        ClearValue(Values[point.X][point.Y]);
         isSet[point.X][point.Y] = false;
 
         ReInterpolate();
@@ -198,7 +198,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <param name="point"></param>
     public override void Reset(Vector2Int point)
     {
-        ClearValue(values[point.X][point.Y]);
+        ClearValue(Values[point.X][point.Y]);
         isSet[point.X][point.Y] = true;
 
         ReInterpolate();
@@ -212,14 +212,14 @@ public class DeformationParameterBinding : ParameterBindingImpl
     {
         if (axis == 0)
         {
-            values.Reverse();
+            Values.Reverse();
             isSet.Reverse();
         }
         else
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                values[i].Reverse();
+                Values[i].Reverse();
             }
             for (int i = 0; i < isSet.Count; i++)
             {
@@ -298,8 +298,8 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
         Deformation Get(int maj, int min)
         {
-            if (yMajor) return values[min][maj];
-            else return values[maj][min];
+            if (yMajor) return Values[min][maj];
+            else return Values[maj][min];
         }
         float GetDistance(int maj, int min)
         {
@@ -315,7 +315,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 {
                     throw new Exception("valid error");
                 }
-                values[min][maj] = val;
+                Values[min][maj] = val;
                 interpDistance[min][maj] = distance;
                 newlySet[min][maj] = true;
             }
@@ -326,7 +326,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
                 {
                     throw new Exception("valid error");
                 }
-                values[maj][min] = val;
+                Values[maj][min] = val;
                 interpDistance[maj][min] = distance;
                 newlySet[maj][min] = true;
             }
@@ -422,10 +422,10 @@ public class DeformationParameterBinding : ParameterBindingImpl
 
             void extrapolateCorner(int baseX, int baseY, int offX, int offY)
             {
-                Deformation base1 = values[baseX][baseY];
-                Deformation dX = values[baseX + offX][baseY] + (base1 * -1f);
-                Deformation dY = values[baseX][baseY + offY] + (base1 * -1f);
-                values[baseX + offX][baseY + offY] = base1 + dX + dY;
+                Deformation base1 = Values[baseX][baseY];
+                Deformation dX = Values[baseX + offX][baseY] + (base1 * -1f);
+                Deformation dY = Values[baseX][baseY + offY] + (base1 * -1f);
+                Values[baseX + offX][baseY + offY] = base1 + dX + dY;
                 commitPoints.Add(new Vector2Int(baseX + offX, baseY + offY));
             }
 
@@ -567,7 +567,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
 
     public Deformation Interpolate(Vector2Int leftKeypoint, Vector2 offset)
     {
-        return interpolateMode switch
+        return InterpolateMode switch
         {
             InterpolateMode.Nearest => InterpolateNearest(leftKeypoint, offset),
             InterpolateMode.Linear => InterpolateLinear(leftKeypoint, offset),
@@ -582,11 +582,11 @@ public class DeformationParameterBinding : ParameterBindingImpl
         if (Parameter.IsVec2)
         {
             var py = leftKeypoint.Y + ((offset.Y >= 0.5) ? 1 : 0);
-            return values[px][py];
+            return Values[px][py];
         }
         else
         {
-            return values[px][0];
+            return Values[px][0];
         }
     }
 
@@ -596,17 +596,17 @@ public class DeformationParameterBinding : ParameterBindingImpl
 
         if (Parameter.IsVec2)
         {
-            var p00 = values[leftKeypoint.X][leftKeypoint.Y];
-            var p01 = values[leftKeypoint.X][leftKeypoint.Y + 1];
-            var p10 = values[leftKeypoint.X + 1][leftKeypoint.Y];
-            var p11 = values[leftKeypoint.X + 1][leftKeypoint.Y + 1];
+            var p00 = Values[leftKeypoint.X][leftKeypoint.Y];
+            var p01 = Values[leftKeypoint.X][leftKeypoint.Y + 1];
+            var p10 = Values[leftKeypoint.X + 1][leftKeypoint.Y];
+            var p11 = Values[leftKeypoint.X + 1][leftKeypoint.Y + 1];
             p0 = MathHelper.Lerp(p00, p01, offset.Y);
             p1 = MathHelper.Lerp(p10, p11, offset.Y);
         }
         else
         {
-            p0 = values[leftKeypoint.X][0];
-            p1 = values[leftKeypoint.X + 1][0];
+            p0 = Values[leftKeypoint.X][0];
+            p1 = Values[leftKeypoint.X + 1][0];
         }
 
         return MathHelper.Lerp(p0, p1, offset.X);
@@ -621,8 +621,8 @@ public class DeformationParameterBinding : ParameterBindingImpl
             Deformation p01, p02, p03, p04;
             Deformation[] pOut = new Deformation[4];
 
-            var xlen = values.Count - 1;
-            var ylen = values[0].Count - 1;
+            var xlen = Values.Count - 1;
+            var ylen = Values[0].Count - 1;
             var xkp = leftKeypoint.X;
             var ykp = leftKeypoint.Y;
 
@@ -630,10 +630,10 @@ public class DeformationParameterBinding : ParameterBindingImpl
             {
                 var yp = float.Clamp(ykp + y - 1, 0, ylen);
 
-                p01 = values[int.Max(xkp - 1, 0)][(int)yp];
-                p02 = values[xkp][(int)yp];
-                p03 = values[xkp + 1][(int)yp];
-                p04 = values[int.Min(xkp + 2, xlen)][(int)yp];
+                p01 = Values[int.Max(xkp - 1, 0)][(int)yp];
+                p02 = Values[xkp][(int)yp];
+                p03 = Values[xkp + 1][(int)yp];
+                p04 = Values[int.Min(xkp + 2, xlen)][(int)yp];
                 pOut[y] = MathHelper.Cubic(p01, p02, p03, p04, xt);
             }
 
@@ -647,12 +647,12 @@ public class DeformationParameterBinding : ParameterBindingImpl
         else
         {
             var xkp = leftKeypoint.X;
-            var xlen = values.Count - 1;
+            var xlen = Values.Count - 1;
 
-            p0 = values[int.Max(xkp - 1, 0)][0];
-            p1 = values[xkp][0];
-            p2 = values[xkp + 1][0];
-            p3 = values[int.Min(xkp + 2, xlen)][0];
+            p0 = Values[int.Max(xkp - 1, 0)][0];
+            p1 = Values[xkp][0];
+            p2 = Values[xkp + 1][0];
+            p3 = Values[int.Min(xkp + 2, xlen)][0];
             return MathHelper.Cubic(p0, p1, p2, p3, offset.X);
         }
     }
@@ -673,20 +673,20 @@ public class DeformationParameterBinding : ParameterBindingImpl
         {
             int yCount = Parameter.AxisPointCount(1);
 
-            values.Insert(index, []);
+            Values.Insert(index, []);
             isSet.Insert(index, []);
 
             for (int i = 0; i < yCount; i++)
             {
                 isSet[index].Add(false);
-                values[index].Add(new());
+                Values[index].Add(new());
             }
         }
         else if (axis == 1)
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                var item = values[i];
+                var item = Values[i];
                 item.Insert(index, new Deformation());
             }
             for (int i = 0; i < isSet.Count; i++)
@@ -709,9 +709,9 @@ public class DeformationParameterBinding : ParameterBindingImpl
         if (axis == 0)
         {
             {
-                var swap = values[oldindex];
-                values.RemoveAt(oldindex);
-                values.Insert(newindex, swap);
+                var swap = Values[oldindex];
+                Values.RemoveAt(oldindex);
+                Values.Insert(newindex, swap);
             }
 
             {
@@ -722,9 +722,9 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
         else if (axis == 1)
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                var item = values[i];
+                var item = Values[i];
                 var swap = item[oldindex];
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
@@ -750,14 +750,14 @@ public class DeformationParameterBinding : ParameterBindingImpl
 
         if (axis == 0)
         {
-            values.RemoveAt(index);
+            Values.RemoveAt(index);
             isSet.RemoveAt(index);
         }
         else if (axis == 1)
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                values[i].RemoveAt(index);
+                Values[i].RemoveAt(index);
             }
             for (int i = 0; i < isSet.Count; i++)
             {
@@ -828,9 +828,9 @@ public class DeformationParameterBinding : ParameterBindingImpl
             Deformation otherVal = o.GetValue(dest);
 
             // Swap directly, to avoid clobbering by update
-            o.values[dest.X][dest.Y] = thisVal;
+            o.Values[dest.X][dest.Y] = thisVal;
             o.isSet[dest.X][dest.Y] = thisSet;
-            values[src.X][src.Y] = otherVal;
+            Values[src.X][src.Y] = otherVal;
             isSet[src.X][src.Y] = otherSet;
 
             ReInterpolate();
@@ -881,7 +881,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     public void Update(Vector2Int point, Vector2[] offsets)
     {
         isSet[point.X][point.Y] = true;
-        values[point.X][point.Y].Update(offsets.ToArray());
+        Values[point.X][point.Y].Update([.. offsets]);
         ReInterpolate();
     }
 }

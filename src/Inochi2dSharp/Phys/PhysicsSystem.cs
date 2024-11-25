@@ -2,7 +2,7 @@
 
 namespace Inochi2dSharp.Phys;
 
-public abstract class PhysicsSystem
+public abstract class PhysicsSystem : IDisposable
 {
     //float*
     private readonly Dictionary<IntPtr, ulong> variableMap = [];
@@ -156,4 +156,5 @@ public abstract class PhysicsSystem
     /// </summary>
     /// <param name="trans"></param>
     public abstract void DrawDebug(Matrix4x4 trans);
+    public abstract void Dispose();
 }

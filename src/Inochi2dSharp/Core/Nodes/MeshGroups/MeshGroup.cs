@@ -11,7 +11,7 @@ namespace Inochi2dSharp.Core.Nodes.MeshGroups;
 /// children of this node
 /// </summary>
 [TypeId("MeshGroup")]
-public class MeshGroup(Node? parent = null) : Drawable(parent)
+public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, parent)
 {
     protected ushort[] bitMask;
     protected Vector4 bounds;
@@ -33,11 +33,6 @@ public class MeshGroup(Node? parent = null) : Drawable(parent)
             foreach (var child in Children)
                 SetupChild(child);
         }
-    }
-
-    public MeshGroup() : this(null)
-    {
-
     }
 
     private (Vector2[]?, Matrix4x4?) FilterChildren(List<Vector2> origVertices, Vector2[] origDeformation, ref Matrix4x4 origTransform)
@@ -361,16 +356,16 @@ public class MeshGroup(Node? parent = null) : Drawable(parent)
                     var matrix = drawable.Transform().Matrix;
 
                     var nodeBinding = param.GetOrAddBinding(node, "deform") as DeformationParameterBinding;
-                    var nodeDeform = nodeBinding!.values[x][y].VertexOffsets.ToArray();
+                    var nodeDeform = nodeBinding!.Values[x][y].VertexOffsets.ToArray();
                     var filterResult = FilterChildren(vertices, nodeDeform, ref matrix);
                     if (filterResult.Item1 != null)
                     {
-                        var temp = nodeBinding.values[x][y].VertexOffsets;
+                        var temp = nodeBinding.Values[x][y].VertexOffsets;
                         for (int i = 0; i < temp.Count; i++)
                         {
                             temp[i] = filterResult.Item1[i];
                         }
-                        nodeBinding.getIsSet()[x][y] = true;
+                        nodeBinding.GetIsSet()[x][y] = true;
                     }
                 }
                 else if (_translateChildren && !isComposite)
@@ -388,8 +383,8 @@ public class MeshGroup(Node? parent = null) : Drawable(parent)
                     {
                         nodeBindingX!.values[x][y] += filterResult.Item1[0].X;
                         nodeBindingY!.values[x][y] += filterResult.Item1[0].Y;
-                        nodeBindingX.getIsSet()[x][y] = true;
-                        nodeBindingY.getIsSet()[x][y] = true;
+                        nodeBindingX.GetIsSet()[x][y] = true;
+                        nodeBindingY.GetIsSet()[x][y] = true;
                     }
 
                 }
@@ -409,7 +404,7 @@ public class MeshGroup(Node? parent = null) : Drawable(parent)
                 {
                     throw new Exception("deformBinding is not DeformationParameterBinding");
                 }
-                Node target = binding.getTarget().node;
+                Node target = binding.GetTarget().node;
 
                 for (int x = 0; x < param.AxisPoints[0].Count; x++)
                 {
@@ -417,7 +412,7 @@ public class MeshGroup(Node? parent = null) : Drawable(parent)
                     {
                         Vector2[] deformation;
                         if (deformBinding.isSet[x][y])
-                            deformation = [.. deformBinding.values[x][y].VertexOffsets];
+                            deformation = [.. deformBinding.Values[x][y].VertexOffsets];
                         else
                         {
                             bool rightMost = x == param.AxisPoints[0].Count - 1;

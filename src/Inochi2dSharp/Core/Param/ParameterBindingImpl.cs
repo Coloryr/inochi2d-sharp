@@ -46,7 +46,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Gets target of binding
     /// </summary>
     /// <returns></returns>
-    public override BindTarget getTarget()
+    public override BindTarget GetTarget()
     {
         return Target;
     }
@@ -55,7 +55,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Gets name of binding
     /// </summary>
     /// <returns></returns>
-    public override string getName()
+    public override string GetName()
     {
         return Target.paramName;
     }
@@ -64,7 +64,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Gets the node of the binding
     /// </summary>
     /// <returns></returns>
-    public override Node getNode()
+    public override Node GetNode()
     {
         return Target.node;
     }
@@ -73,7 +73,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Gets the uuid of the node of the binding
     /// </summary>
     /// <returns></returns>
-    public override uint getNodeUUID()
+    public override uint GetNodeUUID()
     {
         return NodeRef;
     }
@@ -82,7 +82,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Returns isSet_
     /// </summary>
     /// <returns></returns>
-    public override List<List<bool>> getIsSet()
+    public override List<List<bool>> GetIsSet()
     {
         return [.. isSet];
     }
@@ -91,7 +91,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Gets how many breakpoints this binding is set to
     /// </summary>
     /// <returns></returns>
-    public override uint getSetCount()
+    public override uint GetSetCount()
     {
         uint count = 0;
         for (int x = 0; x < isSet.Count; x++)
@@ -104,7 +104,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
         return count;
     }
 
-    public override void reconstruct(Puppet puppet)
+    public override void Reconstruct(Puppet puppet)
     {
 
     }
@@ -113,7 +113,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// Finalize loading of parameter
     /// </summary>
     /// <param name="puppet"></param>
-    public override void finalize(Puppet puppet)
+    public override void Finalize(Puppet puppet)
     {
         //        writefln("finalize binding %s", this.getName());
         Target.node = puppet.Find<Node>(NodeRef)!;

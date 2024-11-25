@@ -18,7 +18,7 @@ namespace Inochi2dSharp.Core;
 /// </summary>
 public class Puppet : IDisposable
 {
-    private readonly I2dTime _time;
+    private readonly I2dCore _core;
 
     public const uint NO_THUMBNAIL = uint.MaxValue;
 
@@ -102,13 +102,13 @@ public class Puppet : IDisposable
     /// <summary>
     /// Creates a new puppet from nothing ()
     /// </summary>
-    public Puppet(I2dTime time)
+    public Puppet(I2dCore core)
     {
-        _time = time;
-        _puppetRootNode = new Node(this);
+        _core = core;
+        _puppetRootNode = new Node(core, this);
         Meta = new PuppetMeta();
         Physics = new PuppetPhysics();
-        Root = new Node(_puppetRootNode)
+        Root = new Node(core, _puppetRootNode)
         {
             name = "Root"
         };
@@ -119,13 +119,13 @@ public class Puppet : IDisposable
     /// Creates a new puppet from a node tree
     /// </summary>
     /// <param name="root"></param>
-    public Puppet(Node root, I2dTime time)
+    public Puppet(I2dCore core, Node root)
     {
-        _time = time;
+        _core = core;
         Meta = new PuppetMeta();
         Physics = new PuppetPhysics();
         Root = root;
-        _puppetRootNode = new Node(this);
+        _puppetRootNode = new Node(core, this);
         Root.name = "Root";
         ScanParts(Root, true);
         Transform = new Transform();
@@ -291,7 +291,7 @@ public class Puppet : IDisposable
         }
 
         // Update so that the timestep gets reset.
-        _time.InUpdate();
+        _core.I2dTime.InUpdate();
     }
 
     /// <summary>
@@ -648,7 +648,7 @@ public class Puppet : IDisposable
         temp = data["nodes"];
         if (temp is JObject obj)
         {
-            Root = new();
+            Root = new(_core);
             Root.Deserialize(obj);
         }
 
@@ -658,7 +658,7 @@ public class Puppet : IDisposable
             // Allow parameter loading to be overridden (for Inochi Creator)
             foreach (JObject key in temp.Cast<JObject>())
             {
-                var param = new Parameter();
+                var param = new Parameter(_core);
                 param.Deserialize(key);
                 Parameters.Add(param);
             }
@@ -674,7 +674,7 @@ public class Puppet : IDisposable
 
                 if (TypeList.HasAutomationType(type))
                 {
-                    var auto_ = TypeList.InstantiateAutomation(type, this, _time);
+                    var auto_ = TypeList.InstantiateAutomation(type, this, _core.I2dTime);
                     auto_.Deserialize(key);
                     Automation.Add(auto_);
                 }
@@ -715,21 +715,21 @@ public class Puppet : IDisposable
     {
         Root.Puppet = this;
         Root.name = "Root";
-        _puppetRootNode = new Node(this);
+        _puppetRootNode = new Node(_core, this);
 
         // Finally update link etc.
         Root.Dispose();
-        foreach (var parameter in Parameters)
+        foreach (var item in Parameters)
         {
-            parameter.Finalize(this);
+            item.Finalize(this);
         }
-        foreach (var automation_ in Automation)
+        foreach (var item in Automation)
         {
-            automation_.Finalize(this);
+            item.Finalize(this);
         }
-        foreach (var animation in Animations)
+        foreach (var item in Animations)
         {
-            animation.Value.Finalize(this);
+            item.Value.Finalize(this);
         }
         ScanParts(Root, true);
         SelfSort();
@@ -745,7 +745,6 @@ public class Puppet : IDisposable
         Reconstruct();
         Dispose();
     }
-
 
     public void ApplyDeformToChildren()
     {

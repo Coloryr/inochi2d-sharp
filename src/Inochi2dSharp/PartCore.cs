@@ -36,7 +36,6 @@ public partial class I2dCore
     public int gs1MultColor;
     public int gs1ScreenColor;
 
-
     /* GLSL Uniforms (Stage 2) */
     public int gs2MvpModel;
     public int gs2MvpViewProjection;
@@ -57,17 +56,17 @@ public partial class I2dCore
 
     public void InInitPart()
     {
-        partShader = new Shader("part", Integration.BasicVert, Integration.BasicFrag);
-        partShaderStage1 = new Shader("part (stage 1)", Integration.BasicVert, Integration.BasicStage1);
-        partShaderStage2 = new Shader("part (stage 2)", Integration.BasicVert, Integration.BasicStage2);
-        partMaskShader = new Shader("part (mask)", Integration.BasicVert, Integration.BasicMask);
+        partShader = new Shader(this, "part", Integration.BasicVert, Integration.BasicFrag);
+        partShaderStage1 = new Shader(this, "part (stage 1)", Integration.BasicVert, Integration.BasicStage1);
+        partShaderStage2 = new Shader(this, "part (stage 2)", Integration.BasicVert, Integration.BasicStage2);
+        partMaskShader = new Shader(this, "part (mask)", Integration.BasicVert, Integration.BasicMask);
 
         IncDrawableBindVAO();
 
-        partShader.use();
-        partShader.setUniform(partShader.GetUniformLocation("albedo"), 0);
-        partShader.setUniform(partShader.GetUniformLocation("emissive"), 1);
-        partShader.setUniform(partShader.GetUniformLocation("bumpmap"), 2);
+        partShader.Use();
+        partShader.SetUniform(partShader.GetUniformLocation("albedo"), 0);
+        partShader.SetUniform(partShader.GetUniformLocation("emissive"), 1);
+        partShader.SetUniform(partShader.GetUniformLocation("bumpmap"), 2);
         mvpModel = partShader.GetUniformLocation("mvpModel");
         mvpViewProjection = partShader.GetUniformLocation("mvpViewProjection");
         offset = partShader.GetUniformLocation("offset");
@@ -76,8 +75,8 @@ public partial class I2dCore
         gScreenColor = partShader.GetUniformLocation("screenColor");
         gEmissionStrength = partShader.GetUniformLocation("emissionStrength");
 
-        partShaderStage1.use();
-        partShaderStage1.setUniform(partShader.GetUniformLocation("albedo"), 0);
+        partShaderStage1.Use();
+        partShaderStage1.SetUniform(partShader.GetUniformLocation("albedo"), 0);
         gs1MvpModel = partShaderStage1.GetUniformLocation("mvpModel");
         gs1MvpViewProjection = partShaderStage1.GetUniformLocation("mvpViewProjection");
         gs1offset = partShaderStage1.GetUniformLocation("offset");
@@ -85,9 +84,9 @@ public partial class I2dCore
         gs1MultColor = partShaderStage1.GetUniformLocation("multColor");
         gs1ScreenColor = partShaderStage1.GetUniformLocation("screenColor");
 
-        partShaderStage2.use();
-        partShaderStage2.setUniform(partShaderStage2.GetUniformLocation("emissive"), 1);
-        partShaderStage2.setUniform(partShaderStage2.GetUniformLocation("bumpmap"), 2);
+        partShaderStage2.Use();
+        partShaderStage2.SetUniform(partShaderStage2.GetUniformLocation("emissive"), 1);
+        partShaderStage2.SetUniform(partShaderStage2.GetUniformLocation("bumpmap"), 2);
         gs2MvpModel = partShaderStage1.GetUniformLocation("mvpModel");
         gs2MvpViewProjection = partShaderStage1.GetUniformLocation("mvpViewProjection");
         gs2offset = partShaderStage2.GetUniformLocation("offset");
@@ -96,17 +95,17 @@ public partial class I2dCore
         gs2ScreenColor = partShaderStage2.GetUniformLocation("screenColor");
         gs2EmissionStrength = partShaderStage2.GetUniformLocation("emissionStrength");
 
-        partMaskShader.use();
-        partMaskShader.setUniform(partMaskShader.GetUniformLocation("albedo"), 0);
-        partMaskShader.setUniform(partMaskShader.GetUniformLocation("emissive"), 1);
-        partMaskShader.setUniform(partMaskShader.GetUniformLocation("bumpmap"), 2);
+        partMaskShader.Use();
+        partMaskShader.SetUniform(partMaskShader.GetUniformLocation("albedo"), 0);
+        partMaskShader.SetUniform(partMaskShader.GetUniformLocation("emissive"), 1);
+        partMaskShader.SetUniform(partMaskShader.GetUniformLocation("bumpmap"), 2);
         mMvpModel = partMaskShader.GetUniformLocation("mvpModel");
         mMvpViewProjection = partMaskShader.GetUniformLocation("mvpViewProjection");
         mthreshold = partMaskShader.GetUniformLocation("threshold");
 
-        gl.GenBuffers(1, out sVertexBuffer);
-        gl.GenBuffers(1, out sUVBuffer);
-        gl.GenBuffers(1, out sElementBuffer);
+        sVertexBuffer = gl.GenBuffer();
+        sUVBuffer = gl.GenBuffer();
+        sElementBuffer = gl.GenBuffer();
     }
 
     /// <summary>
@@ -120,7 +119,7 @@ public partial class I2dCore
     /// <param name="file"></param>
     /// <param name="parent"></param>
     /// <returns></returns>
-    public static Part InCreateSimplePart(string file, Node? parent = null)
+    public Part InCreateSimplePart(string file, Node? parent = null)
     {
         return InCreateSimplePart(new ShallowTexture(file), parent, file);
     }
@@ -135,9 +134,9 @@ public partial class I2dCore
     /// <param name="parent"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static Part InCreateSimplePart(ShallowTexture texture, Node? parent = null, string name = "New Part")
+    public Part InCreateSimplePart(ShallowTexture texture, Node? parent = null, string name = "New Part")
     {
-        return InCreateSimplePart(new Texture(texture), parent, name);
+        return InCreateSimplePart(new Texture(this, texture), parent, name);
     }
 
     /// <summary>
@@ -150,7 +149,7 @@ public partial class I2dCore
     /// <param name="parent"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static Part InCreateSimplePart(Texture tex, Node? parent = null, string name = "New Part")
+    public Part InCreateSimplePart(Texture tex, Node? parent = null, string name = "New Part")
     {
         var data = new MeshData()
         {
@@ -175,7 +174,7 @@ public partial class I2dCore
             ]
         };
 
-        var p = new Part(data, [tex], parent)
+        var p = new Part(this, data, [tex], parent)
         {
             name = name
         };
@@ -187,7 +186,7 @@ public partial class I2dCore
     /// </summary>
     /// <param name="texture"></param>
     /// <param name="part"></param>
-    public unsafe void inDrawTextureAtPart(Texture texture, Part part)
+    public unsafe void InDrawTextureAtPart(Texture texture, Part part)
     {
         float texWidthP = texture.Width / 2;
         float texHeightP = texture.Height / 2;
@@ -195,17 +194,17 @@ public partial class I2dCore
         // Bind the vertex array
         IncDrawableBindVAO();
 
-        partShader.use();
+        partShader.Use();
         var temp = part.Transform().Matrix.Multiply(new Vector4(1, 1, 1, 1));
-        partShader.setUniform(mvpModel,
+        partShader.SetUniform(mvpModel,
             Matrix4x4.CreateTranslation(new Vector3(temp.X, temp.Y, temp.Z))
         );
-        partShader.setUniform(mvpViewProjection,
+        partShader.SetUniform(mvpViewProjection,
             InCamera.Matrix()
         );
-        partShader.setUniform(gopacity, part.opacity);
-        partShader.setUniform(gMultColor, part.tint);
-        partShader.setUniform(gScreenColor, part.screenTint);
+        partShader.SetUniform(gopacity, part.opacity);
+        partShader.SetUniform(gMultColor, part.tint);
+        partShader.SetUniform(gScreenColor, part.screenTint);
 
         // Bind the texture
         texture.Bind();
@@ -281,16 +280,16 @@ public partial class I2dCore
         // Bind the vertex array
         IncDrawableBindVAO();
 
-        partShader.use();
-        partShader.setUniform(mvpModel,
+        partShader.Use();
+        partShader.SetUniform(mvpModel,
             Matrix4x4.CreateScale(1, 1, 1) * Matrix4x4.CreateTranslation(new Vector3(position, 0))
         );
-        partShader.setUniform(mvpViewProjection,
+        partShader.SetUniform(mvpViewProjection,
             InCamera.Matrix()
         );
-        partShader.setUniform(gopacity, opacity);
-        partShader.setUniform(gMultColor, color);
-        partShader.setUniform(gScreenColor, screenColor);
+        partShader.SetUniform(gopacity, opacity);
+        partShader.SetUniform(gMultColor, color);
+        partShader.SetUniform(gScreenColor, screenColor);
 
         // Bind the texture
         texture.Bind();
@@ -345,7 +344,6 @@ public partial class I2dCore
         gl.DisableVertexAttribArray(1);
     }
 
-
     public void InDrawTextureAtRect(Texture texture, Rect area)
     {
         InDrawTextureAtRect(texture, area, new Rect(0, 0, 1, 1), 1, new Vector3(1, 1, 1), new Vector3(0, 0, 0), null, null);
@@ -369,14 +367,14 @@ public partial class I2dCore
 
         s ??= partShader;
         cam ??= InCamera;
-        s.use();
-        s.setUniform(s.GetUniformLocation("mvp"),
+        s.Use();
+        s.SetUniform(s.GetUniformLocation("mvp"),
             cam.Matrix() *
             Matrix4x4.CreateScale(1, 1, 1)
         );
-        s.setUniform(s.GetUniformLocation("opacity"), opacity);
-        s.setUniform(s.GetUniformLocation("multColor"), color);
-        s.setUniform(s.GetUniformLocation("screenColor"), screenColor);
+        s.SetUniform(s.GetUniformLocation("opacity"), opacity);
+        s.SetUniform(s.GetUniformLocation("multColor"), color);
+        s.SetUniform(s.GetUniformLocation("screenColor"), screenColor);
 
         // Bind the texture
         texture.Bind();

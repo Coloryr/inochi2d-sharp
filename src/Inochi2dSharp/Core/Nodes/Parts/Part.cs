@@ -69,12 +69,7 @@ public class Part : Drawable
     /// <param name="data"></param>
     /// <param name="textures"></param>
     /// <param name="parent"></param>
-    public Part(MeshData data, Texture[] textures, Node? parent = null) : this(data, textures, NodeHelper.InCreateUUID(), parent)
-    {
-
-    }
-
-    public Part() : this(null)
+    public Part(I2dCore core, MeshData data, Texture[] textures, Node? parent = null) : this(core, data, textures, core.InCreateUUID(), parent)
     {
 
     }
@@ -83,9 +78,9 @@ public class Part : Drawable
     /// Constructs a new part
     /// </summary>
     /// <param name="parent"></param>
-    public Part(Node? parent = null) : base(parent)
+    public Part(I2dCore core, Node? parent = null) : base(core, parent)
     {
-        I2dCore.gl.GenBuffers(1, out uvbo);
+        uvbo = core.gl.GenBuffer();
     }
 
     /// <summary>
@@ -95,7 +90,7 @@ public class Part : Drawable
     /// <param name="textures"></param>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    public Part(MeshData data, Texture[] textures, uint uuid, Node? parent = null) : base(data, uuid, parent)
+    public Part(I2dCore core, MeshData data, Texture[] textures, uint uuid, Node? parent = null) : base(core, data, uuid, parent)
     {
         for (int i = 0; i < (int)TextureUsage.COUNT; i++)
         {
@@ -103,9 +98,9 @@ public class Part : Drawable
             this.textures[i] = textures[i];
         }
 
-        I2dCore.gl.GenBuffers(1, out uvbo);
+        uvbo = core.gl.GenBuffer();
 
-        updateUVs();
+        UpdateUVs();
     }
 
     public override string TypeId()
@@ -121,7 +116,7 @@ public class Part : Drawable
     protected override void SerializeSelf(JObject serializer)
     {
         base.SerializeSelf(serializer);
-        if (FmtHelper.IsLoadingINP)
+        if (_core.IsLoadingINP)
         {
             var list = new JArray();
             foreach (var texture in textures)
@@ -135,12 +130,12 @@ public class Part : Drawable
                     }
                     else
                     {
-                        list.Add(PartCore.NO_TEXTURE);
+                        list.Add(I2dCore.NO_TEXTURE);
                     }
                 }
                 else
                 {
-                    list.Add(PartCore.NO_TEXTURE);
+                    list.Add(I2dCore.NO_TEXTURE);
                 }
             }
             serializer.Add("textures", list);
@@ -169,7 +164,7 @@ public class Part : Drawable
     {
         base.Deserialize(data);
 
-        if (FmtHelper.IsLoadingINP)
+        if (_core.IsLoadingINP)
         {
             int i = 0;
             var temp1 = data["textures"];
@@ -180,10 +175,10 @@ public class Part : Drawable
                     uint textureId = (uint)texElement;
 
                     // uint max = no texture set
-                    if (textureId == PartCore.NO_TEXTURE) continue;
+                    if (textureId == I2dCore.NO_TEXTURE) continue;
 
                     textureIds.Add(textureId);
-                    textures[i++] = I2dCore.InGetTextureFromId(textureId);
+                    textures[i++] = _core.InGetTextureFromId(textureId);
                 }
             }
         }
@@ -263,7 +258,7 @@ public class Part : Drawable
         }
 
         // Update indices and vertices
-        updateUVs();
+        UpdateUVs();
     }
 
     public override void SerializePartial(JObject obj, bool recursive = true)
@@ -279,7 +274,7 @@ public class Part : Drawable
             }
             else
             {
-                uuid = NodeHelper.InInvalidUUID;
+                uuid = I2dCore.InInvalidUUID;
             }
             list.Add(uuid);
         }
@@ -287,31 +282,31 @@ public class Part : Drawable
     }
 
     // TODO: Cache this
-    protected int maskCount()
+    protected int MaskCount()
     {
         int c = 0;
         foreach (var m in masks) if (m.Mode == MaskingMode.Mask) c++;
         return c;
     }
 
-    protected int dodgeCount()
+    protected int DodgeCount()
     {
         int c = 0;
         foreach (var m in masks) if (m.Mode == MaskingMode.DodgeMask) c++;
         return c;
     }
 
-    private unsafe void updateUVs()
+    private unsafe void UpdateUVs()
     {
-        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
         var temp = Data.Uvs.ToArray();
         fixed (void* ptr = temp)
         {
-            I2dCore.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Data.Uvs.Count * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
+            _core.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Data.Uvs.Count * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
     }
 
-    private void setupShaderStage(int stage, Matrix4x4 matrix)
+    private void SetupShaderStage(int stage, Matrix4x4 matrix)
     {
         var clampedTint = tint;
         if (!float.IsNaN(offsetTint.X)) clampedTint.X = float.Clamp(tint.X * offsetTint.X, 0, 1);
@@ -324,107 +319,107 @@ public class Part : Drawable
         if (!float.IsNaN(offsetScreenTint.Z)) clampedScreen.Z = float.Clamp(screenTint.Z + offsetScreenTint.Z, 0, 1);
 
         var mModel = Puppet.Transform.Matrix * matrix;
-        var mViewProjection = I2dCore.InCamera.Matrix();
+        var mViewProjection = _core.InCamera.Matrix();
 
         switch (stage)
         {
             case 0:
                 // STAGE 1 - Advanced blending
 
-                I2dCore.gl.DrawBuffers(1, [GlApi.GL_COLOR_ATTACHMENT0]);
+                _core.gl.DrawBuffers(1, [GlApi.GL_COLOR_ATTACHMENT0]);
 
-                PartCore.partShaderStage1.use();
-                PartCore.partShaderStage1.setUniform(PartCore.gs1offset, Data.Origin);
-                PartCore.partShaderStage1.setUniform(PartCore.gs1MvpModel, mModel);
-                PartCore.partShaderStage1.setUniform(PartCore.gs1MvpViewProjection, mViewProjection);
-                PartCore.partShaderStage1.setUniform(PartCore.gs1opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
+                _core.partShaderStage1.Use();
+                _core.partShaderStage1.SetUniform(_core.gs1offset, Data.Origin);
+                _core.partShaderStage1.SetUniform(_core.gs1MvpModel, mModel);
+                _core.partShaderStage1.SetUniform(_core.gs1MvpViewProjection, mViewProjection);
+                _core.partShaderStage1.SetUniform(_core.gs1opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
 
-                PartCore.partShaderStage1.setUniform(PartCore.partShaderStage1.GetUniformLocation("albedo"), 0);
-                PartCore.partShaderStage1.setUniform(PartCore.gs1MultColor, clampedTint);
-                PartCore.partShaderStage1.setUniform(PartCore.gs1ScreenColor, clampedScreen);
-                NodeHelper.inSetBlendMode(blendingMode, false);
+                _core.partShaderStage1.SetUniform(_core.partShaderStage1.GetUniformLocation("albedo"), 0);
+                _core.partShaderStage1.SetUniform(_core.gs1MultColor, clampedTint);
+                _core.partShaderStage1.SetUniform(_core.gs1ScreenColor, clampedScreen);
+                _core.InSetBlendMode(blendingMode, false);
                 break;
             case 1:
 
                 // STAGE 2 - Basic blending (albedo, bump)
-                I2dCore.gl.DrawBuffers(2, [GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
+                _core.gl.DrawBuffers(2, [GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
-                PartCore.partShaderStage2.use();
-                PartCore.partShaderStage2.setUniform(PartCore.gs2offset, Data.Origin);
-                PartCore.partShaderStage2.setUniform(PartCore.gs2MvpModel, mModel);
-                PartCore.partShaderStage2.setUniform(PartCore.gs2MvpViewProjection, mViewProjection);
-                PartCore.partShaderStage2.setUniform(PartCore.gs2opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
-                PartCore.partShaderStage2.setUniform(PartCore.gs2EmissionStrength, emissionStrength * offsetEmissionStrength);
+                _core.partShaderStage2.Use();
+                _core.partShaderStage2.SetUniform(_core.gs2offset, Data.Origin);
+                _core.partShaderStage2.SetUniform(_core.gs2MvpModel, mModel);
+                _core.partShaderStage2.SetUniform(_core.gs2MvpViewProjection, mViewProjection);
+                _core.partShaderStage2.SetUniform(_core.gs2opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
+                _core.partShaderStage2.SetUniform(_core.gs2EmissionStrength, emissionStrength * offsetEmissionStrength);
 
-                PartCore.partShaderStage2.setUniform(PartCore.partShaderStage2.GetUniformLocation("emission"), 0);
-                PartCore.partShaderStage2.setUniform(PartCore.partShaderStage2.GetUniformLocation("bump"), 1);
+                _core.partShaderStage2.SetUniform(_core.partShaderStage2.GetUniformLocation("emission"), 0);
+                _core.partShaderStage2.SetUniform(_core.partShaderStage2.GetUniformLocation("bump"), 1);
 
                 // These can be reused from stage 2
-                PartCore.partShaderStage1.setUniform(PartCore.gs2MultColor, clampedTint);
-                PartCore.partShaderStage1.setUniform(PartCore.gs2ScreenColor, clampedScreen);
-                NodeHelper.inSetBlendMode(blendingMode, true);
+                _core.partShaderStage1.SetUniform(_core.gs2MultColor, clampedTint);
+                _core.partShaderStage1.SetUniform(_core.gs2ScreenColor, clampedScreen);
+                _core.InSetBlendMode(blendingMode, true);
                 break;
             case 2:
 
                 // Basic blending
-                I2dCore.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
+                _core.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
 
-                PartCore.partShader.use();
-                PartCore.partShader.setUniform(PartCore.offset, Data.Origin);
-                PartCore.partShader.setUniform(PartCore.mvpModel, mModel);
-                PartCore.partShader.setUniform(PartCore.mvpViewProjection, mViewProjection);
-                PartCore.partShader.setUniform(PartCore.gopacity, float.Clamp(offsetOpacity * opacity, 0, 1));
-                PartCore.partShader.setUniform(PartCore.gEmissionStrength, emissionStrength * offsetEmissionStrength);
+                _core.partShader.Use();
+                _core.partShader.SetUniform(_core.offset, Data.Origin);
+                _core.partShader.SetUniform(_core.mvpModel, mModel);
+                _core.partShader.SetUniform(_core.mvpViewProjection, mViewProjection);
+                _core.partShader.SetUniform(_core.gopacity, float.Clamp(offsetOpacity * opacity, 0, 1));
+                _core.partShader.SetUniform(_core.gEmissionStrength, emissionStrength * offsetEmissionStrength);
 
-                PartCore.partShader.setUniform(PartCore.partShader.GetUniformLocation("albedo"), 0);
-                PartCore.partShader.setUniform(PartCore.partShader.GetUniformLocation("emissive"), 1);
-                PartCore.partShader.setUniform(PartCore.partShader.GetUniformLocation("bumpmap"), 2);
+                _core.partShader.SetUniform(_core.partShader.GetUniformLocation("albedo"), 0);
+                _core.partShader.SetUniform(_core.partShader.GetUniformLocation("emissive"), 1);
+                _core.partShader.SetUniform(_core.partShader.GetUniformLocation("bumpmap"), 2);
 
                 var clampedColor = tint;
                 if (!float.IsNaN(offsetTint.X)) clampedColor.X = float.Clamp(tint.X * offsetTint.X, 0, 1);
                 if (!float.IsNaN(offsetTint.Y)) clampedColor.Y = float.Clamp(tint.Y * offsetTint.Y, 0, 1);
                 if (!float.IsNaN(offsetTint.Z)) clampedColor.Z = float.Clamp(tint.Z * offsetTint.Z, 0, 1);
-                PartCore.partShader.setUniform(PartCore.gMultColor, clampedColor);
+                _core.partShader.SetUniform(_core.gMultColor, clampedColor);
 
                 clampedColor = screenTint;
                 if (!float.IsNaN(offsetScreenTint.X)) clampedColor.X = float.Clamp(screenTint.X + offsetScreenTint.X, 0, 1);
                 if (!float.IsNaN(offsetScreenTint.Y)) clampedColor.Y = float.Clamp(screenTint.Y + offsetScreenTint.Y, 0, 1);
                 if (!float.IsNaN(offsetScreenTint.Z)) clampedColor.Z = float.Clamp(screenTint.Z + offsetScreenTint.Z, 0, 1);
-                PartCore.partShader.setUniform(PartCore.gScreenColor, clampedColor);
-                NodeHelper.inSetBlendMode(blendingMode, true);
+                _core.partShader.SetUniform(_core.gScreenColor, clampedColor);
+                _core.InSetBlendMode(blendingMode, true);
                 break;
             default: return;
         }
     }
 
-    private void renderStage(BlendMode mode, bool advanced = true)
+    private void RenderStage(BlendMode mode, bool advanced = true)
     {
         // Enable points array
-        I2dCore.gl.EnableVertexAttribArray(0);
-        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
-        I2dCore.gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, 0, 0);
+        _core.gl.EnableVertexAttribArray(0);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
+        _core.gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable UVs array
-        I2dCore.gl.EnableVertexAttribArray(1); // uvs
-        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
-        I2dCore.gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, 0, 0);
+        _core.gl.EnableVertexAttribArray(1); // uvs
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
+        _core.gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable deform array
-        I2dCore.gl.EnableVertexAttribArray(2); // deforms
-        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
-        I2dCore.gl.VertexAttribPointer(2, 2, GlApi.GL_FLOAT, false, 0, 0);
+        _core.gl.EnableVertexAttribArray(2); // deforms
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
+        _core.gl.VertexAttribPointer(2, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Bind index buffer
         BindIndex();
 
         // Disable the vertex attribs after use
-        I2dCore.gl.DisableVertexAttribArray(0);
-        I2dCore.gl.DisableVertexAttribArray(1);
-        I2dCore.gl.DisableVertexAttribArray(2);
+        _core.gl.DisableVertexAttribArray(0);
+        _core.gl.DisableVertexAttribArray(1);
+        _core.gl.DisableVertexAttribArray(2);
 
         if (advanced)
         {
-            NodeHelper.inBlendModeBarrier(mode);
+            _core.InBlendModeBarrier(mode);
         }
     }
 
@@ -432,13 +427,13 @@ public class Part : Drawable
     /// RENDERING
     /// </summary>
     /// <param name="isMask"></param>
-    private void drawSelf(bool isMask = false)
+    private void DrawSelf(bool isMask = false)
     {
         // In some cases this may happen
         if (textures.Length == 0) return;
 
         // Bind the vertex array
-        NodeHelper.incDrawableBindVAO();
+        _core.IncDrawableBindVAO();
 
         // Calculate matrix
         var matrix = Transform().Matrix;
@@ -449,7 +444,7 @@ public class Part : Drawable
 
         // Make sure we check whether we're already bound
         // Otherwise we're wasting GPU resources
-        if (PartCore.boundAlbedo != textures[0])
+        if (_core.boundAlbedo != textures[0])
         {
             // Bind the textures
             for (int i = 0; i < textures.Length; i++)
@@ -459,8 +454,8 @@ public class Part : Drawable
                 else
                 {
                     // Disable texture when none is there.
-                    I2dCore.gl.ActiveTexture(GlApi.GL_TEXTURE0 + (uint)i);
-                    I2dCore.gl.BindTexture(GlApi.GL_TEXTURE_2D, 0);
+                    _core.gl.ActiveTexture(GlApi.GL_TEXTURE0 + (uint)i);
+                    _core.gl.BindTexture(GlApi.GL_TEXTURE_2D, 0);
                 }
             }
         }
@@ -468,56 +463,56 @@ public class Part : Drawable
         if (isMask)
         {
             var mModel = Puppet.Transform.Matrix * matrix;
-            var mViewProjection = I2dCore.InCamera.Matrix();
+            var mViewProjection = _core.InCamera.Matrix();
 
-            PartCore.partMaskShader.use();
-            PartCore.partMaskShader.setUniform(PartCore.offset, Data.Origin);
-            PartCore.partMaskShader.setUniform(PartCore.mMvpModel, mModel);
-            PartCore.partMaskShader.setUniform(PartCore.mMvpViewProjection, mViewProjection);
-            PartCore.partMaskShader.setUniform(PartCore.mthreshold, float.Clamp(offsetMaskThreshold + maskAlphaThreshold, 0, 1));
+            _core.partMaskShader.Use();
+            _core.partMaskShader.SetUniform(_core.offset, Data.Origin);
+            _core.partMaskShader.SetUniform(_core.mMvpModel, mModel);
+            _core.partMaskShader.SetUniform(_core.mMvpViewProjection, mViewProjection);
+            _core.partMaskShader.SetUniform(_core.mthreshold, float.Clamp(offsetMaskThreshold + maskAlphaThreshold, 0, 1));
 
             // Make sure the equation is correct
-            I2dCore.gl.BlendEquation(GlApi.GL_FUNC_ADD);
-            I2dCore.gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
+            _core.gl.BlendEquation(GlApi.GL_FUNC_ADD);
+            _core.gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
 
-            renderStage(blendingMode, false);
+            RenderStage(blendingMode, false);
         }
         else
         {
             bool hasEmissionOrBumpmap = textures[1] != null || textures[2] != null;
 
-            if (NodeHelper.inUseMultistageBlending(blendingMode))
+            if (_core.InUseMultistageBlending(blendingMode))
             {
 
                 // TODO: Detect if this Part is NOT in a composite,
                 // If so, we can relatively safely assume that we may skip stage 1.
-                setupShaderStage(0, matrix);
-                renderStage(blendingMode);
+                SetupShaderStage(0, matrix);
+                RenderStage(blendingMode);
 
                 // Only do stage 2 if we have emission or bumpmap textures.
                 if (hasEmissionOrBumpmap)
                 {
-                    setupShaderStage(1, matrix);
-                    renderStage(blendingMode, false);
+                    SetupShaderStage(1, matrix);
+                    RenderStage(blendingMode, false);
                 }
             }
             else
             {
-                setupShaderStage(2, matrix);
-                renderStage(blendingMode, false);
+                SetupShaderStage(2, matrix);
+                RenderStage(blendingMode, false);
             }
         }
 
         // Reset draw buffers
-        I2dCore.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
-        I2dCore.gl.BlendEquation(GlApi.GL_FUNC_ADD);
+        _core.gl.DrawBuffers(3, [GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_COLOR_ATTACHMENT2]);
+        _core.gl.BlendEquation(GlApi.GL_FUNC_ADD);
     }
 
     /// <summary>
     /// Gets the active texture
     /// </summary>
     /// <returns></returns>
-    public Texture activeTexture()
+    public Texture ActiveTexture()
     {
         return textures[0];
     }
@@ -525,16 +520,16 @@ public class Part : Drawable
     public override void RenderMask(bool dodge = false)
     {
         // Enable writing to stencil buffer and disable writing to color buffer
-        I2dCore.gl.ColorMask(false, false, false, false);
-        I2dCore.gl.StencilOp(GlApi.GL_KEEP, GlApi.GL_KEEP, GlApi.GL_REPLACE);
-        I2dCore.gl.StencilFunc(GlApi.GL_ALWAYS, dodge ? 0 : 1, 0xFF);
-        I2dCore.gl.StencilMask(0xFF);
+        _core.gl.ColorMask(false, false, false, false);
+        _core.gl.StencilOp(GlApi.GL_KEEP, GlApi.GL_KEEP, GlApi.GL_REPLACE);
+        _core.gl.StencilFunc(GlApi.GL_ALWAYS, dodge ? 0 : 1, 0xFF);
+        _core.gl.StencilMask(0xFF);
 
         // Draw ourselves to the stencil buffer
-        drawSelf(true);
+        DrawSelf(true);
 
         // Disable writing to stencil buffer and enable writing to color buffer
-        I2dCore.gl.ColorMask(true, true, true, true);
+        _core.gl.ColorMask(true, true, true, true);
     }
 
     public override bool HasParam(string key)
@@ -619,7 +614,7 @@ public class Part : Drawable
         };
     }
 
-    public bool isMaskedBy(Drawable drawable)
+    public bool IsMaskedBy(Drawable drawable)
     {
         foreach (var mask in masks)
         {
@@ -628,7 +623,7 @@ public class Part : Drawable
         return false;
     }
 
-    public int getMaskIdx(Drawable drawable)
+    public int GetMaskIdx(Drawable drawable)
     {
         if (drawable is null) return -1;
         for (int i = 0; i < masks.Count; i++)
@@ -639,7 +634,7 @@ public class Part : Drawable
         return -1;
     }
 
-    public int getMaskIdx(uint uuid)
+    public int GetMaskIdx(uint uuid)
     {
         for (int i = 0; i < masks.Count; i++)
         {
@@ -662,13 +657,13 @@ public class Part : Drawable
     public override void Rebuffer(MeshData data)
     {
         base.Rebuffer(data);
-        this.updateUVs();
+        UpdateUVs();
     }
 
     public override void Draw()
     {
         if (!enabled) return;
-        this.DrawOne();
+        DrawOne();
 
         foreach (var child in Children)
         {
@@ -681,7 +676,7 @@ public class Part : Drawable
         if (!enabled) return;
         if (!Data.IsReady()) return; // Yeah, don't even try
 
-        var cMasks = maskCount();
+        var cMasks = MaskCount();
 
         if (masks.Count > 0)
         {
@@ -695,21 +690,21 @@ public class Part : Drawable
             InBeginMaskContent();
 
             // We are the content
-            this.drawSelf();
+            DrawSelf();
 
             InEndMask();
             return;
         }
 
         // No masks, draw normally
-        this.drawSelf();
+        DrawSelf();
         base.DrawOne();
     }
 
     public override void DrawOneDirect(bool forMasking)
     {
-        if (forMasking) this.drawSelf(true);
-        else this.drawSelf(false);
+        if (forMasking) DrawSelf(true);
+        else DrawSelf(false);
     }
 
     public override void Dispose()

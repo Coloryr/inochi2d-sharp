@@ -80,7 +80,7 @@ public class SimplePhysics : Driver
     /// <summary>
     /// Gets the final gravity
     /// </summary>
-    public float Gravity => _gravity * _offsetGravity * Puppet.Physics.gravity * GetScale();
+    public float Gravity => _gravity * _offsetGravity * Puppet.Physics.Gravity * GetScale();
 
     /// <summary>
     /// Gets the final length
@@ -292,14 +292,15 @@ public class SimplePhysics : Driver
 
         _system = ModelType switch
         {
-            PhysicsModel.Pendulum => new Pendulum(this),
-            PhysicsModel.SpringPendulum => new SpringPendulum(this),
+            PhysicsModel.Pendulum => new Pendulum(_core, this),
+            PhysicsModel.SpringPendulum => new SpringPendulum(_core, this),
             _ => throw new Exception("modelType error"),
         };
     }
 
     public override void Dispose()
     {
+        _system.Dispose();
         _param = Puppet.FindParameter(_paramRef);
         base.Dispose();
         Reset();
@@ -312,7 +313,7 @@ public class SimplePhysics : Driver
 
     public float GetScale()
     {
-        return Puppet.Physics.pixelsPerMeter;
+        return Puppet.Physics.PixelsPerMeter;
     }
 
     public override bool HasParam(string key)

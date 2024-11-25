@@ -5,7 +5,7 @@
 /// Run this after OpenGL context has been set current
 /// </summary>
 /// <param name="timeFunc"></param>
-internal class I2dTime(Func<float> timeFunc)
+public class I2dTime(Func<float> timeFunc)
 {
     private float _currentTime = 0;
     private float _lastTime = 0;

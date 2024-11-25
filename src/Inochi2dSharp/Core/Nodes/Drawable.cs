@@ -53,12 +53,12 @@ public abstract class Drawable : Node
     /// Constructs a new drawable surface
     /// </summary>
     /// <param name="parent"></param>
-    public Drawable(Node? parent = null) : base(parent)
+    public Drawable(I2dCore core, Node? parent = null) : base(core, parent)
     {
         // Generate the buffers
-        I2dCore.gl.GenBuffers(1, out Vbo);
-        I2dCore.gl.GenBuffers(1, out Ibo);
-        I2dCore.gl.GenBuffers(1, out Dbo);
+        Vbo = core.gl.GenBuffer();
+        Ibo = core.gl.GenBuffer();
+        Dbo = core.gl.GenBuffer();
 
         // Create deformation stack
         DeformStack = new DeformationStack(this);
@@ -69,7 +69,7 @@ public abstract class Drawable : Node
     /// </summary>
     /// <param name="data"></param>
     /// <param name="parent"></param>
-    public Drawable(MeshData data, Node? parent = null) : this(data, NodeHelper.InCreateUUID(), parent)
+    public Drawable(I2dCore core, MeshData data, Node? parent = null) : this(core, data, core.InCreateUUID(), parent)
     {
 
     }
@@ -80,7 +80,7 @@ public abstract class Drawable : Node
     /// <param name="data"></param>
     /// <param name="uuid"></param>
     /// <param name="parent"></param>
-    public Drawable(MeshData data, uint uuid, Node? parent = null) : base(uuid, parent)
+    public Drawable(I2dCore core, MeshData data, uint uuid, Node? parent = null) : base(core, uuid, parent)
     {
         Data = data;
         DeformStack = new DeformationStack(this);
@@ -89,9 +89,9 @@ public abstract class Drawable : Node
         Vertices = [.. data.Vertices];
 
         // Generate the buffers
-        I2dCore.gl.GenBuffers(1, out Vbo);
-        I2dCore.gl.GenBuffers(1, out Ibo);
-        I2dCore.gl.GenBuffers(1, out Dbo);
+        Vbo = core.gl.GenBuffer();
+        Ibo = core.gl.GenBuffer();
+        Dbo = core.gl.GenBuffer();
 
         // Update indices and vertices
         UpdateIndices();
@@ -100,22 +100,22 @@ public abstract class Drawable : Node
 
     private unsafe void UpdateIndices()
     {
-        I2dCore.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        _core.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
         var temp = Data.Indices.ToArray();
         fixed (void* ptr = temp)
         {
-            I2dCore.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, temp.Length * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
+            _core.gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, temp.Length * sizeof(ushort), new nint(ptr), GlApi.GL_STATIC_DRAW);
         }
     }
 
     private unsafe void UpdateVertices()
     {
         // Important check since the user can change this every frame
-        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Vbo);
         var temp = Vertices.ToArray();
         fixed (void* ptr = temp)
         {
-            I2dCore.gl.BufferData(GlApi.GL_ARRAY_BUFFER, temp.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
+            _core.gl.BufferData(GlApi.GL_ARRAY_BUFFER, temp.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
 
         // Zero-fill the deformation delta
@@ -137,11 +137,11 @@ public abstract class Drawable : Node
 
         PostProcess();
 
-        I2dCore.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Dbo);
 
         fixed (void* ptr = Deformation)
         {
-            I2dCore.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Deformation.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
+            _core.gl.BufferData(GlApi.GL_ARRAY_BUFFER, Deformation.Length * Marshal.SizeOf<Vector2>(), new nint(ptr), GlApi.GL_DYNAMIC_DRAW);
         }
 
         UpdateBounds();
@@ -153,8 +153,8 @@ public abstract class Drawable : Node
     protected void BindIndex()
     {
         // Bind element array and draw our mesh
-        I2dCore.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
-        I2dCore.gl.DrawElements(GlApi.GL_TRIANGLES, Data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
+        _core.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        _core.gl.DrawElements(GlApi.GL_TRIANGLES, Data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
     }
 
     /// <summary>
@@ -298,7 +298,7 @@ public abstract class Drawable : Node
     /// </summary>
     public void UpdateBounds()
     {
-        if (!NodeHelper.doGenerateBounds) return;
+        if (!_core.DoGenerateBounds) return;
 
         // Calculate bounds
         var wtransform = Transform();
@@ -322,12 +322,12 @@ public abstract class Drawable : Node
     /// </summary>
     public override void DrawBounds()
     {
-        if (!NodeHelper.doGenerateBounds) return;
+        if (!_core.DoGenerateBounds) return;
         if (Vertices.Count == 0) return;
 
         float width = Bounds.Z - Bounds.X;
         float height = Bounds.W - Bounds.Y;
-        I2dCore.InDbgSetBuffer([
+        _core.InDbgSetBuffer([
             new Vector3(Bounds.X, Bounds.Y, 0),
             new Vector3(Bounds.X + width, Bounds.Y, 0),
 
@@ -340,12 +340,12 @@ public abstract class Drawable : Node
             new Vector3(Bounds.X, Bounds.Y+height, 0),
             new Vector3(Bounds.X, Bounds.Y, 0),
         ]);
-        I2dCore.InDbgLineWidth(3);
+        _core.InDbgLineWidth(3);
         if (OneTimeTransform is { } mat)
-            I2dCore.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), mat);
+            _core.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), mat);
         else
-            I2dCore.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
-        I2dCore.InDbgLineWidth(1);
+            _core.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1));
+        _core.InDbgLineWidth(1);
     }
 
     /// <summary>
@@ -376,8 +376,8 @@ public abstract class Drawable : Node
             points[iy + 5] = new Vector3(Vertices[indice] - Data.Origin + Deformation[indice], 0);
         }
 
-        I2dCore.InDbgSetBuffer(points);
-        I2dCore.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), trans);
+        _core.InDbgSetBuffer(points);
+        _core.InDbgDrawLines(new Vector4(0.5f, 0.5f, 0.5f, 1), trans);
     }
 
     /// <summary>
@@ -395,11 +395,11 @@ public abstract class Drawable : Node
             points[i] = new Vector3(point - Data.Origin + Deformation[i], 0);
         }
 
-        I2dCore.InDbgSetBuffer(points);
-        I2dCore.InDbgPointsSize(8);
-        I2dCore.InDbgDrawPoints(new Vector4(0, 0, 0, 1), trans);
-        I2dCore.InDbgPointsSize(4);
-        I2dCore.InDbgDrawPoints(new Vector4(1, 1, 1, 1), trans);
+        _core.InDbgSetBuffer(points);
+        _core.InDbgPointsSize(8);
+        _core.InDbgDrawPoints(new Vector4(0, 0, 0, 1), trans);
+        _core.InDbgPointsSize(4);
+        _core.InDbgDrawPoints(new Vector4(1, 1, 1, 1), trans);
     }
 
     /// <summary>
@@ -442,9 +442,9 @@ public abstract class Drawable : Node
     public void InBeginMask(bool hasMasks)
     {
         // Enable and clear the stencil buffer so we can write our mask to it
-        I2dCore.gl.Enable(GlApi.GL_STENCIL_TEST);
-        I2dCore.gl.ClearStencil(hasMasks ? 0 : 1);
-        I2dCore.gl.Clear(GlApi.GL_STENCIL_BUFFER_BIT);
+        _core.gl.Enable(GlApi.GL_STENCIL_TEST);
+        _core.gl.ClearStencil(hasMasks ? 0 : 1);
+        _core.gl.Clear(GlApi.GL_STENCIL_BUFFER_BIT);
     }
 
     /// <summary>
@@ -455,9 +455,9 @@ public abstract class Drawable : Node
     public void InEndMask()
     {
         // We're done stencil testing, disable it again so that we don't accidentally mask more stuff out
-        I2dCore.gl.StencilMask(0xFF);
-        I2dCore.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
-        I2dCore.gl.Disable(GlApi.GL_STENCIL_TEST);
+        _core.gl.StencilMask(0xFF);
+        _core.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
+        _core.gl.Disable(GlApi.GL_STENCIL_TEST);
     }
 
     /// <summary>
@@ -467,7 +467,7 @@ public abstract class Drawable : Node
     /// </summary>
     public void InBeginMaskContent()
     {
-        I2dCore.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
-        I2dCore.gl.StencilMask(0x00);
+        _core.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
+        _core.gl.StencilMask(0x00);
     }
 }

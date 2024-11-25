@@ -6,7 +6,7 @@ namespace Inochi2dSharp.Math;
 /// <summary>
 /// An orthographic camera
 /// </summary>
-public class Camera
+public class Camera(I2dCore core)
 {
     private Matrix4x4 _projection;
 
@@ -27,7 +27,7 @@ public class Camera
 
     public Vector2 GetRealSize()
     {
-        I2dCore.InGetViewport(out var width, out var height);
+        core.InGetViewport(out var width, out var height);
 
         return new(width / Scale.X, height / Scale.Y);
     }
@@ -51,11 +51,11 @@ public class Camera
         if (!Scale.IsFinite()) Scale = new Vector2(1);
         if (!Rotation.IsFinite()) Rotation = 0;
 
-        Vector2 realSize = GetRealSize();
+        var realSize = GetRealSize();
         if (!realSize.IsFinite()) return Matrix4x4.Identity;
 
-        Vector2 origin = new Vector2(realSize.X / 2, realSize.Y / 2);
-        Vector3 pos = new Vector3(Position.X, Position.Y, -(ushort.MaxValue / 2));
+        var origin = new Vector2(realSize.X / 2, realSize.Y / 2);
+        var pos = new Vector3(Position.X, Position.Y, -(ushort.MaxValue / 2));
 
         return
             Matrix4x4.CreateOrthographicOffCenter(0f, realSize.X, realSize.Y, 0, 0, ushort.MaxValue) *
