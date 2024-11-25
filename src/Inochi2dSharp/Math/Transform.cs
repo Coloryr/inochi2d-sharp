@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Math;
 
@@ -61,7 +61,7 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
     {
         Matrix =
             Matrix4x4.CreateTranslation(Translation) *
-            Matrix4x4.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z) *
+            Matrix4x4.CreateFromYawPitchRoll(Rotation.Z, Rotation.Y, Rotation.X) *
             Matrix4x4.CreateScale(Scale.X, Scale.Y, 1);
     }
 
@@ -72,18 +72,29 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
         Scale = new(1);
     }
 
-    public void Serialize(JObject obj)
+    public void Serialize(JsonObject obj)
     {
         obj.Add("trans", Translation.ToToken());
         obj.Add("rot", Rotation.ToToken());
         obj.Add("scale", Scale.ToToken());
     }
 
-    public void Deserialize(JObject obj)
+    public void Deserialize(JsonObject obj)
     {
-        Translation = obj["trans"]?.ToVector3() ?? new();
-        Rotation = obj["rot"]?.ToVector3() ?? new();
-        Scale = obj["scale"]?.ToVector2() ?? new();
+        if (obj.TryGetPropertyValue("trans", out var temp) && temp is JsonArray array)
+        {
+            Translation = array.ToVector3();
+        }
+
+        if (obj.TryGetPropertyValue("rot", out temp) && temp is JsonArray array1)
+        {
+            Rotation = array1.ToVector3();
+        }
+
+        if (obj.TryGetPropertyValue("scale", out temp) && temp is JsonArray array2)
+        {
+            Scale = array2.ToVector2();
+        }
     }
 
     /// <summary>

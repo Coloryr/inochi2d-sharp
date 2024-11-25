@@ -68,7 +68,7 @@ internal static class TypeList
         return null;
     }
 
-    public static void InInitNodes()
+    private static void InInitNodes()
     {
         RegisterNodeType<MeshGroup>();
         RegisterNodeType<Part>();
@@ -80,9 +80,21 @@ internal static class TypeList
         RegisterNodeType<TmpNode>();
     }
 
-    public static void InInitAutomations()
+    private static void InInitAutomations()
     {
         RegisterAutomationType<PhysicsAutomation>();
         RegisterAutomationType<SineAutomation>();
+    }
+
+    public static void Init()
+    {
+        if (s_nodeTypes.Count == 0)
+        {
+            InInitNodes();
+        }
+        if (s_autoType.Count == 0)
+        {
+            InInitAutomations();
+        }
     }
 }

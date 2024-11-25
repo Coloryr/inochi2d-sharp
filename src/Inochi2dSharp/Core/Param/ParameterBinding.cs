@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Param;
 
@@ -56,7 +56,7 @@ public abstract class ParameterBinding
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public abstract bool IsSet(Vector2Int index);
+    public abstract bool GetIsSet(Vector2Int index);
 
     /// <summary>
     /// Scales the value, optionally with axis awareness
@@ -175,12 +175,12 @@ public abstract class ParameterBinding
     /// Serialize
     /// </summary>
     /// <param name="serializer"></param>
-    public abstract void Serialize(JObject serializer);
+    public abstract void Serialize(JsonObject serializer);
 
     /// <summary>
     /// Deserialize
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public abstract void Deserialize(JObject data);
+    public abstract void Deserialize(JsonObject data);
 }

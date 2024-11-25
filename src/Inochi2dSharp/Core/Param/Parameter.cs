@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
+using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Param;
 
@@ -157,78 +158,69 @@ public class Parameter : IDisposable
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
-        var temp = data["uuid"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("uuid", out var temp) && temp != null)
         {
-            UUID = (uint)temp;
+            UUID = temp.GetValue<uint>();
         }
 
-        temp = data["name"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("name", out temp) && temp != null)
         {
-            Name = temp.ToString();
+            Name = temp.GetValue<string>();
         }
 
-        temp = data["is_vec2"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("is_vec2", out temp) && temp != null)
         {
-            IsVec2 = (bool)temp;
+            IsVec2 = temp.GetValue<bool>();
         }
 
-        temp = data["min"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("min", out temp) && temp is JsonArray array)
         {
-            Min = temp.ToVector2();
+            Min = array.ToVector2();
         }
 
-        temp = data["max"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("max", out temp) && temp is JsonArray array1)
         {
-            Max = temp.ToVector2();
+            Max = array1.ToVector2();
         }
 
-        temp = data["axis_points"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("axis_points", out temp) && temp is JsonArray array2)
         {
-            AxisPoints = array.ToListList<float>();
+            AxisPoints = array2.ToListList<float>();
         }
 
-        temp = data["defaults"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("defaults", out temp) && temp is JsonArray array3)
         {
-            Defaults = temp.ToVector2();
+            Defaults = array3.ToVector2();
         }
 
-        temp = data["merge_mode"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("merge_mode", out temp) && temp != null)
         {
-            MergeMode = temp.ToString();
+            MergeMode = temp.GetValue<string>();
         }
 
-        temp = data["bindings"];
-        if (temp is JArray array1)
+        if (data.TryGetPropertyValue("bindings", out temp) && temp is JsonArray array4)
         {
-            foreach (JObject child in array1.Cast<JObject>())
+            foreach (JsonObject child in array4.Cast<JsonObject>())
             {
-                var temp1 = child["param_name"];
                 // Skip empty children
-                if (temp1 == null) continue;
-
-                string paramName = temp1.ToString();
-
-                if (paramName == "deform")
+                if (child.TryGetPropertyValue("param_name", out var temp1) && temp1 != null)
                 {
-                    var binding = new DeformationParameterBinding(this);
-                    binding.Deserialize(child);
-                    Bindings.Add(binding);
-                }
-                else
-                {
-                    var binding = new ValueParameterBinding(this);
-                    binding.Deserialize(child);
-                    Bindings.Add(binding);
+                    var paramName = temp1.GetValue<string>();
+
+                    if (paramName == "deform")
+                    {
+                        var binding = new DeformationParameterBinding(this);
+                        binding.Deserialize(child);
+                        Bindings.Add(binding);
+                    }
+                    else
+                    {
+                        var binding = new ValueParameterBinding(this);
+                        binding.Deserialize(child);
+                        Bindings.Add(binding);
+                    }
                 }
             }
         }
@@ -246,7 +238,7 @@ public class Parameter : IDisposable
     /// Finalize loading of parameter
     /// </summary>
     /// <param name="puppet"></param>
-    public void Finalize(Puppet puppet)
+    public void JsonLoadDone(Puppet puppet)
     {
         MakeIndexable();
         Value = Defaults;
@@ -268,7 +260,7 @@ public class Parameter : IDisposable
     {
         index = new();
         outOffset = new();
-        void interpAxis(int axis, float val, out int index, out float offset)
+        void InterpAxis(int axis, float val, out int index, out float offset)
         {
             var pos = AxisPoints[axis];
 
@@ -286,8 +278,8 @@ public class Parameter : IDisposable
             offset = 0;
         }
 
-        interpAxis(0, offset.X, out index.X, out outOffset.X);
-        if (IsVec2) interpAxis(1, offset.Y, out index.Y, out outOffset.Y);
+        InterpAxis(0, offset.X, out index.X, out outOffset.X);
+        if (IsVec2) InterpAxis(1, offset.Y, out index.Y, out outOffset.Y);
     }
 
     public void Update()
@@ -794,7 +786,7 @@ public class Parameter : IDisposable
     /// Serializes a parameter
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         serializer.Add("uuid", UUID);
         serializer.Add("name", Name);
@@ -804,10 +796,10 @@ public class Parameter : IDisposable
         serializer.Add("defaults", Defaults.ToToken());
         serializer.Add("axis_points", AxisPoints.ToToken());
         serializer.Add("merge_mode", MergeMode);
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var item in Bindings)
         {
-            var obj = new JObject();
+            var obj = new JsonObject();
             item.Serialize(obj);
             list.Add(item);
         }

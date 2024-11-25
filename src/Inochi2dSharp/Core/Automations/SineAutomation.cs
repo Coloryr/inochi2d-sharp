@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
 
@@ -43,24 +43,22 @@ internal class SineAutomation : Automation
         }
     }
 
-    protected override void SerializeSelf(JObject serializer)
+    protected override void SerializeSelf(JsonObject serializer)
     {
         serializer.Add("speed", _speed);
         serializer.Add("sine_type", (int)_sineType);
     }
 
-    protected override void DeserializeSelf(JObject data)
+    protected override void DeserializeSelf(JsonObject data)
     {
-        var temp = data["speed"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("speed", out var temp) && temp != null)
         {
-            _speed = (int)temp;
+            _speed = temp.GetValue<int>();
         }
 
-        temp = data["sine_type"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("sine_type", out temp) && temp != null)
         {
-            _sineType = (SineType)(int)temp;
+            _sineType = (SineType)temp.GetValue<int>();
         }
     }
 }

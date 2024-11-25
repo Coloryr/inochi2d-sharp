@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Param;
-using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Automations;
 
@@ -78,7 +77,7 @@ public class AutomationBinding
     /// Serializes a parameter
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         serializer.Add("param", _param.Name);
         serializer.Add("axis", _axis);
@@ -89,30 +88,27 @@ public class AutomationBinding
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
-        var temp = data["param"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("param", out var temp) && temp != null)
         {
-            _paramId = temp.ToString();
+            _paramId = temp.GetValue<string>();
         }
 
-        temp = data["axis"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("axis", out temp) && temp != null)
         {
-            _axis = (int)temp;
+            _axis = temp.GetValue<int>();
         }
 
-        temp = data["range"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("range", out temp) && temp is JsonArray array)
         {
-            Range = temp.ToVector2();
+            Range = array.ToVector2();
         }
     }
 
     public void Reconstruct(Puppet puppet) { }
 
-    public void Finalize(Puppet puppet)
+    public void JsonLoadDone(Puppet puppet)
     {
         foreach (var parameter in puppet.Parameters)
         {

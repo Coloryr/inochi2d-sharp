@@ -5,15 +5,15 @@
 /// Run this after OpenGL context has been set current
 /// </summary>
 /// <param name="timeFunc"></param>
-public class I2dTime(Func<float> timeFunc)
+public class I2dTime(Func<float>? timeFunc)
 {
     private float _currentTime = 0;
     private float _lastTime = 0;
     private float _deltaTime = 0;
 
-    private Func<float> _tfunc = timeFunc;
+    private Func<float>? _tfunc = timeFunc;
 
-    public void InSetTimingFunc(Func<float> timeFunc)
+    public void InSetTimingFunc(Func<float>? timeFunc)
     {
         _tfunc = timeFunc;
     }
@@ -23,9 +23,12 @@ public class I2dTime(Func<float> timeFunc)
     /// </summary>
     public void InUpdate()
     {
-        _currentTime = _tfunc();
-        _deltaTime = _currentTime - _lastTime;
-        _lastTime = _currentTime;
+        if (_tfunc != null)
+        {
+            _currentTime = _tfunc();
+            _deltaTime = _currentTime - _lastTime;
+            _lastTime = _currentTime;
+        }
     }
 
     /// <summary>
@@ -53,5 +56,12 @@ public class I2dTime(Func<float> timeFunc)
     public float CurrentTime()
     {
         return _currentTime;
+    }
+
+    public void AddTime(float time)
+    {
+        _deltaTime = time;
+        _currentTime += time;
+        _lastTime += time;
     }
 }

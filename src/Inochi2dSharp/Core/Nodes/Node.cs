@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
 using System.Text;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes.MeshGroups;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes;
 
@@ -105,7 +105,7 @@ public class Node : IDisposable
     /// <summary>
     /// The offset to the transform to apply
     /// </summary>
-    public Transform OffsetTransform;
+    public Transform OffsetTransform = new();
 
     /// <summary>
     /// The offset to apply to sorting
@@ -152,12 +152,12 @@ public class Node : IDisposable
     /// <summary>
     /// The local transform of the node
     /// </summary>
-    public Transform LocalTransform;
+    public Transform LocalTransform = new();
 
     /// <summary>
     /// The cached world space transform of the node
     /// </summary>
-    public Transform GlobalTransform;
+    public Transform GlobalTransform = new();
 
     public bool RecalculateTransform = true;
 
@@ -202,7 +202,7 @@ public class Node : IDisposable
         Parent?.ResetMask();
     }
 
-    protected virtual void SerializeSelfImpl(JObject obj, bool recursive = true)
+    protected virtual void SerializeSelfImpl(JsonObject obj, bool recursive = true)
     {
         obj.Add("uuid", UUID);
         obj.Add("name", name);
@@ -210,20 +210,20 @@ public class Node : IDisposable
         obj.Add("enabled", enabled);
         obj.Add("zsort", _zsort);
 
-        var obj1 = new JObject();
+        var obj1 = new JsonObject();
         LocalTransform.Serialize(obj1);
         obj.Add("transform", obj1);
         obj.Add("lockToRoot", LockToRoot);
 
         if (recursive && Children.Count > 0)
         {
-            var list = new JArray();
+            var list = new JsonArray();
             foreach (var child in Children)
             {
                 // Skip Temporary nodes
                 if (child is TmpNode) continue;
                 // Serialize permanent nodes
-                var obj2 = new JObject();
+                var obj2 = new JsonObject();
                 child.SerializeSelf(obj2);
                 list.Add(obj2);
             }
@@ -231,7 +231,7 @@ public class Node : IDisposable
         }
     }
 
-    protected virtual void SerializeSelf(JObject obj)
+    protected virtual void SerializeSelf(JsonObject obj)
     {
         SerializeSelfImpl(obj, true);
     }
@@ -683,11 +683,11 @@ public class Node : IDisposable
     /// <summary>
     /// Finalizes this node and any children
     /// </summary>
-    public virtual void Dispose()
+    public virtual void JsonLoadDone()
     {
         foreach (var child in Children)
         {
-            child.Dispose();
+            child.JsonLoadDone();
         }
     }
 
@@ -735,7 +735,6 @@ public class Node : IDisposable
         }
     }
 
-
     public override string ToString()
     {
         return name;
@@ -745,7 +744,7 @@ public class Node : IDisposable
     /// Allows serializing a node (with pretty serializer)
     /// </summary>
     /// <param name=""></param>
-    public virtual void SerializePartial(JObject obj, bool recursive = true)
+    public virtual void SerializePartial(JsonObject obj, bool recursive = true)
     {
         SerializeSelfImpl(obj, recursive);
     }
@@ -754,63 +753,54 @@ public class Node : IDisposable
     ///  Deserializes node from Fghj formatted JSON data.
     /// </summary>
     /// <param name="data"></param>
-    public virtual void Deserialize(JObject data)
+    public virtual void Deserialize(JsonObject data)
     {
-        var temp = data["uuid"];
-        if (temp == null)
+        if (!data.TryGetPropertyValue("uuid", out var temp) || temp == null)
         {
             return;
         }
-        UUID = (uint)temp;
-        temp = data["name"];
-        if (temp != null && temp.HasValues)
-        {
-            name = temp.ToString();
-        }
-        temp = data["enabled"];
-        if (temp == null)
-        {
-            return;
-        }
-        enabled = (bool)temp;
+        UUID = temp.GetValue<uint>();
 
-        temp = data["zsort"];
-        if (temp == null)
+        if(data.TryGetPropertyValue("name", out temp) && temp != null)
         {
-            return;
+            name = temp.GetValue<string>();
         }
-        _zsort = (float)temp;
 
-        temp = data["transform"];
-        if (temp is not JObject obj)
+        if (data.TryGetPropertyValue("enabled", out temp) && temp != null)
         {
-            return;
+            enabled = temp.GetValue<bool>();
         }
+       
+        if (data.TryGetPropertyValue("zsort", out temp) && temp != null)
+        {
+            _zsort = temp.GetValue<float>();
+        }
+
         LocalTransform = new();
-        LocalTransform.Deserialize(obj);
-
-        temp = data["lockToRoot"];
-        if (temp == null)
+        if (data.TryGetPropertyValue("transform", out temp) && temp is JsonObject obj)
         {
-            return;
+            LocalTransform.Deserialize(obj);
         }
-        LockToRoot = (bool)temp;
 
-        temp = data["children"];
-        if (temp is not JArray array)
+        if (data.TryGetPropertyValue("lockToRoot", out temp) && temp != null)
+        {
+            LockToRoot = temp.GetValue<bool>();
+        }
+
+        if (!data.TryGetPropertyValue("children", out temp) || temp is not JsonArray array)
         {
             return;
         }
 
         // Pre-populate our children with the correct types
-        foreach (var child in array)
+        foreach (JsonObject child in array.Cast<JsonObject>())
         {
-            if (child is not JObject obj1)
+            if (!child.TryGetPropertyValue("type", out var type1) || type1 == null)
             {
                 continue;
             }
             // Fetch type from json
-            string type = child["type"]!.ToString();
+            var type = type1.GetValue<string>();
 
             // Skips unknown node types
             // TODO: A logging system that shows a warning for this?
@@ -818,7 +808,7 @@ public class Node : IDisposable
 
             // instantiate it
             var n = TypeList.InstantiateNode(type, _core, this);
-            n.Deserialize(obj1);
+            n.Deserialize(child);
         }
     }
 
@@ -999,7 +989,7 @@ public class Node : IDisposable
             SetRelativeTo(parent);
         InsertInto(parent, (int)pOffset);
         Node? c = this;
-        for (var p = parent; p != null; p = p.Parent, c = c.Parent)
+        for (var p = parent; p != null; p = p.Parent, c = c?.Parent)
         {
             p.SetupChild(c);
         }
@@ -1020,5 +1010,10 @@ public class Node : IDisposable
         {
             return Transform().Matrix;
         }
+    }
+
+    public virtual void Dispose()
+    {
+        
     }
 }

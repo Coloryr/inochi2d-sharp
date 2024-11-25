@@ -35,7 +35,7 @@ public partial class I2dCore
             Integration.CompositeMaskFrag
         );
         CShaderMask.Use();
-        Mthreshold = CShaderMask.GetUniformLocation("threshold");
-        Mopacity = CShaderMask.GetUniformLocation("opacity");
+        Mthreshold = CShader.GetUniformLocation("threshold");
+        Mopacity = CShader.GetUniformLocation("opacity");
     }
 }

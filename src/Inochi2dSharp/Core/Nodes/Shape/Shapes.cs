@@ -34,7 +34,7 @@ public class Shapes(I2dCore core, Node? parent = null) : Node(core, parent)
             // Calculate weighted average for each breakpoint
             for (int i = 0; i < nodes.Length; i++)
             {
-                weights[i] = MAX_DIST - (Vector2.Distance(nodes[i].breakpoint, selector) / MAX_DIST);
+                weights[i] = MAX_DIST - (Vector2.Distance(nodes[i].Breakpoint, selector) / MAX_DIST);
                 accWeight += weights[i];
             }
 
@@ -57,9 +57,9 @@ public class Shapes(I2dCore core, Node? parent = null) : Node(core, parent)
             // Apply our weighted offsets
             foreach (var node in nodes)
             {
-                for (int i = 0; i < node.shapeData.Length; i++)
+                for (int i = 0; i < node.ShapeData.Length; i++)
                 {
-                    vertices[i] += weights[i] * node.shapeData[i];
+                    vertices[i] += weights[i] * node.ShapeData[i];
                 }
             }
         }

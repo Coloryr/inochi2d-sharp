@@ -70,9 +70,9 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.BlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, (GLEnum)filter);
     }
 
-    public override void BufferData(uint target, int size, nint data, uint usage)
+    public override unsafe void BufferData(uint target, int size, nint data, uint usage)
     {
-        gl.BufferData((GLEnum)target, (nuint)size, ref data, (GLEnum)usage);
+        gl.BufferData((GLEnum)target, (nuint)size, (void*)data, (GLEnum)usage);
     }
 
     public override void Clear(uint mask)
@@ -158,9 +158,9 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         }
     }
 
-    public override void DrawElements(uint mode, int count, uint type, int indices)
+    public override unsafe void DrawElements(uint mode, int count, uint type, int indices)
     {
-        gl.DrawElements((GLEnum)mode, (uint)count, (GLEnum)type, ref indices);
+        gl.DrawElements((GLEnum)mode, (uint)count, (GLEnum)type, (void*)indices);
     }
 
     public override void Enable(uint cap)
@@ -255,12 +255,12 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
 
     public override bool HasKHRBlendEquationAdvanced()
     {
-        return true;
+        return false;
     }
 
     public override bool HasKHRBlendEquationAdvancedCoherent()
     {
-        return true;
+        return false;
     }
 
     public override void LineWidth(float width)
@@ -303,14 +303,14 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.StencilOp((GLEnum)fail, (GLEnum)zfail, (GLEnum)zpass);
     }
 
-    public override void TexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels)
+    public override unsafe void TexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels)
     {
-        gl.TexImage2D((GLEnum)target, level, (int)internalformat, (uint)width, (uint)height, border, (GLEnum)format, (GLEnum)type, ref pixels);
+        gl.TexImage2D((GLEnum)target, level, (int)internalformat, (uint)width, (uint)height, border, (GLEnum)format, (GLEnum)type, (void*)pixels);
     }
 
     public override void TexParameter(uint target, uint pname, float param)
     {
-        gl.TexParameter((GLEnum)target, (GLEnum)param, param);
+        gl.TexParameter((GLEnum)target, (GLEnum)pname, param);
     }
 
     public override void TexParameter(uint target, uint pname, float[] arg)
@@ -318,14 +318,14 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.TexParameter((GLEnum)target, (GLEnum)pname, arg);
     }
 
-    public override void TexParameterI(uint target, uint pname, uint arg)
+    public override unsafe void TexParameterI(uint target, uint pname, uint arg)
     {
-        gl.TexParameterI((GLEnum)target, (GLEnum)pname, ref arg);
+        gl.TexParameterI((GLEnum)target, (GLEnum)pname, (int)arg);
     }
 
-    public override void TexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, nint pixels)
+    public override unsafe void TexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, nint pixels)
     {
-        gl.TexSubImage2D((GLEnum)target, level, xoffset, yoffset, (uint)width, (uint)height, (GLEnum)format, (GLEnum)type, ref pixels);
+        gl.TexSubImage2D((GLEnum)target, level, xoffset, yoffset, (uint)width, (uint)height, (GLEnum)format, (GLEnum)type, (void*)pixels);
     }
 
     public override void Uniform1(int location, int v0)

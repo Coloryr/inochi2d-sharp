@@ -89,19 +89,15 @@ public partial class I2dCore
         }
     }
 
-    public void InTexUnPremuliply(IntPtr ptr, long size)
+    public void InTexUnPremuliply(byte[] data, long size)
     {
-        unsafe
+        for (int i = 0; i < size / 4; i++)
         {
-            byte* data = (byte*)ptr;
-            for (int i = 0; i < size / 4; i++)
-            {
-                if (data[(i * 4) + 3] == 0) continue;
+            if (data[(i * 4) + 3] == 0) continue;
 
-                data[(i * 4) + 0] = (byte)(data[(i * 4) + 0] * 255 / data[(i * 4) + 3]);
-                data[(i * 4) + 1] = (byte)(data[(i * 4) + 1] * 255 / data[(i * 4) + 3]);
-                data[(i * 4) + 2] = (byte)(data[(i * 4) + 2] * 255 / data[(i * 4) + 3]);
-            }
+            data[(i * 4) + 0] = (byte)(data[(i * 4) + 0] * 255 / data[(i * 4) + 3]);
+            data[(i * 4) + 1] = (byte)(data[(i * 4) + 1] * 255 / data[(i * 4) + 3]);
+            data[(i * 4) + 2] = (byte)(data[(i * 4) + 2] * 255 / data[(i * 4) + 3]);
         }
     }
 }

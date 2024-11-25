@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
+using Inochi2dSharp;
 
 namespace Inochi2dSharp.Core.Nodes;
 
@@ -39,7 +39,7 @@ public record Deformation
         VertexOffsets = [.. new Vector2[length]];
     }
 
-    public void Serialize(JArray serializer)
+    public void Serialize(JsonArray serializer)
     {
         foreach (var offset in VertexOffsets)
         {
@@ -47,9 +47,9 @@ public record Deformation
         }
     }
 
-    public void Deserialize(JArray data)
+    public void Deserialize(JsonArray data)
     {
-        foreach (var elem in data)
+        foreach (var elem in data.Cast<JsonArray>())
         {
             VertexOffsets.Add(elem.ToVector2());
         }

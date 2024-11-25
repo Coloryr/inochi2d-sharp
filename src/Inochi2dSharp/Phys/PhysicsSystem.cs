@@ -35,8 +35,8 @@ public abstract class PhysicsSystem : IDisposable
     /// <returns></returns>
     protected unsafe ulong AddVariable(Vector2* var)
     {
-        ulong index = AddVariable(&var[0].X);
-        AddVariable(&var[0].Y);
+        ulong index = AddVariable(&var->X);
+        AddVariable(&var->Y);
         return index;
     }
 
@@ -57,7 +57,7 @@ public abstract class PhysicsSystem : IDisposable
     /// <param name="value"></param>
     protected unsafe void SetD(float* var, float value)
     {
-        ulong index = variableMap[new nint(&var)];
+        ulong index = variableMap[new nint(var)];
         SetD(index, value);
     }
 

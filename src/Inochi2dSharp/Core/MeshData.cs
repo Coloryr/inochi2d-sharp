@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
+using Inochi2dSharp;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core;
 
@@ -161,9 +162,9 @@ public record MeshData
         };
     }
 
-    public void Serialize(JObject obj)
+    public void Serialize(JsonObject obj)
     {
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var vertex in Vertices)
         {
             list.Add(vertex.X);
@@ -182,7 +183,12 @@ public record MeshData
             obj.Add("uvs", list);
         }
 
-        obj.Add("indices", new JArray(Indices));
+        list = [];
+        foreach (var item in Indices)
+        {
+            list.Add(item);
+        }
+        obj.Add("indices", list);
 
         obj.Add("origin", Origin.ToToken());
         if (IsGrid())
@@ -191,41 +197,42 @@ public record MeshData
         }
     }
 
-    public void Deserialize(JObject obj)
+    public void Deserialize(JsonObject obj)
     {
-        var elements = obj["verts"];
-        if (elements is JArray arrar && elements.HasValues)
+        if (obj.TryGetPropertyValue("verts", out var temp) && temp is JsonArray arrar)
         {
+            var list1 = arrar.GetValues<float>().ToArray();
             for (int a = 0; a < arrar.Count;)
             {
-                Vertices.Add(new((float)arrar[a++], (float)arrar[a++]));
+                Vertices.Add(new(list1[a++], list1[a++]));
             }
         }
-        elements = obj["uvs"];
-        if (elements is JArray arrar1 && elements.HasValues)
+        if (obj.TryGetPropertyValue("uvs", out temp) && temp is JsonArray arrar1)
         {
+            var list1 = arrar1.GetValues<float>().ToArray();
             for (int a = 0; a < arrar1.Count;)
             {
-                Uvs.Add(new((float)arrar1[a++], (float)arrar1[a++]));
+                Uvs.Add(new(list1[a++], list1[a++]));
             }
         }
-        elements = obj["origin"];
-        if (elements != null)
+        if (obj.TryGetPropertyValue("origin", out temp) && temp is JsonArray array2)
         {
-            Origin = elements.ToVector2();
+            Origin = array2.ToVector2();
         }
 
-        elements = obj["grid_axes"];
-        if (elements != null)
+        if (obj.TryGetPropertyValue("grid_axes", out temp) && temp is JsonArray array3)
         {
-            GridAxes = elements.ToListList<float>();
+            GridAxes = array3.ToListList<float>();
         }
-        elements = obj["indices"];
-        if (elements != null)
+        if (obj.TryGetPropertyValue("indices", out temp) && temp is JsonArray array4)
         {
-            foreach (var indiceData in elements)
+            foreach (var indiceData in array4)
             {
-                Indices.Add((ushort)indiceData);
+                if (indiceData == null)
+                {
+                    continue;
+                }
+                Indices.Add(indiceData.GetValue<ushort>());
             }
         }
 

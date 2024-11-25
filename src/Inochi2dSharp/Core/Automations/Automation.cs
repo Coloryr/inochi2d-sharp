@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
 
@@ -45,12 +45,12 @@ public class Automation(Puppet puppet)
     /// Finalizes the loading of the automation
     /// </summary>
     /// <param name="parent"></param>
-    public void Finalize(Puppet parent)
+    public void JsonLoadDone(Puppet parent)
     {
         _parent = parent;
         foreach (var binding in Bindings)
         {
-            binding.Finalize(parent);
+            binding.JsonLoadDone(parent);
         }
     }
 
@@ -68,14 +68,14 @@ public class Automation(Puppet puppet)
     /// Serializes a parameter
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         serializer.Add("type", TypeId);
         serializer.Add("name", _name);
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var item in Bindings)
         {
-            var obj = new JObject();
+            var obj = new JsonObject();
             item.Serialize(obj);
             list.Add(obj);
         }
@@ -87,24 +87,21 @@ public class Automation(Puppet puppet)
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
-        var temp = data["name"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("name", out var temp) && temp != null)
         {
-            _name = temp.ToString();
+            _name = temp.GetValue<string>();
         }
 
-        temp = data["type"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("type", out temp) && temp != null)
         {
-            TypeId = temp.ToString();
+            TypeId = temp.GetValue<string>();
         }
 
-        temp = data["bindings"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("bindings", out temp) && temp is JsonArray array)
         {
-            foreach (JObject obj in array.Cast<JObject>())
+            foreach (JsonObject obj in array.Cast<JsonObject>())
             {
                 var item = new AutomationBinding();
                 item.Deserialize(obj);
@@ -135,6 +132,6 @@ public class Automation(Puppet puppet)
     /// </summary>
     protected virtual void OnUpdate() { }
 
-    protected virtual void SerializeSelf(JObject serializer) { }
-    protected virtual void DeserializeSelf(JObject data) { }
+    protected virtual void SerializeSelf(JsonObject serializer) { }
+    protected virtual void DeserializeSelf(JsonObject data) { }
 }

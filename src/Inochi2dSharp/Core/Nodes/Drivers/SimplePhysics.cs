@@ -1,8 +1,9 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
+using Inochi2dSharp;
 using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Phys;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes.Drivers;
 
@@ -153,6 +154,12 @@ public class SimplePhysics : Driver
         base.Update();
     }
 
+    public override void Dispose()
+    {
+        base.Dispose();
+        _system.Dispose();
+    }
+
     public override Parameter[] GetAffectedParameters()
     {
         if (_param is null) return [];
@@ -261,21 +268,25 @@ public class SimplePhysics : Driver
         switch (MapMode)
         {
             case ParamMapMode.XY:
+            case ParamMapMode.XY1:
                 var localPosNorm = localAngle * relLength;
                 paramVal = localPosNorm - new Vector2(0, 1);
                 paramVal.Y = -paramVal.Y; // Y goes up for params
                 break;
             case ParamMapMode.AngleLength:
+            case ParamMapMode.AngleLength1:
                 float a = float.Atan2(-localAngle.X, localAngle.Y) / MathF.PI;
                 paramVal = new Vector2(a, relLength);
                 break;
             case ParamMapMode.YX:
+            case ParamMapMode.YX1:
                 localPosNorm = localAngle * relLength;
                 paramVal = localPosNorm - new Vector2(0, 1);
                 paramVal.Y = -paramVal.Y; // Y goes up for params
                 paramVal = new Vector2(paramVal.Y, paramVal.X);
                 break;
             case ParamMapMode.LengthAngle:
+            case ParamMapMode.LengthAngle1:
                 a = float.Atan2(-localAngle.X, localAngle.Y) / MathF.PI;
                 paramVal = new Vector2(relLength, a);
                 break;
@@ -292,17 +303,16 @@ public class SimplePhysics : Driver
 
         _system = ModelType switch
         {
-            PhysicsModel.Pendulum => new Pendulum(_core, this),
-            PhysicsModel.SpringPendulum => new SpringPendulum(_core, this),
+            PhysicsModel.Pendulum or PhysicsModel.Pendulum1 => new Pendulum(_core, this),
+            PhysicsModel.SpringPendulum or PhysicsModel.SpringPendulum1 => new SpringPendulum(_core, this),
             _ => throw new Exception("modelType error"),
         };
     }
 
-    public override void Dispose()
+    public override void JsonLoadDone()
     {
-        _system.Dispose();
         _param = Puppet.FindParameter(_paramRef);
-        base.Dispose();
+        base.JsonLoadDone();
         Reset();
     }
 
@@ -398,7 +408,7 @@ public class SimplePhysics : Driver
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="recursive"></param>
-    protected override void SerializeSelfImpl(JObject serializer, bool recursive = true)
+    protected override void SerializeSelfImpl(JsonObject serializer, bool recursive = true)
     {
         base.SerializeSelfImpl(serializer, recursive);
         serializer.Add("param", _paramRef);
@@ -413,68 +423,58 @@ public class SimplePhysics : Driver
         serializer.Add("local_only", LocalOnly);
     }
 
-    public override void Deserialize(JObject data)
+    public override void Deserialize(JsonObject data)
     {
         base.Deserialize(data);
 
-        var temp = data["param"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("param", out var temp) && temp != null)
         {
-            _paramRef = (uint)temp;
+            _paramRef = temp.GetValue<uint>();
         }
 
-        temp = data["model_type"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("model_type", out temp) && temp != null)
         {
-            _modelType = temp.ToString();
+            _modelType = temp.GetValue<string>();
         }
 
-        temp = data["map_mode"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("map_mode", out temp) && temp != null)
         {
-            MapMode = temp.ToString();
+            MapMode = temp.GetValue<string>();
         }
 
-        temp = data["gravity"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("gravity", out temp) && temp != null)
         {
-            _gravity = (float)temp;
+            _gravity = temp.GetValue<float>();
         }
 
-        temp = data["length"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("length", out temp) && temp != null)
         {
-            _length = (float)temp;
+            _length = temp.GetValue<float>();
         }
 
-        temp = data["frequency"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("frequency", out temp) && temp != null)
         {
-            _frequency = (float)temp;
+            _frequency = temp.GetValue<float>();
         }
 
-        temp = data["angle_damping"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("angle_damping", out temp) && temp != null)
         {
-            _angleDamping = (float)temp;
+            _angleDamping = temp.GetValue<float>();
         }
 
-        temp = data["length_damping"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("length_damping", out temp) && temp != null)
         {
-            _lengthDamping = (float)temp;
+            _lengthDamping = temp.GetValue<float>();
         }
 
-        temp = data["output_scale"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("output_scale", out temp) && temp is JsonArray array)
         {
-            _outputScale = temp.ToVector2();
+            _outputScale = array.ToVector2();
         }
 
-        temp = data["local_only"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("local_only", out temp) && temp != null)
         {
-            LocalOnly = (bool)temp;
+            LocalOnly = temp.GetValue<bool>();
         }
     }
 }

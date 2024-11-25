@@ -18,12 +18,12 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <summary>
     /// Reference to what parameter we're binding to
     /// </summary>
-    public BindTarget Target;
+    public BindTarget Target = new();
 
     /// <summary>
     /// Whether the value at each 2D keypoint is user-set
     /// </summary>
-    public List<List<bool>> isSet;
+    public List<List<bool>> IsSet;
 
     public ParameterBindingImpl(Parameter parameter)
     {
@@ -84,7 +84,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override List<List<bool>> GetIsSet()
     {
-        return [.. isSet];
+        return [.. IsSet];
     }
 
     /// <summary>
@@ -94,11 +94,11 @@ public abstract class ParameterBindingImpl : ParameterBinding
     public override uint GetSetCount()
     {
         uint count = 0;
-        for (int x = 0; x < isSet.Count; x++)
+        for (int x = 0; x < IsSet.Count; x++)
         {
-            for (int y = 0; y < isSet[x].Count; y++)
+            for (int y = 0; y < IsSet[x].Count; y++)
             {
-                if (isSet[x][y]) count++;
+                if (IsSet[x][y]) count++;
             }
         }
         return count;
@@ -126,7 +126,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <param name="point"></param>
     public override void SetCurrent(Vector2Int point)
     {
-        isSet[point.X][point.Y] = true;
+        IsSet[point.X][point.Y] = true;
 
         ReInterpolate();
     }
@@ -136,8 +136,8 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public override bool IsSet(Vector2Int index)
+    public override bool GetIsSet(Vector2Int index)
     {
-        return isSet[index.X][index.Y];
+        return IsSet[index.X][index.Y];
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
-using SkiaSharp;
+using StbImageSharp;
+using StbImageWriteSharp;
 
 namespace Inochi2dSharp;
 
@@ -28,33 +29,26 @@ public static class Helper
         return true;
     }
 
-    public static void Save(this SKBitmap bitmap, string file)
+    public static void Save(byte[] bitmap, int width, int height, string file)
     {
-        byte[] temp;
+        var writer = new ImageWriter();
+        using var stream = File.Create(file);
         if (file.EndsWith(".png"))
         {
-            temp = bitmap.Encode(SKEncodedImageFormat.Png, 100).AsSpan().ToArray();
+            writer.WritePng(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
         }
-        else if (file.EndsWith(".jpg"))
+        else if (file.EndsWith(".tga"))
         {
-            temp = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100).AsSpan().ToArray();
+            writer.WriteTga(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
         }
         else
         {
-            temp = bitmap.Encode(SKEncodedImageFormat.Bmp, 100).AsSpan().ToArray();
+            writer.WriteBmp(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
         }
-
-        File.WriteAllBytes(file, temp);
     }
 
-    public static int GetChannel(this SKBitmap bitmap)
+    public static void Save(this ImageResult bitmap, string file)
     {
-        var type = bitmap.ColorType;
-        if (type == SKColorType.Rgba8888 || type == SKColorType.Bgra8888)
-        {
-            return 4;
-        }
-
-        return 0;
+        Save(bitmap.Data, bitmap.Width, bitmap.Height, file);
     }
 }

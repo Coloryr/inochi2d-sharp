@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Animations;
 
@@ -53,16 +53,16 @@ public class Animation
     /// Finalizes the animation
     /// </summary>
     /// <param name="puppet"></param>
-    public void Finalize(Puppet puppet)
+    public void JsonLoadDone(Puppet puppet)
     {
-        foreach (var lane in Lanes) lane.Finalize(puppet);
+        foreach (var lane in Lanes) lane.JsonLoadDone(puppet);
     }
 
     /// <summary>
     /// Serialization function
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         serializer.Add("timestep", Timestep);
         serializer.Add("additive", _additive);
@@ -71,10 +71,10 @@ public class Animation
         serializer.Add("leadOut", LeadOut);
         serializer.Add("animationWeight", _animationWeight);
 
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var lane in Lanes)
         {
-            var obj = new JObject();
+            var obj = new JsonObject();
             lane.Serialize(obj);
             list.Add(obj);
         }
@@ -85,7 +85,7 @@ public class Animation
     /// Deserialization function
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
         var temp = data["timestep"];
         if (temp != null)
@@ -124,9 +124,9 @@ public class Animation
         }
 
         temp = data["lanes"];
-        if (temp is JArray array)
+        if (temp is JsonArray array)
         {
-            foreach (JObject item in array.Cast<JObject>())
+            foreach (JsonObject item in array.Cast<JsonObject>())
             {
                 var land = new AnimationLane();
                 land.Deserialize(item);

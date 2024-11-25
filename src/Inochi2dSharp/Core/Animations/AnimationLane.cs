@@ -1,6 +1,7 @@
-﻿using Inochi2dSharp.Core.Param;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Animations;
 
@@ -33,7 +34,7 @@ public class AnimationLane
     /// Serialization function
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         serializer.Add("interpolation", _interpolation.ToString());
         if (ParamRef != null)
@@ -41,7 +42,12 @@ public class AnimationLane
             serializer.Add("uuid", ParamRef.TargetParam.UUID);
             serializer.Add("target", ParamRef.TargetAxis);
         }
-        serializer.Add("keyframes", new JArray(Frames));
+        var list = new JsonArray();
+        foreach (var item in Frames)
+        {
+            list.Add(item);
+        }
+        serializer.Add("keyframes", list);
         serializer.Add("merge_mode", MergeMode);
     }
 
@@ -49,41 +55,38 @@ public class AnimationLane
     /// Deserialization function
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
-        var temp = data["interpolation"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("interpolation", out var temp) && temp != null)
         {
-            _interpolation = Enum.Parse<InterpolateMode>(temp.ToString());
+            _interpolation = Enum.Parse<InterpolateMode>(temp.GetValue<string>());
         }
 
-        temp = data["uuid"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("uuid", out temp) && temp != null)
         {
-            _refuuid = (uint)temp;
+            _refuuid = temp.GetValue<uint>();
         }
 
         ParamRef = new AnimationParameterRef();
 
-        temp = data["target"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("target", out temp) && temp != null)
         {
-            ParamRef.TargetAxis = (int)temp;
+            ParamRef.TargetAxis = temp.GetValue<int>();
         }
 
-        temp = data["keyframes"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("keyframes", out temp) && temp is JsonArray array)
         {
-            foreach (var item in array)
+            foreach (JsonObject item in array.Cast<JsonObject>())
             {
-                Frames.Add(item.ToObject<Keyframe>()!);
+                var temp1 = new Keyframe();
+                temp1.Deserialize(item);
+                Frames.Add(temp1);
             }
         }
 
-        temp = data["merge_mode"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("merge_mode", out temp) && temp != null)
         {
-            MergeMode = temp.ToString();
+            MergeMode = temp.GetValue<string>();
         }
     }
 
@@ -166,7 +169,7 @@ public class AnimationLane
 
     public void Reconstruct(Puppet puppet) { }
 
-    public void Finalize(Puppet puppet)
+    public void JsonLoadDone(Puppet puppet)
     {
         if (ParamRef != null) ParamRef.TargetParam = puppet.FindParameter(_refuuid)!;
     }

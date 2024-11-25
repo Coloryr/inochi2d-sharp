@@ -1,17 +1,33 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+﻿
+
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Nodes;
 
 public record MaskBinding
 {
-    [JsonProperty("maskSrcUUID")]
-    public uint MaskSrcUUID;
+    public uint MaskSrcUUID { get; set; }
 
-    [JsonProperty("mode")]
-    [JsonConverter(typeof(StringEnumConverter))]
-    public MaskingMode Mode;
+    public MaskingMode Mode { get; set; }
 
-    [JsonIgnore]
-    public Drawable maskSrc;
+    public Drawable MaskSrc { get; set; }
+
+    public void Serialize(JsonObject obj)
+    {
+        obj.Add("maskSrcUUID", MaskSrcUUID);
+        obj.Add("mode", Mode.ToString());
+    }
+
+    public void Deserialize(JsonObject obj)
+    {
+        if (obj.TryGetPropertyValue("maskSrcUUID", out var temp) && temp != null)
+        {
+            MaskSrcUUID = temp.GetValue<uint>();
+        }
+
+        if (obj.TryGetPropertyValue("mode", out temp) && temp != null)
+        {
+            Mode = Enum.Parse<MaskingMode>(temp.GetValue<string>());
+        }
+    }
 }

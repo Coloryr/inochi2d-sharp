@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Inochi2dSharp.Math;
-using SkiaSharp;
+using StbImageSharp;
 
 namespace Inochi2dSharp.Core;
 
@@ -20,7 +20,7 @@ public class Texture : IDisposable
 
     public uint UUID { get; private set; }
 
-    private readonly SKBitmap? _image;
+    private readonly ImageResult? _image;
     private readonly I2dCore _core;
     public Texture(I2dCore core, ShallowTexture shallow) 
         : this(core, shallow.Data, shallow.Width, shallow.Height, shallow.Channels, shallow.ConvChannels)
@@ -41,19 +41,20 @@ public class Texture : IDisposable
     public Texture(I2dCore core, string file)
     {
         _core = core;
-        _image = SKBitmap.Decode(file);
+        var data = File.ReadAllBytes(file);
+        _image = ImageResult.FromMemory(data);
 
         // Load in image data to OpenGL
         Width = _image.Width;
         Height = _image.Height;
-        Channels = _image.GetChannel();
+        Channels = (int)_image.SourceComp;
 
         InColorMode = GlApi.GL_RGBA;
         OutColorMode = GlApi.GL_RGBA;
 
         // Generate OpenGL texture
         Id = _core.gl.GenTexture();
-        SetData(_image.GetPixels());
+        SetData(_image.Data);
 
         // Set default filtering and wrapping
         SetFiltering(Filtering.Linear);
@@ -68,7 +69,7 @@ public class Texture : IDisposable
     /// <param name="width"></param>
     /// <param name="height"></param>
     /// <param name="channels"></param>
-    public Texture(I2dCore core, int width, int height, int channels = 4) : this(core, Marshal.AllocHGlobal(width * height * channels), width, height, channels, channels)
+    public Texture(I2dCore core, int width, int height, int channels = 4) : this(core, new byte[width * height * channels], width, height, channels, channels)
     {
         _core = core;
     }
@@ -81,7 +82,7 @@ public class Texture : IDisposable
     /// <param name="height"></param>
     /// <param name="inChannels"></param>
     /// <param name="outChannels"></param>
-    public Texture(I2dCore core, IntPtr data, int width, int height, int inChannels = 4, int outChannels = 4)
+    public Texture(I2dCore core, byte[] data, int width, int height, int inChannels = 4, int outChannels = 4)
     {
         _core = core;
 
@@ -104,20 +105,6 @@ public class Texture : IDisposable
         SetWrapping(Wrapping.Clamp);
         SetAnisotropy(_core.IncGetMaxAnisotropy() / 2.0f);
         UUID = _core.InCreateUUID();
-    }
-
-    /// <summary>
-    /// Disposes texture from GL
-    /// </summary>
-    public void Dispose()
-    {
-        _image?.Dispose();
-
-        if (Id > 0)
-        {
-            _core.gl.DeleteTexture(Id);
-            Id = 0;
-        }
     }
 
     /// <summary>
@@ -184,12 +171,15 @@ public class Texture : IDisposable
     /// Sets the data of the texture
     /// </summary>
     /// <param name="data"></param>
-    public void SetData(IntPtr data)
+    public unsafe void SetData(byte[] data)
     {
         Bind();
         _core.gl.PixelStore(GlApi.GL_UNPACK_ALIGNMENT, 1);
         _core.gl.PixelStore(GlApi.GL_PACK_ALIGNMENT, 1);
-        _core.gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, OutColorMode, Width, Height, 0, InColorMode, GlApi.GL_UNSIGNED_BYTE, data);
+        fixed (void* ptr = data)
+        {
+            _core.gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, OutColorMode, Width, Height, 0, InColorMode, GlApi.GL_UNSIGNED_BYTE, new nint(ptr));
+        }
 
         GenMipmap();
     }
@@ -264,10 +254,8 @@ public class Texture : IDisposable
     /// <param name="file"></param>
     public void Save(string file)
     {
-        var bitmap = new SKBitmap(Width, Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
         var temp = GetTextureData(true);
-        bitmap.SetPixels(temp);
-        bitmap.Save(file);
+        Helper.Save(temp, Width, Height, file);
     }
 
     /// <summary>
@@ -275,12 +263,15 @@ public class Texture : IDisposable
     /// </summary>
     /// <param name="unmultiply"></param>
     /// <returns></returns>
-    public IntPtr GetTextureData(bool unmultiply = false)
+    public unsafe byte[] GetTextureData(bool unmultiply = false)
     {
         long size = Width * Height * Channels;
-        var buf = Marshal.AllocHGlobal(Width * Height * Channels);
+        var buf = new byte[Width * Height * Channels];
         Bind();
-        _core.gl.GetTexImage(GlApi.GL_TEXTURE_2D, 0, OutColorMode, GlApi.GL_UNSIGNED_BYTE, buf);
+        fixed (byte* ptr = buf)
+        {
+            _core.gl.GetTexImage(GlApi.GL_TEXTURE_2D, 0, OutColorMode, GlApi.GL_UNSIGNED_BYTE, new nint(ptr));
+        }
         if (unmultiply && Channels == 4)
         {
             _core.InTexUnPremuliply(buf, size);
@@ -295,5 +286,17 @@ public class Texture : IDisposable
     public uint GetTextureId()
     {
         return Id;
+    }
+
+    /// <summary>
+    /// Disposes texture from GL
+    /// </summary>
+    public void Dispose()
+    {
+        if (Id > 0)
+        {
+            _core.gl.DeleteTexture(Id);
+            Id = 0;
+        }
     }
 }

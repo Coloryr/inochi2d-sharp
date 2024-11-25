@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
+using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Param;
 
@@ -26,12 +27,12 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// Serializes a binding
     /// </summary>
     /// <param name="serializer"></param>
-    public override void Serialize(JObject serializer)
+    public override void Serialize(JsonObject serializer)
     {
         serializer.Add("node", Target.node.UUID);
         serializer.Add("param_name", Target.paramName);
         serializer.Add("values", values.ToToken());
-        serializer.Add("isSet", isSet.ToToken());
+        serializer.Add("isSet", IsSet.ToToken());
         serializer.Add("interpolate_mode", InterpolateMode.ToString());
     }
 
@@ -39,39 +40,35 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// Deserializes a binding
     /// </summary>
     /// <param name="data"></param>
-    public override void Deserialize(JObject data)
+    public override void Deserialize(JsonObject data)
     {
-        var temp = data["node"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("node", out var temp) && temp != null)
         {
-            NodeRef = (uint)temp;
+            NodeRef = temp.GetValue<uint>();
         }
-        temp = data["param_name"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("param_name", out temp) && temp != null)
         {
-            Target.paramName = temp.ToString();
+            Target.paramName = temp.GetValue<string>();
         }
 
-        temp = data["values"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("values", out temp) && temp is JsonArray array)
         {
             values = array.ToListList<float>();
         }
 
-        temp = data["isSet"];
-        if (temp is JArray array1)
+        if (data.TryGetPropertyValue("isSet", out temp) && temp is JsonArray array1)
         {
-            isSet = array1.ToListList<bool>();
+            IsSet = array1.ToListList<bool>();
         }
 
-        temp = data["interpolate_mode"];
-        if (temp == null || !Enum.TryParse<InterpolateMode>(temp.ToString(), out var _interpolateMode))
+        if (data.TryGetPropertyValue("interpolate_mode", out temp) && temp != null
+            && !Enum.TryParse<InterpolateMode>(temp.GetValue<string>(), out var temp1))
         {
-            InterpolateMode = InterpolateMode.Linear;
+            InterpolateMode = temp1;
         }
         else
         {
-            InterpolateMode = _interpolateMode;
+            InterpolateMode = InterpolateMode.Linear;
         }
 
         int xCount = Parameter.AxisPointCount(0);
@@ -89,11 +86,11 @@ public class ValueParameterBinding : ParameterBindingImpl
             }
         }
 
-        if (isSet.Count != xCount)
+        if (IsSet.Count != xCount)
         {
             throw new Exception("Mismatched X isSet_ count");
         }
-        foreach (var i in isSet)
+        foreach (var i in IsSet)
         {
             if (i.Count != yCount)
             {
@@ -111,14 +108,14 @@ public class ValueParameterBinding : ParameterBindingImpl
         int yCount = Parameter.AxisPointCount(1);
 
         values = [];
-        isSet = [];
+        IsSet = [];
         for (int x = 0; x < xCount; x++)
         {
-            isSet.Add([]);
+            IsSet.Add([]);
             values.Add([]);
             for (int y = 0; y < yCount; y++)
             {
-                isSet[x].Add(false);
+                IsSet[x].Add(false);
                 values[x].Add(0);
                 var value = values[x][y];
                 ClearValue(ref value);
@@ -150,7 +147,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     public void SetValue(Vector2Int point, float value)
     {
         values[point.X][point.Y] = value;
-        isSet[point.X][point.Y] = true;
+        IsSet[point.X][point.Y] = true;
 
         ReInterpolate();
     }
@@ -164,7 +161,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         var value = values[point.X][point.Y];
         ClearValue(ref value);
         values[point.X][point.Y] = value;
-        isSet[point.X][point.Y] = false;
+        IsSet[point.X][point.Y] = false;
 
         ReInterpolate();
     }
@@ -178,7 +175,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         var value = values[point.X][point.Y];
         ClearValue(ref value);
         values[point.X][point.Y] = value;
-        isSet[point.X][point.Y] = true;
+        IsSet[point.X][point.Y] = true;
 
         ReInterpolate();
     }
@@ -192,7 +189,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         if (axis == 0)
         {
             values.Reverse();
-            isSet.Reverse();
+            IsSet.Reverse();
         }
         else
         {
@@ -200,9 +197,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             {
                 values[i].Reverse();
             }
-            for (int i = 0; i < isSet.Count; i++)
+            for (int i = 0; i < IsSet.Count; i++)
             {
-                isSet[i].Reverse();
+                IsSet[i].Reverse();
             }
         }
     }
@@ -223,10 +220,10 @@ public class ValueParameterBinding : ParameterBindingImpl
         // Initialize validity map to user-set points
         for (int x = 0; x < xCount; x++)
         {
-            valid.Add([.. isSet[x]]);
+            valid.Add([.. IsSet[x]]);
             for (int y = 0; y < yCount; y++)
             {
-                if (isSet[x][y]) validCount++;
+                if (IsSet[x][y]) validCount++;
             }
         }
 
@@ -652,11 +649,11 @@ public class ValueParameterBinding : ParameterBindingImpl
             int yCount = Parameter.AxisPointCount(1);
 
             values.Insert(index, []);
-            isSet.Insert(index, []);
+            IsSet.Insert(index, []);
             for (int i = 0; i < yCount; i++)
             {
                 values[index].Add(0);
-                isSet[index].Add(false);
+                IsSet[index].Add(false);
             }
         }
         else if (axis == 1)
@@ -666,9 +663,9 @@ public class ValueParameterBinding : ParameterBindingImpl
                 var item = values[i];
                 item.Insert(index, 0);
             }
-            for (int i = 0; i < isSet.Count; i++)
+            for (int i = 0; i < IsSet.Count; i++)
             {
-                var item = isSet[i];
+                var item = IsSet[i];
                 item.Insert(index, false);
             }
         }
@@ -692,9 +689,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             }
 
             {
-                var swap = isSet[oldindex];
-                isSet.RemoveAt(oldindex);
-                isSet.Insert(newindex, swap);
+                var swap = IsSet[oldindex];
+                IsSet.RemoveAt(oldindex);
+                IsSet.Insert(newindex, swap);
             }
         }
         else if (axis == 1)
@@ -706,9 +703,9 @@ public class ValueParameterBinding : ParameterBindingImpl
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
             }
-            for (int i = 0; i < isSet.Count; i++)
+            for (int i = 0; i < IsSet.Count; i++)
             {
-                var item = isSet[i];
+                var item = IsSet[i];
                 var swap = item[oldindex];
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
@@ -728,7 +725,7 @@ public class ValueParameterBinding : ParameterBindingImpl
         if (axis == 0)
         {
             values.RemoveAt(index);
-            isSet.RemoveAt(index);
+            IsSet.RemoveAt(index);
         }
         else if (axis == 1)
         {
@@ -736,9 +733,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             {
                 values[i].RemoveAt(index);
             }
-            for (int i = 0; i < isSet.Count; i++)
+            for (int i = 0; i < IsSet.Count; i++)
             {
-                isSet[i].RemoveAt(index);
+                IsSet[i].RemoveAt(index);
             }
         }
 
@@ -773,7 +770,7 @@ public class ValueParameterBinding : ParameterBindingImpl
 
     public override void CopyKeypointToBinding(Vector2Int src, ParameterBinding other, Vector2Int dest)
     {
-        if (!IsSet(src))
+        if (!GetIsSet(src))
         {
             other.Unset(dest);
         }
@@ -791,16 +788,16 @@ public class ValueParameterBinding : ParameterBindingImpl
     {
         if (other is ValueParameterBinding o)
         {
-            bool thisSet = IsSet(src);
-            bool otherSet = other.IsSet(dest);
+            bool thisSet = GetIsSet(src);
+            bool otherSet = other.GetIsSet(dest);
             float thisVal = GetValue(src);
             float otherVal = o.GetValue(dest);
 
             // Swap directly, to avoid clobbering by update
             o.values[dest.X][dest.Y] = thisVal;
-            o.isSet[dest.X][dest.Y] = thisSet;
+            o.IsSet[dest.X][dest.Y] = thisSet;
             values[src.X][src.Y] = otherVal;
-            isSet[src.X][src.Y] = otherSet;
+            IsSet[src.X][src.Y] = otherSet;
 
             ReInterpolate();
             o.ReInterpolate();

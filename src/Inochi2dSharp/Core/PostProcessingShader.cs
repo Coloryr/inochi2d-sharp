@@ -4,11 +4,11 @@ public class PostProcessingShader
 {
     private readonly Dictionary<string, int> _uniformCache = [];
 
-    public Shader shader;
+    public Shader Shader;
 
     public PostProcessingShader(Shader shader)
     {
-        this.shader = shader;
+        Shader = shader;
 
         shader.Use();
         shader.SetUniform(shader.GetUniformLocation("albedo"), 0);
@@ -24,7 +24,7 @@ public class PostProcessingShader
     public int GetUniform(string name)
     {
         if (HasUniform(name)) return _uniformCache[name];
-        int element = shader.GetUniformLocation(name);
+        int element = Shader.GetUniformLocation(name);
         _uniformCache[name] = element;
         return element;
     }

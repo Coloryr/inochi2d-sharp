@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
-using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
 
@@ -26,7 +25,7 @@ public class VerletNode
     /// Serializes a parameter
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         serializer.Add("distance", Distance);
         serializer.Add("position", Position.ToToken());
@@ -37,24 +36,21 @@ public class VerletNode
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
-        var temp = data["distance"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("distance", out var temp) && temp != null)
         {
-            Distance = (float)temp;
+            Distance = temp.GetValue<float>();
         }
 
-        temp = data["position"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("position", out temp) && temp is JsonArray array)
         {
-            Position = temp.ToVector2();
+            Position = array.ToVector2();
         }
 
-        temp = data["old_position"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("old_position", out temp) && temp is JsonArray array1)
         {
-            OldPosition = temp.ToVector2();
+            OldPosition = array1.ToVector2();
         }
     }
 }

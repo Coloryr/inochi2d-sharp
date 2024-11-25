@@ -139,7 +139,7 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
         for (int i = 0; i < player.PlayingAnimations.Count; i++)
         {
             var sanim = player.PlayingAnimations[i];
-            if (sanim.Name == this.Name) idx = i;
+            if (sanim.Name == Name) idx = i;
         }
 
         return idx;

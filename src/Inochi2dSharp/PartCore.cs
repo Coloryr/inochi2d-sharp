@@ -203,7 +203,7 @@ public partial class I2dCore
             InCamera.Matrix()
         );
         partShader.SetUniform(gopacity, part.opacity);
-        partShader.SetUniform(gMultColor, part.tint);
+        partShader.SetUniform(gMultColor, part.Tint);
         partShader.SetUniform(gScreenColor, part.screenTint);
 
         // Bind the texture

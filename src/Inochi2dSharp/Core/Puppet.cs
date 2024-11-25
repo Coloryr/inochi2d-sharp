@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Animations;
 using Inochi2dSharp.Core.Automations;
 using Inochi2dSharp.Core.Nodes;
@@ -9,7 +11,6 @@ using Inochi2dSharp.Core.Nodes.MeshGroups;
 using Inochi2dSharp.Core.Nodes.Parts;
 using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core;
 
@@ -204,7 +205,7 @@ public class Puppet : IDisposable
 
     public void SelfSort()
     {
-        RootParts.Sort((a, b) => a.ZSort.CompareTo(b.ZSort));
+        RootParts.Sort((a, b) => b.ZSort.CompareTo(a.ZSort));
     }
 
     public Node? FindNode(Node n, string name)
@@ -585,17 +586,21 @@ public class Puppet : IDisposable
         return ToStringBranch(Root, 0);
     }
 
-    public void SerializeSelf(JObject serializer)
+    public void SerializeSelf(JsonObject serializer)
     {
-        serializer.Add("meta", new JObject(Meta));
-        serializer.Add("physics", new JObject(Physics));
-        var obj = new JObject();
+        var obj = new JsonObject();
+        Meta.Serialize(obj);
+        serializer.Add("meta", obj);
+        obj = [];
+        Physics.Serialize(obj);
+        serializer.Add("physics", obj);
+        obj = [];
         Root.SerializePartial(obj);
         serializer.Add("nodes", obj);
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var item in Parameters)
         {
-            var obj1 = new JObject();
+            var obj1 = new JsonObject();
             item.Serialize(obj1);
             list.Add(obj1);
         }
@@ -603,26 +608,26 @@ public class Puppet : IDisposable
         list = [];
         foreach (var item in Automation)
         {
-            var obj1 = new JObject();
+            var obj1 = new JsonObject();
             item.Serialize(obj1);
             list.Add(obj1);
         }
         serializer.Add("automation", list);
-        list = [];
+        obj = [];
         foreach (var item in Animations)
         {
-            var obj1 = new JObject();
+            var obj1 = new JsonObject();
             item.Value.Serialize(obj1);
-            list.Add(new JProperty(item.Key, obj1));
+            obj.Add(item.Key, obj1);
         }
-        serializer.Add("animations", list);
+        serializer.Add("animations", obj);
     }
 
     /// <summary>
     /// Serializes a puppet
     /// </summary>
     /// <param name="serializer"></param>
-    public void Serialize(JObject serializer)
+    public void Serialize(JsonObject serializer)
     {
         SerializeSelf(serializer);
     }
@@ -631,32 +636,30 @@ public class Puppet : IDisposable
     /// Deserializes a puppet
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JObject data)
+    public void Deserialize(JsonObject data)
     {
-        var temp = data["meta"];
-        if (temp != null)
+        Meta = new();
+        if (data.TryGetPropertyValue("meta", out var temp) && temp is JsonObject obj)
         {
-            Meta = temp.ToObject<PuppetMeta>()!;
+            Meta.Deserialize(obj);
         }
 
-        temp = data["physics"];
-        if (temp != null)
+        Physics = new();
+        if (data.TryGetPropertyValue("physics", out temp) && temp is JsonObject obj1)
         {
-            Physics = temp.ToObject<PuppetPhysics>()!;
+            Physics.Deserialize(obj1);
         }
 
-        temp = data["nodes"];
-        if (temp is JObject obj)
+        Root = new(_core);
+        if (data.TryGetPropertyValue("nodes", out temp) && temp is JsonObject obj2)
         {
-            Root = new(_core);
-            Root.Deserialize(obj);
+            Root.Deserialize(obj2);
         }
 
-        temp = data["param"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("param", out temp) && temp is JsonArray array)
         {
             // Allow parameter loading to be overridden (for Inochi Creator)
-            foreach (JObject key in temp.Cast<JObject>())
+            foreach (JsonObject key in array.Cast<JsonObject>())
             {
                 var param = new Parameter(_core);
                 param.Deserialize(key);
@@ -665,30 +668,32 @@ public class Puppet : IDisposable
         }
 
         // Deserialize automation
-        temp = data["automation"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("automation", out temp) && temp is JsonArray array1)
         {
-            foreach (JObject key in array.Cast<JObject>())
+            foreach (JsonObject key in array1.Cast<JsonObject>())
             {
-                string type = key["type"]!.ToString();
-
-                if (TypeList.HasAutomationType(type))
+                if (key.TryGetPropertyValue("type", out var temp1) && temp1 != null)
                 {
-                    var auto_ = TypeList.InstantiateAutomation(type, this, _core.I2dTime);
-                    auto_.Deserialize(key);
-                    Automation.Add(auto_);
+                    string type = temp1.GetValue<string>();
+
+                    if (TypeList.HasAutomationType(type))
+                    {
+                        var auto_ = TypeList.InstantiateAutomation(type, this, _core.I2dTime);
+                        auto_.Deserialize(key);
+                        Automation.Add(auto_);
+                    }
                 }
+               
             }
         }
 
-        temp = data["animations"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("animations", out temp) && temp is JsonObject obj3)
         {
-            foreach (JProperty obj1 in temp.Cast<JProperty>())
+            foreach (var obj4 in obj3.Cast<KeyValuePair<string, JsonObject>>())
             {
                 var item = new Animation();
-                item.Deserialize((obj1.Value as JObject)!);
-                Animations.Add(obj1.Name, item);
+                item.Deserialize(obj4.Value);
+                Animations.Add(obj4.Key, item);
             }
         }
         FinalizeDeserialization(data);
@@ -711,25 +716,25 @@ public class Puppet : IDisposable
         }
     }
 
-    public void Dispose()
+    public void JsonLoadDone()
     {
         Root.Puppet = this;
         Root.name = "Root";
         _puppetRootNode = new Node(_core, this);
 
         // Finally update link etc.
-        Root.Dispose();
+        Root.JsonLoadDone();
         foreach (var item in Parameters)
         {
-            item.Finalize(this);
+            item.JsonLoadDone(this);
         }
         foreach (var item in Automation)
         {
-            item.Finalize(this);
+            item.JsonLoadDone(this);
         }
         foreach (var item in Animations)
         {
-            item.Value.Finalize(this);
+            item.Value.JsonLoadDone(this);
         }
         ScanParts(Root, true);
         SelfSort();
@@ -739,11 +744,11 @@ public class Puppet : IDisposable
     /// Finalizer
     /// </summary>
     /// <param name="data"></param>
-    public void FinalizeDeserialization(JObject data)
+    public void FinalizeDeserialization(JsonObject data)
     {
         // reconstruct object path so that object is located at final position
         Reconstruct();
-        Dispose();
+        JsonLoadDone();
     }
 
     public void ApplyDeformToChildren()
@@ -763,5 +768,10 @@ public class Puppet : IDisposable
     public Vector4 GetCombinedBounds(bool reupdate = false)
     {
         return Root.GetCombinedBounds(reupdate, true);
+    }
+
+    public void Dispose()
+    {
+        
     }
 }

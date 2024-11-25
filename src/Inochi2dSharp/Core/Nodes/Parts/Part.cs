@@ -1,14 +1,14 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
+using System.Runtime.InteropServices.JavaScript;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Nodes.Parts;
 
 [TypeId("Part")]
 public class Part : Drawable
 {
-    private readonly uint uvbo;
+    private readonly uint Uvbo;
 
     //
     //      PARAMETER OFFSETS
@@ -56,7 +56,7 @@ public class Part : Drawable
     /// <summary>
     /// Multiplicative tint color
     /// </summary>
-    public Vector3 tint = new(1, 1, 1);
+    public Vector3 Tint = new(1, 1, 1);
 
     /// <summary>
     /// Screen tint color
@@ -80,7 +80,7 @@ public class Part : Drawable
     /// <param name="parent"></param>
     public Part(I2dCore core, Node? parent = null) : base(core, parent)
     {
-        uvbo = core.gl.GenBuffer();
+        Uvbo = core.gl.GenBuffer();
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public class Part : Drawable
             this.textures[i] = textures[i];
         }
 
-        uvbo = core.gl.GenBuffer();
+        Uvbo = core.gl.GenBuffer();
 
         UpdateUVs();
     }
@@ -113,12 +113,12 @@ public class Part : Drawable
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="recursive"></param>
-    protected override void SerializeSelf(JObject serializer)
+    protected override void SerializeSelf(JsonObject serializer)
     {
         base.SerializeSelf(serializer);
         if (_core.IsLoadingINP)
         {
-            var list = new JArray();
+            var list = new JsonArray();
             foreach (var texture in textures)
             {
                 if (texture != null)
@@ -142,16 +142,18 @@ public class Part : Drawable
         }
 
         serializer.Add("blend_mode", blendingMode.ToString());
-        serializer.Add("tint", tint.ToToken());
+        serializer.Add("tint", Tint.ToToken());
         serializer.Add("screenTint", screenTint.ToToken());
         serializer.Add("emissionStrength", emissionStrength);
 
         if (masks != null && masks.Count > 0)
         {
-            var list = new JArray();
-            foreach (var m in masks)
+            var list = new JsonArray();
+            foreach (var item in masks)
             {
-                list.Add(m);
+                var obj = new JsonObject();
+                item.Serialize(obj);
+                list.Add(obj);
             }
             serializer.Add("masks", list);
         }
@@ -160,22 +162,28 @@ public class Part : Drawable
         serializer.Add("opacity", opacity);
     }
 
-    public override void Deserialize(JObject data)
+    public override void Deserialize(JsonObject data)
     {
         base.Deserialize(data);
 
         if (_core.IsLoadingINP)
         {
             int i = 0;
-            var temp1 = data["textures"];
-            if (temp1 != null)
+            if (data.TryGetPropertyValue("textures", out var temp1) && temp1 is JsonArray array4)
             {
-                foreach (var texElement in temp1)
+                foreach (var texElement in array4)
                 {
-                    uint textureId = (uint)texElement;
+                    if (texElement == null)
+                    {
+                        continue;
+                    }
+                    uint textureId = texElement.GetValue<uint>();
 
                     // uint max = no texture set
-                    if (textureId == I2dCore.NO_TEXTURE) continue;
+                    if (textureId == I2dCore.NO_TEXTURE)
+                    {
+                        continue;
+                    }
 
                     textureIds.Add(textureId);
                     textures[i++] = _core.InGetTextureFromId(textureId);
@@ -187,58 +195,54 @@ public class Part : Drawable
             throw new Exception("Loading from texture path is deprecated.");
         }
 
-        var temp = data["opacity"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("opacity", out var temp) && temp != null)
         {
-            opacity = (float)temp;
+            opacity = temp.GetValue<float>();
         }
 
-        temp = data["mask_threshold"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("mask_threshold", out temp) && temp != null)
         {
-            maskAlphaThreshold = (float)temp;
+            maskAlphaThreshold = temp.GetValue<float>();
         }
 
         // Older models may not have tint
-        temp = data["tint"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("tint", out temp) && temp is JsonArray array1)
         {
-            tint = temp.ToVector3();
+            Tint = array1.ToVector3();
         }
 
         // Older models may not have screen tint
-        temp = data["screenTint"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("screenTint", out temp) && temp is JsonArray array2)
         {
-            screenTint = temp.ToVector3();
+            screenTint = array2.ToVector3();
         }
 
         // Older models may not have emission
-        temp = data["emissionStrength"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("emissionStrength", out temp) && temp is JsonArray array3)
         {
-            tint = temp.ToVector3();
+            Tint = array3.ToVector3();
         }
 
         // Older models may not have blend mode
-        temp = data["blend_mode"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("blend_mode", out temp) && temp != null)
         {
-            blendingMode = Enum.Parse<BlendMode>(temp.ToString());
+            blendingMode = Enum.Parse<BlendMode>(temp.GetValue<string>());
         }
 
-        temp = data["masked_by"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("mask_mode", out temp) && temp != null)
         {
             var mode = Enum.Parse<MaskingMode>(temp.ToString());
 
             // Go every masked part
-            var temp1 = data["masked_by"];
-            if (temp1 != null)
+            if (data.TryGetPropertyValue("masked_by", out var temp1) && temp1 is JsonArray array4)
             {
-                foreach (var imask in temp1)
+                foreach (var imask in array4)
                 {
-                    uint uuid = (uint)imask;
+                    if (imask == null)
+                    {
+                        continue;
+                    }
+                    uint uuid = imask.GetValue<uint>();
                     masks.Add(new MaskBinding
                     {
                         MaskSrcUUID = uuid,
@@ -248,12 +252,13 @@ public class Part : Drawable
             }
         }
 
-        temp = data["masks"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("masks", out temp) && temp is JsonArray array)
         {
-            foreach (var item in array)
+            foreach (var item in array.Cast<JsonObject>())
             {
-                masks.Add(item.ToObject<MaskBinding>()!);
+                var item1 = new MaskBinding();
+                item1.Deserialize(item);
+                masks.Add(item1);
             }
         }
 
@@ -261,10 +266,10 @@ public class Part : Drawable
         UpdateUVs();
     }
 
-    public override void SerializePartial(JObject obj, bool recursive = true)
+    public override void SerializePartial(JsonObject obj, bool recursive = true)
     {
         base.SerializePartial(obj, recursive);
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var texture in textures)
         {
             uint uuid;
@@ -298,7 +303,7 @@ public class Part : Drawable
 
     private unsafe void UpdateUVs()
     {
-        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Uvbo);
         var temp = Data.Uvs.ToArray();
         fixed (void* ptr = temp)
         {
@@ -308,10 +313,10 @@ public class Part : Drawable
 
     private void SetupShaderStage(int stage, Matrix4x4 matrix)
     {
-        var clampedTint = tint;
-        if (!float.IsNaN(offsetTint.X)) clampedTint.X = float.Clamp(tint.X * offsetTint.X, 0, 1);
-        if (!float.IsNaN(offsetTint.Y)) clampedTint.Y = float.Clamp(tint.Y * offsetTint.Y, 0, 1);
-        if (!float.IsNaN(offsetTint.Z)) clampedTint.Z = float.Clamp(tint.Z * offsetTint.Z, 0, 1);
+        var clampedTint = Tint;
+        if (!float.IsNaN(offsetTint.X)) clampedTint.X = float.Clamp(Tint.X * offsetTint.X, 0, 1);
+        if (!float.IsNaN(offsetTint.Y)) clampedTint.Y = float.Clamp(Tint.Y * offsetTint.Y, 0, 1);
+        if (!float.IsNaN(offsetTint.Z)) clampedTint.Z = float.Clamp(Tint.Z * offsetTint.Z, 0, 1);
 
         var clampedScreen = screenTint;
         if (!float.IsNaN(offsetScreenTint.X)) clampedScreen.X = float.Clamp(screenTint.X + offsetScreenTint.X, 0, 1);
@@ -375,10 +380,10 @@ public class Part : Drawable
                 _core.partShader.SetUniform(_core.partShader.GetUniformLocation("emissive"), 1);
                 _core.partShader.SetUniform(_core.partShader.GetUniformLocation("bumpmap"), 2);
 
-                var clampedColor = tint;
-                if (!float.IsNaN(offsetTint.X)) clampedColor.X = float.Clamp(tint.X * offsetTint.X, 0, 1);
-                if (!float.IsNaN(offsetTint.Y)) clampedColor.Y = float.Clamp(tint.Y * offsetTint.Y, 0, 1);
-                if (!float.IsNaN(offsetTint.Z)) clampedColor.Z = float.Clamp(tint.Z * offsetTint.Z, 0, 1);
+                var clampedColor = Tint;
+                if (!float.IsNaN(offsetTint.X)) clampedColor.X = float.Clamp(Tint.X * offsetTint.X, 0, 1);
+                if (!float.IsNaN(offsetTint.Y)) clampedColor.Y = float.Clamp(Tint.Y * offsetTint.Y, 0, 1);
+                if (!float.IsNaN(offsetTint.Z)) clampedColor.Z = float.Clamp(Tint.Z * offsetTint.Z, 0, 1);
                 _core.partShader.SetUniform(_core.gMultColor, clampedColor);
 
                 clampedColor = screenTint;
@@ -401,7 +406,7 @@ public class Part : Drawable
 
         // Enable UVs array
         _core.gl.EnableVertexAttribArray(1); // uvs
-        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, uvbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Uvbo);
         _core.gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable deform array
@@ -618,7 +623,7 @@ public class Part : Drawable
     {
         foreach (var mask in masks)
         {
-            if (mask.maskSrc.UUID == drawable.UUID) return true;
+            if (mask.MaskSrc.UUID == drawable.UUID) return true;
         }
         return false;
     }
@@ -629,7 +634,7 @@ public class Part : Drawable
         for (int i = 0; i < masks.Count; i++)
         {
             var mask = masks[i];
-            if (mask.maskSrc.UUID == drawable.UUID) return i;
+            if (mask.MaskSrc.UUID == drawable.UUID) return i;
         }
         return -1;
     }
@@ -639,7 +644,7 @@ public class Part : Drawable
         for (int i = 0; i < masks.Count; i++)
         {
             var mask = masks[i];
-            if (mask.maskSrc.UUID == uuid) return i;
+            if (mask.MaskSrc.UUID == uuid) return i;
         }
         return -1;
     }
@@ -684,7 +689,7 @@ public class Part : Drawable
 
             foreach (var mask in masks)
             {
-                mask.maskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
+                mask.MaskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
 
             InBeginMaskContent();
@@ -707,16 +712,16 @@ public class Part : Drawable
         else DrawSelf(false);
     }
 
-    public override void Dispose()
+    public override void JsonLoadDone()
     {
-        base.Dispose();
+        base.JsonLoadDone();
 
         var validMasks = new List<MaskBinding>();
         for (int i = 0; i < masks.Count; i++)
         {
             if (Puppet.Find<Drawable>(masks[i].MaskSrcUUID) is { } nMask)
             {
-                masks[i].maskSrc = nMask;
+                masks[i].MaskSrc = nMask;
                 validMasks.Add(masks[i]);
             }
         }
@@ -730,7 +735,7 @@ public class Part : Drawable
         base.SetOneTimeTransform(transform);
         foreach (var m in masks)
         {
-            m.maskSrc.OneTimeTransform = transform;
+            m.MaskSrc.OneTimeTransform = transform;
         }
     }
 }

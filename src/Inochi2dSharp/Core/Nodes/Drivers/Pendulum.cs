@@ -27,6 +27,7 @@ public class Pendulum : PhysicsSystem
 
     public override unsafe void Dispose()
     {
+        GC.SuppressFinalize(this);
         Marshal.FreeHGlobal(new nint(_angle));
         Marshal.FreeHGlobal(new nint(_dAngle));
     }

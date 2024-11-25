@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
 
@@ -121,12 +121,12 @@ internal class PhysicsAutomation : Automation
         }
     }
 
-    protected override void SerializeSelf(JObject serializer)
+    protected override void SerializeSelf(JsonObject serializer)
     {
-        var list = new JArray();
+        var list = new JsonArray();
         foreach (var item in Nodes)
         {
-            var obj = new JObject();
+            var obj = new JsonObject();
             item.Serialize(obj);
             list.Add(obj);
         }
@@ -136,12 +136,11 @@ internal class PhysicsAutomation : Automation
         serializer.Add("gravity", Gravity);
     }
 
-    protected override void DeserializeSelf(JObject data)
+    protected override void DeserializeSelf(JsonObject data)
     {
-        var temp = data["nodes"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("nodes", out var temp) && temp is JsonArray array)
         {
-            foreach (JObject item in array.Cast<JObject>())
+            foreach (JsonObject item in array.Cast<JsonObject>())
             {
                 var node = new VerletNode();
                 node.Deserialize(item);
@@ -149,22 +148,19 @@ internal class PhysicsAutomation : Automation
             }
         }
 
-        temp = data["damping"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("damping", out temp) && temp != null)
         {
-            Damping = (float)temp;
+            Damping = temp.GetValue<float>();
         }
 
-        temp = data["bounciness"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("bounciness", out temp) && temp != null)
         {
-            Bounciness = (float)temp;
+            Bounciness = temp.GetValue<float>();
         }
 
-        temp = data["gravity"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("gravity", out temp) && temp != null)
         {
-            Gravity = (float)temp;
+            Gravity = temp.GetValue<float>();
         }
     }
 }

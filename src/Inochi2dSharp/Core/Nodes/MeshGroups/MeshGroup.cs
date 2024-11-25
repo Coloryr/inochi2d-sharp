@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes.Composites;
 using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes.MeshGroups;
 
@@ -71,7 +71,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
             }
             else
             {
-                var temp = triangles[index].transformMatrix * new Vector3(cVertex, 1);
+                var temp = triangles[index].TransformMatrix * new Vector3(cVertex, 1);
                 newPos = new(temp.X, temp.Y);
             }
             if (!Dynamic)
@@ -114,15 +114,15 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                 var p1 = transformedVertices[Data.Indices[index * 3]];
                 var p2 = transformedVertices[Data.Indices[index * 3 + 1]];
                 var p3 = transformedVertices[Data.Indices[index * 3 + 2]];
-                triangles[index].transformMatrix = new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
+                triangles[index].TransformMatrix = new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
                                                         p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
-                                                        0, 0, 1) * triangles[index].offsetMatrices;
+                                                        0, 0, 1) * triangles[index].OffsetMatrices;
             }
             forwardMatrix = Transform().Matrix;
             inverseMatrix = GlobalTransform.Matrix.Copy();
         }
 
-        ((Node)this).Update();
+        UpdateNode();
         UpdateDeform();
     }
 
@@ -186,7 +186,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
             var raxis1 = new Matrix3x3(axis0.X, axis0.Y, 0, -axis0.Y, axis0.X, 0, 0, 0, 1) * new Vector3(axis1, 1);
             float cosA = raxis1.X;
             float sinA = raxis1.Y;
-            t.offsetMatrices =
+            t.OffsetMatrices =
                 new Matrix3x3(axis0len > 0 ? 1 / axis0len : 0, 0, 0,
                         0, axis1len > 0 ? 1 / axis1len : 0, 0,
                         0, 0, 1) *
@@ -256,7 +256,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         }
     }
 
-    protected override void SerializeSelfImpl(JObject serializer, bool recursive = true)
+    protected override void SerializeSelfImpl(JsonObject serializer, bool recursive = true)
     {
         base.SerializeSelfImpl(serializer, recursive);
 
@@ -264,21 +264,22 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         serializer.Add("translate_children", _translateChildren);
     }
 
-    public override void Deserialize(JObject data)
+    public override void Deserialize(JsonObject data)
     {
         base.Deserialize(data);
 
-        var temp = data["dynamic_deformation"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("dynamic_deformation", out var temp) && temp != null)
         {
-            Dynamic = (bool)temp;
+            Dynamic = temp.GetValue<bool>();
         }
 
-        _translateChildren = false;
-        temp = data["translate_children"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("translate_children", out temp) && temp != null)
         {
-            _translateChildren = (bool)temp;
+            _translateChildren = temp.GetValue<bool>();
+        }
+        else
+        {
+            _translateChildren = false;
         }
     }
 
@@ -411,7 +412,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                     for (int y = 0; y < param.AxisPoints[1].Count; y++)
                     {
                         Vector2[] deformation;
-                        if (deformBinding.isSet[x][y])
+                        if (deformBinding.IsSet[x][y])
                             deformation = [.. deformBinding.Values[x][y].VertexOffsets];
                         else
                         {
@@ -431,10 +432,10 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                             var p1 = transformedVertices[Data.Indices[index * 3]];
                             var p2 = transformedVertices[Data.Indices[index * 3 + 1]];
                             var p3 = transformedVertices[Data.Indices[index * 3 + 2]];
-                            triangles[index].transformMatrix =
+                            triangles[index].TransformMatrix =
                                 new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
                                               p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
-                                              0, 0, 1) * triangles[index].offsetMatrices;
+                                              0, 0, 1) * triangles[index].OffsetMatrices;
                         }
 
                         foreach (var child in Children)

@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
+using System.Text.Json.Nodes;
+using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes.Parts;
-using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes.Composites;
 
@@ -144,7 +144,7 @@ public class Composite : Node
     {
         foreach (var mask in _masks)
         {
-            if (mask.maskSrc.UUID == drawable.UUID) return true;
+            if (mask.MaskSrc.UUID == drawable.UUID) return true;
         }
         return false;
     }
@@ -155,7 +155,7 @@ public class Composite : Node
         for (int i = 0; i < _masks.Count; i++)
         {
             var mask = _masks[i];
-            if (mask.maskSrc.UUID == drawable.UUID) return i;
+            if (mask.MaskSrc.UUID == drawable.UUID) return i;
         }
         return -1;
     }
@@ -165,7 +165,7 @@ public class Composite : Node
         for (int i = 0; i < _masks.Count; i++)
         {
             var mask = _masks[i];
-            if (mask.maskSrc.UUID == uuid) return i;
+            if (mask.MaskSrc.UUID == uuid) return i;
         }
         return -1;
     }
@@ -193,7 +193,7 @@ public class Composite : Node
 
             foreach (var mask in _masks)
             {
-                mask.maskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
+                mask.MaskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
 
             _core.InBeginMaskContent();
@@ -216,16 +216,16 @@ public class Composite : Node
         DrawOne();
     }
 
-    public override void Dispose()
+    public override void JsonLoadDone()
     {
-        base.Dispose();
+        base.JsonLoadDone();
 
         var validMasks = new List<MaskBinding>();
         for (int i = 0; i < _masks.Count; i++)
         {
             if (Puppet.Find<Drawable>(_masks[i].MaskSrcUUID) is { } nMask)
             {
-                _masks[i].maskSrc = nMask;
+                _masks[i].MaskSrc = nMask;
                 validMasks.Add(_masks[i]);
             }
         }
@@ -242,9 +242,7 @@ public class Composite : Node
         _subParts.Clear();
         if (Children.Count > 0)
         {
-            var temp = Children[0].Parent;
-            ScanPartsRecurse(temp!);
-            Children[0].Parent = temp;
+            ScanPartsRecurse(Children[0].Parent!);
         }
     }
 
@@ -354,7 +352,7 @@ public class Composite : Node
         _core.gl.DrawArrays(GlApi.GL_TRIANGLES, 0, 6);
     }
 
-    protected override void SerializeSelfImpl(JObject serializer, bool recursive = true)
+    protected override void SerializeSelfImpl(JsonObject serializer, bool recursive = true)
     {
         base.SerializeSelfImpl(serializer, recursive);
 
@@ -367,65 +365,61 @@ public class Composite : Node
 
         if (_masks.Count > 0)
         {
-            var list = new JArray();
-            foreach (var m in _masks)
+            var list = new JsonArray();
+            foreach (var item in _masks)
             {
-                var obj = new JObject(m);
+                var obj = new JsonObject();
+                item.Serialize(obj);
                 list.Add(obj);
             }
             serializer.Add("masks", list);
         }
     }
 
-    public override void Deserialize(JObject data)
+    public override void Deserialize(JsonObject data)
     {
         // Older models may not have these tags
-        var temp = data["opacity"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("opacity", out var temp) && temp != null)
         {
-            _opacity = (float)temp;
+            _opacity = temp.GetValue<float>();
         }
 
-        temp = data["mask_threshold"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("mask_threshold", out temp) && temp != null)
         {
-            _threshold = (float)temp;
+            _threshold = temp.GetValue<float>();
         }
 
-        temp = data["tint"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("tint", out temp) && temp is JsonArray array)
         {
-            _tint = temp.ToVector3();
+            _tint = array.ToVector3();
         }
 
-        temp = data["screenTint"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("screenTint", out temp) && temp is JsonArray array1)
         {
-            _screenTint = temp.ToVector3();
+            _screenTint = array1.ToVector3();
         }
 
-        temp = data["blend_mode"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("blend_mode", out temp) && temp != null)
         {
-            _blendingMode = Enum.Parse<BlendMode>(temp.ToString());
+            _blendingMode = Enum.Parse<BlendMode>(temp.GetValue<string>());
         }
 
-        temp = data["propagate_meshgroup"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("propagate_meshgroup", out temp) && temp != null)
         {
-            PropagateMeshGroup = (bool)temp;
+            PropagateMeshGroup = temp.GetValue<bool>();
         }
         else
         {
             PropagateMeshGroup = false;
         }
 
-        temp = data["masks"];
-        if (temp is JArray array)
+        if (data.TryGetPropertyValue("masks", out temp) && temp is JsonArray array2)
         {
-            foreach (JObject item in array.Cast<JObject>())
+            foreach (JsonObject item in array2.Cast<JsonObject>())
             {
-                _masks.Add(item.ToObject<MaskBinding>()!);
+                var item1 = new MaskBinding();
+                item1.Deserialize(item);
+                _masks.Add(item1);
             }
         }
 
@@ -455,12 +449,12 @@ public class Composite : Node
     public override void PreProcess()
     {
         if (!PropagateMeshGroup)
-            ((Node)this).PreProcess();
+            base.PreProcess();
     }
 
     public override void PostProcess()
     {
         if (!PropagateMeshGroup)
-            ((Node)this).PostProcess();
+            base.PostProcess();
     }
 }

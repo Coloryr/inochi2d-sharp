@@ -1,8 +1,9 @@
-﻿using System.Text;
+﻿using System.Buffers;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Core;
 using Inochi2dSharp.Fmt;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp;
 
@@ -60,7 +61,7 @@ public partial class I2dCore
     public Puppet InLoadPuppetFromMemory(byte[] data)
     {
         var temp = Encoding.UTF8.GetString(data);
-        var obj = JObject.Parse(temp);
+        var obj = JsonNode.Parse(temp)!.AsObject();
         var puppet = new Puppet(this);
         puppet.Deserialize(obj);
         return puppet;
@@ -74,7 +75,7 @@ public partial class I2dCore
     public Puppet InLoadJSONPuppet(string data)
     {
         IsLoadingINP = false;
-        return JsonConvert.DeserializeObject<Puppet>(data)!;
+        return JsonSerializer.Deserialize<Puppet>(data)!;
     }
 
     /// <summary>
@@ -85,11 +86,6 @@ public partial class I2dCore
     public Puppet InLoadINPPuppet(Stream buffer)
     {
         IsLoadingINP = true;
-
-        if (!BinFmt.InVerifyMagicBytes(buffer))
-        {
-            throw new Exception("Invalid data format for INP puppet");
-        }
 
         // Find the puppet data
         var temp = new byte[4];
@@ -130,9 +126,18 @@ public partial class I2dCore
             }
             else
             {
-                temp = new byte[textureLength];
-                buffer.ReadExactly(temp);
+                if (textureType == 0)
+                {
+                    //PNG
+                }
+                else if (textureType == 1)
+                {
+                    //TGA
+                }
+                temp = ArrayPool<byte>.Shared.Rent(textureLength);
+                buffer.ReadExactly(temp, 0, textureLength);
                 InAddTextureBinary(new ShallowTexture(temp));
+                ArrayPool<byte>.Shared.Return(temp);
             }
 
             // Readd to puppet so that stuff doesn't break if we re-save the puppet
@@ -140,7 +145,7 @@ public partial class I2dCore
         }
 
         var puppet = new Puppet(this);
-        var obj = new JObject(puppetData);
+        var obj = JsonNode.Parse(puppetData)!.AsObject();
         puppet.Deserialize(obj);
         puppet.TextureSlots = slots;
         puppet.UpdateTextureState();
@@ -173,6 +178,7 @@ public partial class I2dCore
 
                 // Load the vendor JSON data in to the extData section of the puppet
                 byte[] payload = new byte[payloadLength];
+                buffer.ReadExactly(payload);
                 puppet.ExtData.Add(sectionName, payload);
             }
         }

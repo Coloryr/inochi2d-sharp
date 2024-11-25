@@ -3,10 +3,4 @@
 public static class Inochi2d
 {
     public const string Version = "0.8.7";
-
-    public static void Init()
-    {
-        TypeList.InInitNodes();
-        TypeList.InInitAutomations();
-    }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using Inochi2dSharp.Math;
-using Newtonsoft.Json.Linq;
 
 namespace Inochi2dSharp.Core.Nodes;
 
@@ -162,19 +162,18 @@ public abstract class Drawable : Node
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="recursive"></param>
-    protected override void SerializeSelfImpl(JObject serializer, bool recursive = true)
+    protected override void SerializeSelfImpl(JsonObject serializer, bool recursive = true)
     {
         base.SerializeSelfImpl(serializer, recursive);
-        var obj = new JObject();
+        var obj = new JsonObject();
         Data.Serialize(obj);
         serializer.Add("mesh", obj);
     }
 
-    public override void Deserialize(JObject obj)
+    public override void Deserialize(JsonObject obj)
     {
         base.Deserialize(obj);
-        var temp = obj["mesh"];
-        if (temp is not JObject obj1)
+        if (!obj.TryGetPropertyValue("mesh", out var temp) || temp is not JsonObject obj1)
         {
             return;
         }
@@ -469,5 +468,10 @@ public abstract class Drawable : Node
     {
         _core.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
         _core.gl.StencilMask(0x00);
+    }
+
+    protected void UpdateNode()
+    {
+        base.Update();
     }
 }

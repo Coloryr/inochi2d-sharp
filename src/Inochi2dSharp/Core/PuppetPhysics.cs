@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core;
 
@@ -7,9 +7,26 @@ namespace Inochi2dSharp.Core;
 /// </summary>
 public record PuppetPhysics
 {
-    [JsonProperty("pixelsPerMeter")]
-    public float PixelsPerMeter = 1000;
+    public float PixelsPerMeter { get; set; } = 1000;
 
-    [JsonProperty("gravity")]
-    public float Gravity = 9.8f;
+    public float Gravity { get; set; } = 9.8f;
+
+    public void Serialize(JsonObject serializer)
+    {
+        serializer.Add("pixelsPerMeter", PixelsPerMeter);
+        serializer.Add("gravity", Gravity);
+    }
+
+    public void Deserialize(JsonObject data)
+    {
+        if (data.TryGetPropertyValue("pixelsPerMeter", out var temp) && temp != null)
+        {
+            PixelsPerMeter = temp.GetValue<float>();
+        }
+
+        if (data.TryGetPropertyValue("gravity", out temp) && temp != null)
+        {
+            Gravity = temp.GetValue<float>();
+        }
+    }
 }

@@ -43,6 +43,19 @@ public static class BinFmt
     /// <returns></returns>
     private static bool InVerifySection(byte[] buffer, byte[] section)
     {
-        return buffer.Length >= section.Length && buffer[0..section.Length] == section;
+        if (buffer.Length >= section.Length)
+        {
+            var temp = buffer[0..section.Length];
+            for (int a = 0; a < section.Length; a++)
+            {
+                if (temp[a] != section[a])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        return false;
     }
 }

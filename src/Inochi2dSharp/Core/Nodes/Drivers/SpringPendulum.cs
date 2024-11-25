@@ -94,6 +94,7 @@ public class SpringPendulum : PhysicsSystem
 
     public override unsafe void Dispose()
     {
+        GC.SuppressFinalize(this);
         Marshal.FreeHGlobal(new nint(_bob));
         Marshal.FreeHGlobal(new nint(_dBob));
     }

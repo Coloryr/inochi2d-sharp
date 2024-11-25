@@ -1,4 +1,4 @@
-﻿using SkiaSharp;
+﻿using StbImageSharp;
 
 namespace Inochi2dSharp.Core;
 
@@ -7,7 +7,7 @@ public class ShallowTexture
     /// <summary>
     /// 8-bit RGBA color data
     /// </summary>
-    public IntPtr Data { get; private set; }
+    public byte[] Data { get; private set; }
 
     /// <summary>
     /// Width of texture
@@ -29,7 +29,7 @@ public class ShallowTexture
     /// </summary>
     public int ConvChannels { get; private set; }
 
-    private readonly SKBitmap _image;
+    private readonly ImageResult _image;
 
     /// <summary>
     /// Loads a shallow texture from image file
@@ -47,15 +47,15 @@ public class ShallowTexture
         var fData = File.ReadAllBytes(file);
 
         // Load image from disk, as <channels> 8-bit
-        _image = SKBitmap.Decode(fData);
+        _image = ImageResult.FromMemory(fData, ColorComponents.RedGreenBlueAlpha);
 
         // Copy data from IFImage to this ShallowTexture
-        Data = _image.GetPixels();
+        Data = _image.Data;
 
         // Set the width/height data
         Width = _image.Width;
         Height = _image.Height;
-        Channels = _image.GetChannel();
+        Channels = (int)_image.SourceComp;
         ConvChannels = channels == 0 ? Channels : channels;
     }
 
@@ -67,16 +67,16 @@ public class ShallowTexture
     public ShallowTexture(byte[] buffer, int channels = 0)
     {
         // Load image from disk, as < channels > 8 - bit
-        _image = SKBitmap.Decode(buffer);
+        _image = ImageResult.FromMemory(buffer, ColorComponents.RedGreenBlueAlpha);
 
         // Copy data from IFImage to this ShallowTexture
-        Data = _image.GetPixels();
+        Data = _image.Data;
 
         // Set the width/height data
         Width = _image.Width;
         Height = _image.Height;
         Channels = channels;
-        ConvChannels = channels == 0 ? _image.GetChannel() : channels;
+        ConvChannels = channels == 0 ? (int)_image.SourceComp : channels;
     }
 
     /// <summary>
@@ -88,8 +88,8 @@ public class ShallowTexture
     /// <param name="channels"></param>
     public ShallowTexture(byte[] buffer, int w, int h, int channels = 4)
     {
-        _image = SKBitmap.Decode(buffer);
-        Data = _image.GetPixels();
+        _image = ImageResult.FromMemory(buffer, ColorComponents.RedGreenBlueAlpha);
+        Data = _image.Data;
 
         // Set the width/height data
         Width = w;
@@ -108,8 +108,8 @@ public class ShallowTexture
     /// <param name="convChannels"></param>
     public ShallowTexture(byte[] buffer, int w, int h, int channels = 4, int convChannels = 4)
     {
-        _image = SKBitmap.Decode(buffer);
-        Data = _image.GetPixels();
+        _image = ImageResult.FromMemory(buffer, ColorComponents.RedGreenBlueAlpha);
+        Data = _image.Data;
         // Set the width/height data
         Width = w;
         Height = h;

@@ -57,10 +57,27 @@ public class Camera(I2dCore core)
         var origin = new Vector2(realSize.X / 2, realSize.Y / 2);
         var pos = new Vector3(Position.X, Position.Y, -(ushort.MaxValue / 2));
 
-        return
-            Matrix4x4.CreateOrthographicOffCenter(0f, realSize.X, realSize.Y, 0, 0, ushort.MaxValue) *
-            Matrix4x4.CreateTranslation(origin.X, origin.Y, 0) *
-            Matrix4x4.CreateRotationZ(Rotation) *
-            Matrix4x4.CreateTranslation(pos);
+        var temp1 = ort(0f, realSize.X, realSize.Y, 0, 0, ushort.MaxValue);
+        var temp4 = Matrix4x4.CreateTranslation(origin.X, origin.Y, 0);
+        var temp5 = Matrix4x4.CreateRotationZ(Rotation);
+        var temp2 = temp1 * temp4 * temp5;
+        var temp3 = temp2 * Matrix4x4.CreateTranslation(pos);
+
+        return temp3;
+    }
+
+    private static Matrix4x4 ort(float left, float right, float bottom, float top, float near, float far)
+    {
+        Matrix4x4 ret = new();
+
+        ret[0,0] = 2 / (right - left);
+        ret[0,3] = -(right + left) / (right - left);
+        ret[1,1] = 2 / (top - bottom);
+        ret[1,3] = -(top + bottom) / (top - bottom);
+        ret[2,2] = -2 / (far - near);
+        ret[2,3] = -(far + near) / (far - near);
+        ret[3,3] = 1;
+
+        return ret;
     }
 }
