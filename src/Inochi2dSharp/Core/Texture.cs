@@ -9,16 +9,16 @@ namespace Inochi2dSharp.Core;
 /// </summary>
 public class Texture : IDisposable
 {
-    public uint Id { get; private set; }
+    public uint Id;
 
-    public int Width { get; private set; }
-    public int Height { get; private set; }
+    public int Width;
+    public int Height;
 
-    public uint InColorMode { get; private set; }
-    public uint OutColorMode { get; private set; }
-    public int Channels { get; private set; }
+    public uint InColorMode;
+    public uint OutColorMode;
+    public int Channels;
 
-    public uint UUID { get; private set; }
+    public uint UUID;
 
     private readonly ImageResult? _image;
     private readonly I2dCore _core;

@@ -1,6 +1,6 @@
 ﻿namespace Inochi2dSharp.Shaders;
 
-public static class Integration
+public static class ShaderCode
 {
     public const string PartMaskShader =
 """

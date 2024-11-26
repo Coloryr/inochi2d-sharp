@@ -157,4 +157,5 @@ public abstract class GlApi
     public abstract void ColorMask(bool red, bool green, bool blue, bool alpha);
     public abstract void StencilOp(uint fail, uint zfail, uint zpass);
     public abstract int GetError();
+    public abstract void DeleteBuffer(uint uvbo);
 }

@@ -10,10 +10,10 @@ public record ShapeNode
     /// <summary>
     /// The breakpoint in which the Shape Node activates
     /// </summary>
-    public Vector2 Breakpoint { get; set; }
+    public Vector2 Breakpoint;
 
     /// <summary>
     /// The shape data
     /// </summary>
-    public Vector2[] ShapeData { get; set; }
+    public Vector2[] ShapeData;
 }

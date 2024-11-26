@@ -7,7 +7,7 @@ public class Transform2D
     /// <summary>
     /// Gets the matrix for this transform
     /// </summary>
-    public Matrix3x3 Matrix { get; private set; }
+    public Matrix3x3 Matrix;
 
     /// <summary>
     /// Translate

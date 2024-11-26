@@ -10,7 +10,7 @@ public abstract class Drawable : Node
     /// <summary>
     /// OpenGL Index Buffer Object
     /// </summary>
-    protected uint Ibo;
+    private readonly uint _ibo;
 
     /// <summary>
     /// OpenGL Vertex Buffer Object
@@ -45,7 +45,7 @@ public abstract class Drawable : Node
     /// </summary>
     public DeformationStack DeformStack;
 
-    public List<Vector2> Vertices { get; set; }
+    public List<Vector2> Vertices;
 
     public abstract void RenderMask(bool dodge = false);
 
@@ -57,7 +57,7 @@ public abstract class Drawable : Node
     {
         // Generate the buffers
         Vbo = core.gl.GenBuffer();
-        Ibo = core.gl.GenBuffer();
+        _ibo = core.gl.GenBuffer();
         Dbo = core.gl.GenBuffer();
 
         // Create deformation stack
@@ -90,7 +90,7 @@ public abstract class Drawable : Node
 
         // Generate the buffers
         Vbo = core.gl.GenBuffer();
-        Ibo = core.gl.GenBuffer();
+        _ibo = core.gl.GenBuffer();
         Dbo = core.gl.GenBuffer();
 
         // Update indices and vertices
@@ -100,7 +100,7 @@ public abstract class Drawable : Node
 
     private unsafe void UpdateIndices()
     {
-        _core.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        _core.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, _ibo);
         var temp = Data.Indices.ToArray();
         fixed (void* ptr = temp)
         {
@@ -153,7 +153,7 @@ public abstract class Drawable : Node
     protected void BindIndex()
     {
         // Bind element array and draw our mesh
-        _core.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, Ibo);
+        _core.gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, _ibo);
         _core.gl.DrawElements(GlApi.GL_TRIANGLES, Data.Indices.Count, GlApi.GL_UNSIGNED_SHORT, 0);
     }
 
@@ -195,9 +195,9 @@ public abstract class Drawable : Node
 
     public override void PreProcess()
     {
-        if (preProcessed)
+        if (PreProcessed)
             return;
-        preProcessed = true;
+        PreProcessed = true;
         if (PreProcessFilter != null)
         {
             OverrideTransformMatrix = null;
@@ -216,9 +216,9 @@ public abstract class Drawable : Node
 
     public override void PostProcess()
     {
-        if (postProcessed)
+        if (PostProcessed)
             return;
-        postProcessed = true;
+        PostProcessed = true;
         if (PostProcessFilter != null)
         {
             OverrideTransformMatrix = null;
@@ -432,5 +432,13 @@ public abstract class Drawable : Node
     protected void UpdateNode()
     {
         base.Update();
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _core.gl.DeleteBuffer(_ibo);
+        _core.gl.DeleteBuffer(Vbo);
+        _core.gl.DeleteBuffer(Dbo);
     }
 }

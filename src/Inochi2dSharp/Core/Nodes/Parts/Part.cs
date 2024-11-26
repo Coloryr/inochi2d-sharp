@@ -8,60 +8,60 @@ namespace Inochi2dSharp.Core.Nodes.Parts;
 [TypeId("Part")]
 public class Part : Drawable
 {
-    private readonly uint Uvbo;
+    private readonly uint _uvbo;
 
     //
     //      PARAMETER OFFSETS
     //
-    protected float offsetMaskThreshold = 0;
-    protected float offsetOpacity = 1;
-    protected float offsetEmissionStrength = 1;
-    protected Vector3 offsetTint = new(0);
-    protected Vector3 offsetScreenTint = new(0);
+    private float _offsetMaskThreshold = 0;
+    private float _offsetOpacity = 1;
+    private float _offsetEmissionStrength = 1;
+    private Vector3 _offsetTint = new(0);
+    private Vector3 _offsetScreenTint = new(0);
 
     //List of textures this part can use
     //TODO: use more than texture 0
-    public Texture[] textures = new Texture[(int)TextureUsage.COUNT];
+    public Texture[] Textures = new Texture[(int)TextureUsage.COUNT];
 
     /// <summary>
     /// List of texture IDs
     /// </summary>
-    public List<uint> textureIds = [];
+    private readonly List<uint> _textureIds = [];
 
     /// <summary>
     /// List of masks to apply
     /// </summary>
-    public List<MaskBinding> masks = [];
+    private List<MaskBinding> _masks = [];
 
     /// <summary>
     /// Blending mode
     /// </summary>
-    public BlendMode blendingMode = BlendMode.Normal;
+    private BlendMode _blendingMode = BlendMode.Normal;
 
     /// <summary>
     /// Alpha Threshold for the masking system, the higher the more opaque pixels will be discarded in the masking process
     /// </summary>
-    public float maskAlphaThreshold = 0.5f;
+    private float _maskAlphaThreshold = 0.5f;
 
     /// <summary>
     /// Opacity of the mesh
     /// </summary>
-    public float opacity = 1;
+    public float Opacity = 1;
 
     /// <summary>
     /// Strength of emission
     /// </summary>
-    public float emissionStrength = 1;
+    private float _emissionStrength = 1;
 
     /// <summary>
     /// Multiplicative tint color
     /// </summary>
-    public Vector3 Tint = new(1, 1, 1);
+    public Vector3 Tint  = new(1, 1, 1);
 
     /// <summary>
     /// Screen tint color
     /// </summary>
-    public Vector3 screenTint = new(0, 0, 0);
+    public Vector3 ScreenTint  = new(0, 0, 0);
 
     /// <summary>
     /// Constructs a new part
@@ -80,7 +80,7 @@ public class Part : Drawable
     /// <param name="parent"></param>
     public Part(I2dCore core, Node? parent = null) : base(core, parent)
     {
-        Uvbo = core.gl.GenBuffer();
+        _uvbo = core.gl.GenBuffer();
     }
 
     /// <summary>
@@ -95,10 +95,10 @@ public class Part : Drawable
         for (int i = 0; i < (int)TextureUsage.COUNT; i++)
         {
             if (i >= textures.Length) break;
-            this.textures[i] = textures[i];
+            Textures[i] = textures[i];
         }
 
-        Uvbo = core.gl.GenBuffer();
+        _uvbo = core.gl.GenBuffer();
 
         UpdateUVs();
     }
@@ -119,7 +119,7 @@ public class Part : Drawable
         if (_core.IsLoadingINP)
         {
             var list = new JsonArray();
-            foreach (var texture in textures)
+            foreach (var texture in Textures)
             {
                 if (texture != null)
                 {
@@ -141,15 +141,15 @@ public class Part : Drawable
             serializer.Add("textures", list);
         }
 
-        serializer.Add("blend_mode", blendingMode.ToString());
+        serializer.Add("blend_mode", _blendingMode.ToString());
         serializer.Add("tint", Tint.ToToken());
-        serializer.Add("screenTint", screenTint.ToToken());
-        serializer.Add("emissionStrength", emissionStrength);
+        serializer.Add("screenTint", ScreenTint.ToToken());
+        serializer.Add("emissionStrength", _emissionStrength);
 
-        if (masks != null && masks.Count > 0)
+        if (_masks != null && _masks.Count > 0)
         {
             var list = new JsonArray();
-            foreach (var item in masks)
+            foreach (var item in _masks)
             {
                 var obj = new JsonObject();
                 item.Serialize(obj);
@@ -158,8 +158,8 @@ public class Part : Drawable
             serializer.Add("masks", list);
         }
 
-        serializer.Add("mask_threshold", maskAlphaThreshold);
-        serializer.Add("opacity", opacity);
+        serializer.Add("mask_threshold", _maskAlphaThreshold);
+        serializer.Add("opacity", Opacity);
     }
 
     public override void Deserialize(JsonObject data)
@@ -185,8 +185,8 @@ public class Part : Drawable
                         continue;
                     }
 
-                    textureIds.Add(textureId);
-                    textures[i++] = _core.InGetTextureFromId(textureId);
+                    _textureIds.Add(textureId);
+                    Textures[i++] = _core.InGetTextureFromId(textureId);
                 }
             }
         }
@@ -197,12 +197,12 @@ public class Part : Drawable
 
         if (data.TryGetPropertyValue("opacity", out var temp) && temp != null)
         {
-            opacity = temp.GetValue<float>();
+            Opacity = temp.GetValue<float>();
         }
 
         if (data.TryGetPropertyValue("mask_threshold", out temp) && temp != null)
         {
-            maskAlphaThreshold = temp.GetValue<float>();
+            _maskAlphaThreshold = temp.GetValue<float>();
         }
 
         // Older models may not have tint
@@ -214,7 +214,7 @@ public class Part : Drawable
         // Older models may not have screen tint
         if (data.TryGetPropertyValue("screenTint", out temp) && temp is JsonArray array2)
         {
-            screenTint = array2.ToVector3();
+            ScreenTint = array2.ToVector3();
         }
 
         // Older models may not have emission
@@ -226,7 +226,7 @@ public class Part : Drawable
         // Older models may not have blend mode
         if (data.TryGetPropertyValue("blend_mode", out temp) && temp != null)
         {
-            blendingMode = Enum.Parse<BlendMode>(temp.GetValue<string>());
+            _blendingMode = Enum.Parse<BlendMode>(temp.GetValue<string>());
         }
 
         if (data.TryGetPropertyValue("mask_mode", out temp) && temp != null)
@@ -243,7 +243,7 @@ public class Part : Drawable
                         continue;
                     }
                     uint uuid = imask.GetValue<uint>();
-                    masks.Add(new MaskBinding
+                    _masks.Add(new MaskBinding
                     {
                         MaskSrcUUID = uuid,
                         Mode = mode
@@ -258,7 +258,7 @@ public class Part : Drawable
             {
                 var item1 = new MaskBinding();
                 item1.Deserialize(item);
-                masks.Add(item1);
+                _masks.Add(item1);
             }
         }
 
@@ -270,7 +270,7 @@ public class Part : Drawable
     {
         base.SerializePartial(obj, recursive);
         var list = new JsonArray();
-        foreach (var texture in textures)
+        foreach (var texture in Textures)
         {
             uint uuid;
             if (texture != null)
@@ -290,20 +290,20 @@ public class Part : Drawable
     protected int MaskCount()
     {
         int c = 0;
-        foreach (var m in masks) if (m.Mode == MaskingMode.Mask) c++;
+        foreach (var m in _masks) if (m.Mode == MaskingMode.Mask) c++;
         return c;
     }
 
     protected int DodgeCount()
     {
         int c = 0;
-        foreach (var m in masks) if (m.Mode == MaskingMode.DodgeMask) c++;
+        foreach (var m in _masks) if (m.Mode == MaskingMode.DodgeMask) c++;
         return c;
     }
 
     private unsafe void UpdateUVs()
     {
-        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Uvbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, _uvbo);
         var temp = Data.Uvs.ToArray();
         fixed (void* ptr = temp)
         {
@@ -314,14 +314,14 @@ public class Part : Drawable
     private void SetupShaderStage(int stage, Matrix4x4 matrix)
     {
         var clampedTint = Tint;
-        if (!float.IsNaN(offsetTint.X)) clampedTint.X = float.Clamp(Tint.X * offsetTint.X, 0, 1);
-        if (!float.IsNaN(offsetTint.Y)) clampedTint.Y = float.Clamp(Tint.Y * offsetTint.Y, 0, 1);
-        if (!float.IsNaN(offsetTint.Z)) clampedTint.Z = float.Clamp(Tint.Z * offsetTint.Z, 0, 1);
+        if (!float.IsNaN(_offsetTint.X)) clampedTint.X = float.Clamp(Tint.X * _offsetTint.X, 0, 1);
+        if (!float.IsNaN(_offsetTint.Y)) clampedTint.Y = float.Clamp(Tint.Y * _offsetTint.Y, 0, 1);
+        if (!float.IsNaN(_offsetTint.Z)) clampedTint.Z = float.Clamp(Tint.Z * _offsetTint.Z, 0, 1);
 
-        var clampedScreen = screenTint;
-        if (!float.IsNaN(offsetScreenTint.X)) clampedScreen.X = float.Clamp(screenTint.X + offsetScreenTint.X, 0, 1);
-        if (!float.IsNaN(offsetScreenTint.Y)) clampedScreen.Y = float.Clamp(screenTint.Y + offsetScreenTint.Y, 0, 1);
-        if (!float.IsNaN(offsetScreenTint.Z)) clampedScreen.Z = float.Clamp(screenTint.Z + offsetScreenTint.Z, 0, 1);
+        var clampedScreen = ScreenTint;
+        if (!float.IsNaN(_offsetScreenTint.X)) clampedScreen.X = float.Clamp(ScreenTint.X + _offsetScreenTint.X, 0, 1);
+        if (!float.IsNaN(_offsetScreenTint.Y)) clampedScreen.Y = float.Clamp(ScreenTint.Y + _offsetScreenTint.Y, 0, 1);
+        if (!float.IsNaN(_offsetScreenTint.Z)) clampedScreen.Z = float.Clamp(ScreenTint.Z + _offsetScreenTint.Z, 0, 1);
 
         var mModel = Puppet.Transform.Matrix * matrix;
         var mViewProjection = _core.InCamera.Matrix();
@@ -337,12 +337,12 @@ public class Part : Drawable
                 _core.partShaderStage1.SetUniform(_core.gs1offset, Data.Origin);
                 _core.partShaderStage1.SetUniform(_core.gs1MvpModel, mModel);
                 _core.partShaderStage1.SetUniform(_core.gs1MvpViewProjection, mViewProjection);
-                _core.partShaderStage1.SetUniform(_core.gs1opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
+                _core.partShaderStage1.SetUniform(_core.gs1opacity, float.Clamp(_offsetOpacity * Opacity, 0, 1));
 
                 _core.partShaderStage1.SetUniform(_core.partShaderStage1.GetUniformLocation("albedo"), 0);
                 _core.partShaderStage1.SetUniform(_core.gs1MultColor, clampedTint);
                 _core.partShaderStage1.SetUniform(_core.gs1ScreenColor, clampedScreen);
-                _core.InSetBlendMode(blendingMode, false);
+                _core.InSetBlendMode(_blendingMode, false);
                 break;
             case 1:
 
@@ -353,8 +353,8 @@ public class Part : Drawable
                 _core.partShaderStage2.SetUniform(_core.gs2offset, Data.Origin);
                 _core.partShaderStage2.SetUniform(_core.gs2MvpModel, mModel);
                 _core.partShaderStage2.SetUniform(_core.gs2MvpViewProjection, mViewProjection);
-                _core.partShaderStage2.SetUniform(_core.gs2opacity, float.Clamp(offsetOpacity * opacity, 0, 1));
-                _core.partShaderStage2.SetUniform(_core.gs2EmissionStrength, emissionStrength * offsetEmissionStrength);
+                _core.partShaderStage2.SetUniform(_core.gs2opacity, float.Clamp(_offsetOpacity * Opacity, 0, 1));
+                _core.partShaderStage2.SetUniform(_core.gs2EmissionStrength, _emissionStrength * _offsetEmissionStrength);
 
                 _core.partShaderStage2.SetUniform(_core.partShaderStage2.GetUniformLocation("emission"), 0);
                 _core.partShaderStage2.SetUniform(_core.partShaderStage2.GetUniformLocation("bump"), 1);
@@ -362,7 +362,7 @@ public class Part : Drawable
                 // These can be reused from stage 2
                 _core.partShaderStage1.SetUniform(_core.gs2MultColor, clampedTint);
                 _core.partShaderStage1.SetUniform(_core.gs2ScreenColor, clampedScreen);
-                _core.InSetBlendMode(blendingMode, true);
+                _core.InSetBlendMode(_blendingMode, true);
                 break;
             case 2:
 
@@ -373,25 +373,25 @@ public class Part : Drawable
                 _core.partShader.SetUniform(_core.offset, Data.Origin);
                 _core.partShader.SetUniform(_core.mvpModel, mModel);
                 _core.partShader.SetUniform(_core.mvpViewProjection, mViewProjection);
-                _core.partShader.SetUniform(_core.gopacity, float.Clamp(offsetOpacity * opacity, 0, 1));
-                _core.partShader.SetUniform(_core.gEmissionStrength, emissionStrength * offsetEmissionStrength);
+                _core.partShader.SetUniform(_core.gopacity, float.Clamp(_offsetOpacity * Opacity, 0, 1));
+                _core.partShader.SetUniform(_core.gEmissionStrength, _emissionStrength * _offsetEmissionStrength);
 
                 _core.partShader.SetUniform(_core.partShader.GetUniformLocation("albedo"), 0);
                 _core.partShader.SetUniform(_core.partShader.GetUniformLocation("emissive"), 1);
                 _core.partShader.SetUniform(_core.partShader.GetUniformLocation("bumpmap"), 2);
 
                 var clampedColor = Tint;
-                if (!float.IsNaN(offsetTint.X)) clampedColor.X = float.Clamp(Tint.X * offsetTint.X, 0, 1);
-                if (!float.IsNaN(offsetTint.Y)) clampedColor.Y = float.Clamp(Tint.Y * offsetTint.Y, 0, 1);
-                if (!float.IsNaN(offsetTint.Z)) clampedColor.Z = float.Clamp(Tint.Z * offsetTint.Z, 0, 1);
+                if (!float.IsNaN(_offsetTint.X)) clampedColor.X = float.Clamp(Tint.X * _offsetTint.X, 0, 1);
+                if (!float.IsNaN(_offsetTint.Y)) clampedColor.Y = float.Clamp(Tint.Y * _offsetTint.Y, 0, 1);
+                if (!float.IsNaN(_offsetTint.Z)) clampedColor.Z = float.Clamp(Tint.Z * _offsetTint.Z, 0, 1);
                 _core.partShader.SetUniform(_core.gMultColor, clampedColor);
 
-                clampedColor = screenTint;
-                if (!float.IsNaN(offsetScreenTint.X)) clampedColor.X = float.Clamp(screenTint.X + offsetScreenTint.X, 0, 1);
-                if (!float.IsNaN(offsetScreenTint.Y)) clampedColor.Y = float.Clamp(screenTint.Y + offsetScreenTint.Y, 0, 1);
-                if (!float.IsNaN(offsetScreenTint.Z)) clampedColor.Z = float.Clamp(screenTint.Z + offsetScreenTint.Z, 0, 1);
+                clampedColor = ScreenTint;
+                if (!float.IsNaN(_offsetScreenTint.X)) clampedColor.X = float.Clamp(ScreenTint.X + _offsetScreenTint.X, 0, 1);
+                if (!float.IsNaN(_offsetScreenTint.Y)) clampedColor.Y = float.Clamp(ScreenTint.Y + _offsetScreenTint.Y, 0, 1);
+                if (!float.IsNaN(_offsetScreenTint.Z)) clampedColor.Z = float.Clamp(ScreenTint.Z + _offsetScreenTint.Z, 0, 1);
                 _core.partShader.SetUniform(_core.gScreenColor, clampedColor);
-                _core.InSetBlendMode(blendingMode, true);
+                _core.InSetBlendMode(_blendingMode, true);
                 break;
             default: return;
         }
@@ -406,7 +406,7 @@ public class Part : Drawable
 
         // Enable UVs array
         _core.gl.EnableVertexAttribArray(1); // uvs
-        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, Uvbo);
+        _core.gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, _uvbo);
         _core.gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, 0, 0);
 
         // Enable deform array
@@ -435,7 +435,7 @@ public class Part : Drawable
     private void DrawSelf(bool isMask = false)
     {
         // In some cases this may happen
-        if (textures.Length == 0) return;
+        if (Textures.Length == 0) return;
 
         // Bind the vertex array
         _core.IncDrawableBindVAO();
@@ -449,12 +449,12 @@ public class Part : Drawable
 
         // Make sure we check whether we're already bound
         // Otherwise we're wasting GPU resources
-        if (_core.boundAlbedo != textures[0])
+        if (_core.boundAlbedo != Textures[0])
         {
             // Bind the textures
-            for (int i = 0; i < textures.Length; i++)
+            for (int i = 0; i < Textures.Length; i++)
             {
-                var texture = textures[i];
+                var texture = Textures[i];
                 if (texture != null) texture.Bind((uint)i);
                 else
                 {
@@ -474,37 +474,37 @@ public class Part : Drawable
             _core.partMaskShader.SetUniform(_core.offset, Data.Origin);
             _core.partMaskShader.SetUniform(_core.mMvpModel, mModel);
             _core.partMaskShader.SetUniform(_core.mMvpViewProjection, mViewProjection);
-            _core.partMaskShader.SetUniform(_core.mthreshold, float.Clamp(offsetMaskThreshold + maskAlphaThreshold, 0, 1));
+            _core.partMaskShader.SetUniform(_core.mthreshold, float.Clamp(_offsetMaskThreshold + _maskAlphaThreshold, 0, 1));
 
             // Make sure the equation is correct
             _core.gl.BlendEquation(GlApi.GL_FUNC_ADD);
             _core.gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
 
-            RenderStage(blendingMode, false);
+            RenderStage(_blendingMode, false);
         }
         else
         {
-            bool hasEmissionOrBumpmap = textures[1] != null || textures[2] != null;
+            bool hasEmissionOrBumpmap = Textures[1] != null || Textures[2] != null;
 
-            if (_core.InUseMultistageBlending(blendingMode))
+            if (_core.InUseMultistageBlending(_blendingMode))
             {
 
                 // TODO: Detect if this Part is NOT in a composite,
                 // If so, we can relatively safely assume that we may skip stage 1.
                 SetupShaderStage(0, matrix);
-                RenderStage(blendingMode);
+                RenderStage(_blendingMode);
 
                 // Only do stage 2 if we have emission or bumpmap textures.
                 if (hasEmissionOrBumpmap)
                 {
                     SetupShaderStage(1, matrix);
-                    RenderStage(blendingMode, false);
+                    RenderStage(_blendingMode, false);
                 }
             }
             else
             {
                 SetupShaderStage(2, matrix);
-                RenderStage(blendingMode, false);
+                RenderStage(_blendingMode, false);
             }
         }
 
@@ -519,7 +519,7 @@ public class Part : Drawable
     /// <returns></returns>
     public Texture ActiveTexture()
     {
-        return textures[0];
+        return Textures[0];
     }
 
     public override void RenderMask(bool dodge = false)
@@ -572,31 +572,31 @@ public class Part : Drawable
         switch (key)
         {
             case "alphaThreshold":
-                offsetMaskThreshold *= value;
+                _offsetMaskThreshold *= value;
                 return true;
             case "opacity":
-                offsetOpacity *= value;
+                _offsetOpacity *= value;
                 return true;
             case "tint.r":
-                offsetTint.X *= value;
+                _offsetTint.X *= value;
                 return true;
             case "tint.g":
-                offsetTint.Y *= value;
+                _offsetTint.Y *= value;
                 return true;
             case "tint.b":
-                offsetTint.Z *= value;
+                _offsetTint.Z *= value;
                 return true;
             case "screenTint.r":
-                offsetScreenTint.X += value;
+                _offsetScreenTint.X += value;
                 return true;
             case "screenTint.g":
-                offsetScreenTint.Y += value;
+                _offsetScreenTint.Y += value;
                 return true;
             case "screenTint.b":
-                offsetScreenTint.Z += value;
+                _offsetScreenTint.Z += value;
                 return true;
             case "emissionStrength":
-                offsetEmissionStrength += value;
+                _offsetEmissionStrength += value;
                 return true;
             default: return false;
         }
@@ -606,22 +606,22 @@ public class Part : Drawable
     {
         return key switch
         {
-            "alphaThreshold" => offsetMaskThreshold,
-            "opacity" => offsetOpacity,
-            "tint.r" => offsetTint.X,
-            "tint.g" => offsetTint.Y,
-            "tint.b" => offsetTint.Z,
-            "screenTint.r" => offsetScreenTint.X,
-            "screenTint.g" => offsetScreenTint.Y,
-            "screenTint.b" => offsetScreenTint.Z,
-            "emissionStrength" => offsetEmissionStrength,
+            "alphaThreshold" => _offsetMaskThreshold,
+            "opacity" => _offsetOpacity,
+            "tint.r" => _offsetTint.X,
+            "tint.g" => _offsetTint.Y,
+            "tint.b" => _offsetTint.Z,
+            "screenTint.r" => _offsetScreenTint.X,
+            "screenTint.g" => _offsetScreenTint.Y,
+            "screenTint.b" => _offsetScreenTint.Z,
+            "emissionStrength" => _offsetEmissionStrength,
             _ => base.GetValue(key),
         };
     }
 
     public bool IsMaskedBy(Drawable drawable)
     {
-        foreach (var mask in masks)
+        foreach (var mask in _masks)
         {
             if (mask.MaskSrc.UUID == drawable.UUID) return true;
         }
@@ -631,9 +631,9 @@ public class Part : Drawable
     public int GetMaskIdx(Drawable drawable)
     {
         if (drawable is null) return -1;
-        for (int i = 0; i < masks.Count; i++)
+        for (int i = 0; i < _masks.Count; i++)
         {
-            var mask = masks[i];
+            var mask = _masks[i];
             if (mask.MaskSrc.UUID == drawable.UUID) return i;
         }
         return -1;
@@ -641,9 +641,9 @@ public class Part : Drawable
 
     public int GetMaskIdx(uint uuid)
     {
-        for (int i = 0; i < masks.Count; i++)
+        for (int i = 0; i < _masks.Count; i++)
         {
-            var mask = masks[i];
+            var mask = _masks[i];
             if (mask.MaskSrc.UUID == uuid) return i;
         }
         return -1;
@@ -651,11 +651,11 @@ public class Part : Drawable
 
     public override void BeginUpdate()
     {
-        offsetMaskThreshold = 0;
-        offsetOpacity = 1;
-        offsetTint = new(1, 1, 1);
-        offsetScreenTint = new(0, 0, 0);
-        offsetEmissionStrength = 1;
+        _offsetMaskThreshold = 0;
+        _offsetOpacity = 1;
+        _offsetTint = new(1, 1, 1);
+        _offsetScreenTint = new(0, 0, 0);
+        _offsetEmissionStrength = 1;
         base.BeginUpdate();
     }
 
@@ -683,11 +683,11 @@ public class Part : Drawable
 
         var cMasks = MaskCount();
 
-        if (masks.Count > 0)
+        if (_masks.Count > 0)
         {
             _core.InBeginMask(cMasks > 0);
 
-            foreach (var mask in masks)
+            foreach (var mask in _masks)
             {
                 mask.MaskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
@@ -717,25 +717,34 @@ public class Part : Drawable
         base.JsonLoadDone();
 
         var validMasks = new List<MaskBinding>();
-        for (int i = 0; i < masks.Count; i++)
+        for (int i = 0; i < _masks.Count; i++)
         {
-            if (Puppet.Find<Drawable>(masks[i].MaskSrcUUID) is { } nMask)
+            if (Puppet.Find<Drawable>(_masks[i].MaskSrcUUID) is { } nMask)
             {
-                masks[i].MaskSrc = nMask;
-                validMasks.Add(masks[i]);
+                _masks[i].MaskSrc = nMask;
+                validMasks.Add(_masks[i]);
             }
         }
 
         // Remove invalid masks
-        masks = validMasks;
+        _masks = validMasks;
     }
 
     public override void SetOneTimeTransform(Matrix4x4 transform)
     {
         base.SetOneTimeTransform(transform);
-        foreach (var m in masks)
+        foreach (var m in _masks)
         {
             m.MaskSrc.OneTimeTransform = transform;
+        }
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        if (_uvbo > 0)
+        {
+            _core.gl.DeleteBuffer(_uvbo);
         }
     }
 }

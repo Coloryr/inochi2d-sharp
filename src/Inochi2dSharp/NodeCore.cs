@@ -6,7 +6,7 @@ public partial class I2dCore
 {
     public const uint InInvalidUUID = uint.MaxValue;
 
-    public bool DoGenerateBounds { get; set; }
+    public bool DoGenerateBounds;
 
     private uint _drawableVAO;
 

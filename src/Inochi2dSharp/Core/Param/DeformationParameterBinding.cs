@@ -29,8 +29,8 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <param name="serializer"></param>
     public override void Serialize(JsonObject serializer)
     {
-        serializer.Add("node", Target.node.UUID);
-        serializer.Add("param_name", Target.paramName);
+        serializer.Add("node", Target.Node.UUID);
+        serializer.Add("param_name", Target.ParamName);
         var list = new JsonArray();
         foreach (var item in Values)
         {
@@ -60,7 +60,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
         }
         if (data.TryGetPropertyValue("param_name", out temp) && temp != null)
         {
-            Target.paramName = temp.GetValue<string>();
+            Target.ParamName = temp.GetValue<string>();
         }
 
         if (data.TryGetPropertyValue("values", out temp) && temp is JsonArray array)
@@ -148,7 +148,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
     public void ClearValue(Deformation val)
     {
         // Reset deformation to identity, with the right vertex count
-        if (Target.node is Drawable d)
+        if (Target.Node is Drawable d)
         {
             val.Clear(d.Vertices.Count);
         }
@@ -845,12 +845,12 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// <param name="value"></param>
     public void ApplyToTarget(Deformation value)
     {
-        if (Target.paramName != "deform")
+        if (Target.ParamName != "deform")
         {
             throw new Exception("paramName is not deform");
         }
 
-        if (Target.node is Drawable d)
+        if (Target.Node is Drawable d)
         {
             d.DeformStack.Push(value);
         }
@@ -858,7 +858,7 @@ public class DeformationParameterBinding : ParameterBindingImpl
 
     public override bool IsCompatibleWithNode(Node other)
     {
-        if (Target.node is Drawable d)
+        if (Target.Node is Drawable d)
         {
             if (other is Drawable o)
             {

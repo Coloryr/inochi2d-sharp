@@ -7,9 +7,9 @@ public record AnimationParameterRef
     /// <summary>
     /// A parameter to target
     /// </summary>
-    public Parameter TargetParam { get; set; }
+    public Parameter TargetParam;
     /// <summary>
     /// Target axis of the parameter
     /// </summary>
-    public int TargetAxis { get; set; }
+    public int TargetAxis;
 }

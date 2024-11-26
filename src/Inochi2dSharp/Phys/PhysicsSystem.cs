@@ -5,22 +5,22 @@ namespace Inochi2dSharp.Phys;
 public abstract class PhysicsSystem : IDisposable
 {
     //float*
-    private readonly Dictionary<IntPtr, ulong> variableMap = [];
+    private readonly Dictionary<IntPtr, int> variableMap = [];
     //float*
     private readonly List<IntPtr> refs = [];
 
     private float[] derivative = [];
 
-    private float t;
+    private float t = 0;
 
     /// <summary>
     /// Add a float variable to the simulation
     /// </summary>
     /// <param name="var"></param>
     /// <returns></returns>
-    protected unsafe ulong AddVariable(float* var)
+    protected unsafe nint AddVariable(float* var)
     {
-        ulong index = (ulong)refs.Count;
+        var index = refs.Count;
 
         variableMap[new(var)] = index;
         refs.Add(new nint(var));
@@ -33,9 +33,9 @@ public abstract class PhysicsSystem : IDisposable
     /// </summary>
     /// <param name="var"></param>
     /// <returns></returns>
-    protected unsafe ulong AddVariable(Vector2* var)
+    protected unsafe nint AddVariable(Vector2* var)
     {
-        ulong index = AddVariable(&var->X);
+        var index = AddVariable(&var->X);
         AddVariable(&var->Y);
         return index;
     }
@@ -45,9 +45,9 @@ public abstract class PhysicsSystem : IDisposable
     /// </summary>
     /// <param name="index"></param>
     /// <param name="value"></param>
-    protected void SetD(ulong index, float value)
+    protected void SetD(int index, float value)
     {
-        derivative[(int)index] = value;
+        derivative[index] = value;
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public abstract class PhysicsSystem : IDisposable
     /// <param name="value"></param>
     protected unsafe void SetD(float* var, float value)
     {
-        ulong index = variableMap[new nint(var)];
+        var index = variableMap[new nint(var)];
         SetD(index, value);
     }
 
@@ -72,13 +72,13 @@ public abstract class PhysicsSystem : IDisposable
         SetD(&var->Y, value->Y);
     }
 
-    protected unsafe List<float> GetState()
+    protected unsafe float[] GetState()
     {
-        var vals = new List<float>();
+        var vals = new float[refs.Count];
 
-        foreach (var ptr in refs)
+        for (int a=0;a<vals.Length;a++)
         {
-            vals.Add(*(float*)ptr);
+            vals[a] = *(float*)refs[a];
         }
 
         return vals;
@@ -88,8 +88,7 @@ public abstract class PhysicsSystem : IDisposable
     {
         for (int idx = 0; idx < refs.Count; idx++)
         {
-            var ptr = refs[idx];
-            *(float*)ptr = vals[idx];
+            *(float*)refs[idx] = vals[idx];
         }
     }
 
@@ -106,38 +105,39 @@ public abstract class PhysicsSystem : IDisposable
     public unsafe virtual void Tick(float h)
     {
         var cur = GetState();
-        var tmp = new float[cur.Count];
-        derivative = new float[cur.Count];
-        for (var i = 0; i < cur.Count; i++)
-        {
-            derivative[i] = 0;
-        }
+        derivative = new float[cur.Length];
 
         Eval(t);
         float[] k1 = [.. derivative];
 
-        for (int i = 0; i < cur.Count; i++)
+        for (int i = 0; i < cur.Length; i++)
+        {
             *(float*)refs[i] = cur[i] + h * k1[i] / 2f;
+        }
         Eval(t + h / 2f);
         float[] k2 = [.. derivative];
 
-        for (int i = 0; i < cur.Count; i++)
+        for (int i = 0; i < cur.Length; i++)
+        {
             *(float*)refs[i] = cur[i] + h * k2[i] / 2f;
+        }
         Eval(t + h / 2f);
         float[] k3 = [.. derivative];
 
-        for (int i = 0; i < cur.Count; i++)
+        for (int i = 0; i < cur.Length; i++)
+        {
             *(float*)refs[i] = cur[i] + h * k3[i];
+        }
         Eval(t + h);
         float[] k4 = [.. derivative];
 
-        for (int i = 0; i < cur.Count; i++)
+        for (int i = 0; i < cur.Length; i++)
         {
             *(float*)refs[i] = cur[i] + h * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) / 6f;
             if (!(*(float*)refs[i]).IsFinite())
             {
                 // Simulation failed, revert
-                for (int j = 0; j < cur.Count; j++)
+                for (int j = 0; j < cur.Length; j++)
                     *(float*)refs[j] = cur[j];
                 break;
             }

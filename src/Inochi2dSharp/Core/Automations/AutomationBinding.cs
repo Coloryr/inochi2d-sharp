@@ -30,7 +30,7 @@ public class AutomationBinding
     /// <summary>
     /// Min/max range of binding
     /// </summary>
-    public Vector2 Range { get; private set; }
+    public Vector2 Range;
 
     /// <summary>
     /// Gets the value at the specified axis

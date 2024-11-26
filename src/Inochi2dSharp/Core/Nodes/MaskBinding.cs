@@ -6,11 +6,11 @@ namespace Inochi2dSharp.Core.Nodes;
 
 public record MaskBinding
 {
-    public uint MaskSrcUUID { get; set; }
+    public uint MaskSrcUUID;
 
-    public MaskingMode Mode { get; set; }
+    public MaskingMode Mode;
 
-    public Drawable MaskSrc { get; set; }
+    public Drawable MaskSrc;
 
     public void Serialize(JsonObject obj)
     {

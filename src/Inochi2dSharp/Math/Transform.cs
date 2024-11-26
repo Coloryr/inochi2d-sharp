@@ -14,7 +14,7 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
     /// <summary>
     /// Gets the matrix for this transform
     /// </summary>
-    public Matrix4x4 Matrix { get; private set; } = Matrix4x4.Identity;
+    public Matrix4x4 Matrix = Matrix4x4.Identity;
 
     /// <summary>
     /// The translation of the transform

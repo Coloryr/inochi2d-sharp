@@ -5,7 +5,7 @@ namespace Inochi2dSharp.Core.Automations;
 
 public class VerletNode
 {
-    public float Distance { get; set; } = 1f;
+    public float Distance = 1f;
     public Vector2 Position;
     public Vector2 OldPosition;
 

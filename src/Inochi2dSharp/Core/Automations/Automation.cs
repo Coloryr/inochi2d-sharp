@@ -7,7 +7,7 @@ public class Automation(Puppet puppet)
 {
     private Puppet _parent = puppet;
 
-    protected List<AutomationBinding> Bindings { get; init; } = [];
+    protected List<AutomationBinding> Bindings = [];
 
     /// <summary>
     /// Human readable name of automation
@@ -22,7 +22,7 @@ public class Automation(Puppet puppet)
     /// <summary>
     /// Type ID of the automation
     /// </summary>
-    public string TypeId { get; set; }
+    public string TypeId;
 
     /// <summary>
     /// Adds a binding

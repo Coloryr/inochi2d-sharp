@@ -367,4 +367,9 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
     {
         gl.Viewport(x, y, (uint)width, (uint)height);
     }
+
+    public override void DeleteBuffer(uint uvbo)
+    {
+        gl.DeleteBuffer(uvbo);
+    }
 }

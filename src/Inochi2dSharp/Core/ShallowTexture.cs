@@ -7,27 +7,27 @@ public class ShallowTexture
     /// <summary>
     /// 8-bit RGBA color data
     /// </summary>
-    public byte[] Data { get; private set; }
+    public byte[] Data;
 
     /// <summary>
     /// Width of texture
     /// </summary>
-    public int Width { get; private set; }
+    public int Width;
 
     /// <summary>
     /// Height of texture
     /// </summary>
-    public int Height { get; private set; }
+    public int Height;
 
     /// <summary>
     /// Amount of color channels
     /// </summary>
-    public int Channels { get; private set; }
+    public int Channels;
 
     /// <summary>
     /// Amount of channels to conver to when passed to OpenGL
     /// </summary>
-    public int ConvChannels { get; private set; }
+    public int ConvChannels;
 
     private readonly ImageResult _image;
 

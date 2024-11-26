@@ -19,8 +19,8 @@ public partial class I2dCore
 
     private void InInitDebug()
     {
-        DbgShaderLine = new Shader(this, "debug line", Integration.DebugVert, Integration.DebugLineFrag);
-        DbgShaderPoint = new Shader(this, "debug point", Integration.DebugVert, Integration.DebugPointFrag);
+        DbgShaderLine = new Shader(this, "debug line", ShaderCode.DebugVert, ShaderCode.DebugLineFrag);
+        DbgShaderPoint = new Shader(this, "debug point", ShaderCode.DebugVert, ShaderCode.DebugPointFrag);
         DbgVAO = gl.GenVertexArray();
         DbgVBO = gl.GenBuffer();
         DbgIBO = gl.GenBuffer();

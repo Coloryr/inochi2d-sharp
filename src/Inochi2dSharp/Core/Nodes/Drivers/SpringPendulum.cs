@@ -13,12 +13,15 @@ public class SpringPendulum : PhysicsSystem
 
     private readonly I2dCore _core;
 
+    private bool _isDispose;
+
     public unsafe SpringPendulum(I2dCore core, SimplePhysics driver)
     {
         _core = core;
         _driver = driver;
 
-        *_bob = driver.Anchor + new Vector2(0, driver.Length);
+        _bob->X = driver.Anchor.X;
+        _bob->Y = driver.Anchor.Y + driver.Length;
         _dBob->X = 0;
         _dBob->Y = 0;
 
@@ -49,7 +52,8 @@ public class SpringPendulum : PhysicsSystem
 
     public override unsafe void UpdateAnchor()
     {
-        *_bob = _driver.Anchor + new Vector2(0, _driver.Length);
+        _bob->X = _driver.Anchor.X;
+        _bob->Y = _driver.Anchor.Y + _driver.Length;
     }
 
     protected override unsafe void Eval(float t)
@@ -96,6 +100,12 @@ public class SpringPendulum : PhysicsSystem
 
     public override unsafe void Dispose()
     {
+        if (_isDispose)
+        {
+            return;
+        }
+
+        _isDispose = true;
         GC.SuppressFinalize(this);
         Marshal.FreeHGlobal(new nint(_bob));
         Marshal.FreeHGlobal(new nint(_dBob));

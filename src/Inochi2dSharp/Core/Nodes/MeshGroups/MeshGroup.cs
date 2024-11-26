@@ -13,14 +13,14 @@ namespace Inochi2dSharp.Core.Nodes.MeshGroups;
 [TypeId("MeshGroup")]
 public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, parent)
 {
-    protected ushort[] bitMask;
-    protected Vector4 bounds;
-    protected List<Triangle> triangles = [];
-    protected Vector2[] transformedVertices = [];
-    protected Matrix4x4 forwardMatrix;
-    protected Matrix4x4 inverseMatrix;
-    protected bool _translateChildren = true;
-    protected bool precalculated = false;
+    private ushort[] _bitMask = [];
+    private Vector4 _bounds;
+    private List<Triangle> _triangles = [];
+    private Vector2[] _transformedVertices = [];
+    private Matrix4x4 _forwardMatrix;
+    private Matrix4x4 _inverseMatrix;
+    private bool _translateChildren = true;
+    private bool _precalculated = false;
 
     public bool Dynamic = false;
 
@@ -37,13 +37,13 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
 
     private (Vector2[]?, Matrix4x4?) FilterChildren(List<Vector2> origVertices, Vector2[] origDeformation, ref Matrix4x4 origTransform)
     {
-        if (!precalculated)
+        if (!_precalculated)
             return (null, null);
 
-        var centerMatrix = inverseMatrix * origTransform;
+        var centerMatrix = _inverseMatrix * origTransform;
 
         // Transform children vertices in MeshGroup coordinates.
-        var r = new Rect(bounds.X, bounds.Y, (MathF.Ceiling(bounds.Z) - MathF.Floor(bounds.X) + 1), (MathF.Ceiling(bounds.W) - MathF.Floor(bounds.Y) + 1));
+        var r = new Rect(_bounds.X, _bounds.Y, (MathF.Ceiling(_bounds.Z) - MathF.Floor(_bounds.X) + 1), (MathF.Ceiling(_bounds.W) - MathF.Floor(_bounds.Y) + 1));
         for (int i = 0; i < origVertices.Count; i++)
         {
             var vertex = origVertices[i];
@@ -59,9 +59,9 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                 cVertex = new Vector2(transformedVertex.X, transformedVertex.Y);
             }
             int index = -1;
-            if (bounds.X <= cVertex.X && cVertex.X < bounds.Z && bounds.Y <= cVertex.Y && cVertex.Y < bounds.W)
+            if (_bounds.X <= cVertex.X && cVertex.X < _bounds.Z && _bounds.Y <= cVertex.Y && cVertex.Y < _bounds.W)
             {
-                ushort bit = bitMask[(int)(cVertex.Y - bounds.Y) * (int)r.Width + (int)(cVertex.X - bounds.X)];
+                ushort bit = _bitMask[(int)(cVertex.Y - _bounds.Y) * (int)r.Width + (int)(cVertex.X - _bounds.X)];
                 index = bit - 1;
             }
             Vector2 newPos;
@@ -71,7 +71,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
             }
             else
             {
-                var temp = triangles[index].TransformMatrix * new Vector3(cVertex, 1);
+                var temp = _triangles[index].TransformMatrix * new Vector3(cVertex, 1);
                 newPos = new(temp.X, temp.Y);
             }
             if (!Dynamic)
@@ -89,7 +89,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
 
         if (!Dynamic)
             return (origDeformation, null);
-        return (origDeformation, forwardMatrix);
+        return (origDeformation, _forwardMatrix);
     }
 
     public override void Update()
@@ -99,27 +99,27 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
 
         if (Data.Indices.Count > 0)
         {
-            if (!precalculated)
+            if (!_precalculated)
             {
                 Precalculate();
             }
-            transformedVertices = new Vector2[Data.Vertices.Count];
+            _transformedVertices = new Vector2[Data.Vertices.Count];
             for (int i = 0; i < Data.Vertices.Count; i++)
             {
                 var vertex = Data.Vertices[i];
-                transformedVertices[i] = vertex + Deformation[i];
+                _transformedVertices[i] = vertex + Deformation[i];
             }
-            for (int index = 0; index < triangles.Count; index++)
+            for (int index = 0; index < _triangles.Count; index++)
             {
-                var p1 = transformedVertices[Data.Indices[index * 3]];
-                var p2 = transformedVertices[Data.Indices[index * 3 + 1]];
-                var p3 = transformedVertices[Data.Indices[index * 3 + 2]];
-                triangles[index].TransformMatrix = new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
+                var p1 = _transformedVertices[Data.Indices[index * 3]];
+                var p2 = _transformedVertices[Data.Indices[index * 3 + 1]];
+                var p3 = _transformedVertices[Data.Indices[index * 3 + 2]];
+                _triangles[index].TransformMatrix = new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
                                                         p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
-                                                        0, 0, 1) * triangles[index].OffsetMatrices;
+                                                        0, 0, 1) * _triangles[index].OffsetMatrices;
             }
-            forwardMatrix = Transform().Matrix;
-            Matrix4x4.Invert(GlobalTransform.Matrix, out inverseMatrix);
+            _forwardMatrix = Transform().Matrix;
+            Matrix4x4.Invert(GlobalTransform.Matrix, out _inverseMatrix);
         }
 
         UpdateNode();
@@ -140,8 +140,8 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
     {
         if (Data.Indices.Count == 0)
         {
-            triangles = [];
-            bitMask = [];
+            _triangles = [];
+            _bitMask = [];
             return;
         }
 
@@ -160,8 +160,8 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         }
 
         // Calculating conversion matrix for triangles
-        bounds = GetBounds(Data.Vertices);
-        triangles.Clear();
+        _bounds = GetBounds(Data.Vertices);
+        _triangles.Clear();
         for (int i = 0; i < Data.Indices.Count / 3; i++)
         {
             var t = new Triangle();
@@ -199,14 +199,14 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                 new Matrix3x3(1, 0, -p1.X,
                         0, 1, -p1.Y,
                         0, 0, 1);
-            triangles.Add(t);
+            _triangles.Add(t);
         }
 
         // Construct bitMap
-        int width = (int)(MathF.Ceiling(bounds.Z) - MathF.Floor(bounds.X) + 1);
-        int height = (int)(MathF.Ceiling(bounds.W) - MathF.Floor(bounds.Y) + 1);
-        bitMask = new ushort[width * height];
-        for (int i = 0; i < triangles.Count; i++)
+        int width = (int)(MathF.Ceiling(_bounds.Z) - MathF.Floor(_bounds.X) + 1);
+        int height = (int)(MathF.Ceiling(_bounds.W) - MathF.Floor(_bounds.Y) + 1);
+        _bitMask = new ushort[width * height];
+        for (int i = 0; i < _triangles.Count; i++)
         {
             Vector2[] tvertices =
             [
@@ -228,14 +228,14 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                     if (TriangleHelper.IsPointInTriangle(pt, tvertices))
                     {
                         ushort id = (ushort)(i + 1);
-                        pt -= new Vector2(bounds.X, bounds.Y);
-                        bitMask[(int)(pt.Y * width + pt.X)] = id;
+                        pt -= new Vector2(_bounds.X, _bounds.Y);
+                        _bitMask[(int)(pt.Y * width + pt.X)] = id;
                     }
                 }
             }
         }
 
-        precalculated = true;
+        _precalculated = true;
         foreach (var child in Children)
         {
             SetupChild(child);
@@ -252,7 +252,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         base.Rebuffer(data);
         if (Dynamic)
         {
-            precalculated = false;
+            _precalculated = false;
         }
     }
 
@@ -335,12 +335,12 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         if (Dynamic || Data.Indices.Count == 0)
             return;
 
-        if (!precalculated)
+        if (!_precalculated)
         {
             Precalculate();
         }
-        forwardMatrix = Transform().Matrix;
-        Matrix4x4.Invert(GlobalTransform.Matrix, out inverseMatrix);
+        _forwardMatrix = Transform().Matrix;
+        Matrix4x4.Invert(GlobalTransform.Matrix, out _inverseMatrix);
 
         foreach (var param in par)
         {
@@ -382,8 +382,8 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                     var filterResult = FilterChildren(vertices, nodeDeform, ref matrix);
                     if (filterResult.Item1 != null)
                     {
-                        nodeBindingX!.values[x][y] += filterResult.Item1[0].X;
-                        nodeBindingY!.values[x][y] += filterResult.Item1[0].Y;
+                        nodeBindingX!.Values[x][y] += filterResult.Item1[0].X;
+                        nodeBindingY!.Values[x][y] += filterResult.Item1[0].Y;
                         nodeBindingX.GetIsSet()[x][y] = true;
                         nodeBindingY.GetIsSet()[x][y] = true;
                     }
@@ -405,7 +405,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                 {
                     throw new Exception("deformBinding is not DeformationParameterBinding");
                 }
-                Node target = binding.GetTarget().node;
+                Node target = binding.GetTarget().Node;
 
                 for (int x = 0; x < param.AxisPoints[0].Count; x++)
                 {
@@ -420,22 +420,22 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                             bool bottomMost = y == param.AxisPoints[1].Count - 1;
                             deformation = [.. deformBinding.Interpolate(new Vector2Int(rightMost ? x - 1 : x, bottomMost ? y - 1 : y), new Vector2(rightMost ? 1 : 0, bottomMost ? 1 : 0)).VertexOffsets];
                         }
-                        transformedVertices = new Vector2[Vertices.Count];
+                        _transformedVertices = new Vector2[Vertices.Count];
                         for (int i = 0; i < Vertices.Count; i++)
                         {
                             var vertex = Vertices[i];
-                            transformedVertices[i] = vertex + deformation[i];
+                            _transformedVertices[i] = vertex + deformation[i];
                         }
-                        for (int index = 0; index < triangles.Count; index++)
+                        for (int index = 0; index < _triangles.Count; index++)
                         {
 
-                            var p1 = transformedVertices[Data.Indices[index * 3]];
-                            var p2 = transformedVertices[Data.Indices[index * 3 + 1]];
-                            var p3 = transformedVertices[Data.Indices[index * 3 + 2]];
-                            triangles[index].TransformMatrix =
+                            var p1 = _transformedVertices[Data.Indices[index * 3]];
+                            var p2 = _transformedVertices[Data.Indices[index * 3 + 1]];
+                            var p3 = _transformedVertices[Data.Indices[index * 3 + 2]];
+                            _triangles[index].TransformMatrix =
                                 new Matrix3x3(p2.X - p1.X, p3.X - p1.X, p1.X,
                                               p2.Y - p1.Y, p3.Y - p1.Y, p1.Y,
-                                              0, 0, 1) * triangles[index].OffsetMatrices;
+                                              0, 0, 1) * _triangles[index].OffsetMatrices;
                         }
 
                         foreach (var child in Children)
@@ -454,7 +454,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         Data.Uvs.Clear();
         Rebuffer(Data);
         _translateChildren = false;
-        precalculated = false;
+        _precalculated = false;
     }
 
     public void SwitchMode(bool dynamic)
@@ -462,15 +462,15 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         if (Dynamic != dynamic)
         {
             Dynamic = dynamic;
-            precalculated = false;
+            _precalculated = false;
         }
     }
 
     public void ClearCache()
     {
-        precalculated = false;
-        bitMask = [];
-        triangles = [];
+        _precalculated = false;
+        _bitMask = [];
+        _triangles = [];
     }
 
     public override void PreProcess()

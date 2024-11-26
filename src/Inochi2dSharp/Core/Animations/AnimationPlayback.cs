@@ -2,16 +2,16 @@
 
 public class AnimationPlayback(AnimationPlayer player, Animation anim, string name)
 {
-    public Animation Anim { get; private set; } = anim;
+    public Animation Anim = anim;
     /// <summary>
     /// Whether this instance is valid
     /// </summary>
-    public bool Valid { get; set; } = true;
+    public bool Valid  = true;
 
     /// <summary>
     /// Gets the name of the animation
     /// </summary>
-    public string Name { get; private set; } = name;
+    public string Name = name;
 
     // Runtime
     private bool _playLeadOut = false;
@@ -20,7 +20,8 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
     /// <summary>
     /// whether this instance is looping
     /// </summary>
-    public bool Looping { get; set; }
+    public bool Looping;
+
     private bool _stopping;
     private float _time;
     private float _strength = 1;

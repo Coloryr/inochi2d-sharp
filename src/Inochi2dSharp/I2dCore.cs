@@ -34,12 +34,12 @@ public partial class I2dCore : IDisposable
     private readonly PostProcessingShader _basicSceneShader;
     private readonly PostProcessingShader _basicSceneLighting;
 
-    public List<PostProcessingShader> PostProcessingStack { get; private set; } = [];
+    public List<PostProcessingShader> PostProcessingStack = [];
 
     public GlApi gl;
 
     // Camera
-    public Camera InCamera { get; set; }
+    public Camera InCamera;
 
     private bool _isCompositing;
 
@@ -85,7 +85,7 @@ public partial class I2dCore : IDisposable
 
         _inClearColor = new(0, 0, 0, 0);
         // Shader for scene
-        _basicSceneShader = new PostProcessingShader(new Shader(this, "scene", Integration.ScencVert, Integration.SceneFrag));
+        _basicSceneShader = new PostProcessingShader(new Shader(this, "scene", ShaderCode.ScencVert, ShaderCode.SceneFrag));
         _sceneVAO = gl.GenVertexArray();
         _sceneVBO = gl.GenBuffer();
 
@@ -380,8 +380,8 @@ public partial class I2dCore : IDisposable
     {
         PostProcessingStack.Add(new PostProcessingShader(
             new Shader(this, "scene+lighting",
-                Integration.ScencVert,
-                Integration.LighingFrag
+                ShaderCode.ScencVert,
+                ShaderCode.LighingFrag
             )
         ));
     }
@@ -599,9 +599,9 @@ public partial class I2dCore : IDisposable
         I2dTime.InUpdate();
     }
 
-    public void TickTime(float time)
+    public void TickTime(float delta)
     {
-        I2dTime.AddTime(time);
+        I2dTime.AddTime(delta);
     }
 
     public void Dispose()

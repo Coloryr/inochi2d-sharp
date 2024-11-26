@@ -36,7 +36,7 @@ public class Puppet : IDisposable
     /// <summary>
     /// A list of drivers that need to run to update the puppet
     /// </summary>
-    public List<Driver> Drivers { get; init; } = [];
+    internal List<Driver> Drivers { get; init; } = [];
 
     /// <summary>
     /// A list of parameters that are driven by drivers
@@ -51,12 +51,12 @@ public class Puppet : IDisposable
     /// <summary>
     /// Meta information about this puppet
     /// </summary>
-    public PuppetMeta Meta;
+    public PuppetMeta Meta { get; private set; }
 
     /// <summary>
     /// Global physics settings for this puppet
     /// </summary>
-    public PuppetPhysics Physics;
+    public PuppetPhysics Physics { get; private set; }
 
     /// <summary>
     /// The root node of the puppet
@@ -71,7 +71,7 @@ public class Puppet : IDisposable
     /// <summary>
     /// Automations
     /// </summary>
-    public List<Automation> Automation = [];
+    internal List<Automation> Automation = [];
 
     /// <summary>
     /// INP Texture slots for this puppet
@@ -133,7 +133,7 @@ public class Puppet : IDisposable
         SelfSort();
     }
 
-    public void ScanPartsRecurse(Node node, bool driversOnly = false)
+    internal void ScanPartsRecurse(Node node, bool driversOnly = false)
     {
         // Don't need to scan null nodes
         if (node is null) return;
@@ -176,7 +176,7 @@ public class Puppet : IDisposable
         }
     }
 
-    public void ScanParts(Node node, bool reparent = false)
+    internal void ScanParts(Node node, bool reparent = false)
     {
         // We want rootParts to be cleared so that we
         // don't draw the same part multiple times
@@ -197,18 +197,17 @@ public class Puppet : IDisposable
         // quite different.
         if (reparent)
         {
-            if (_puppetRootNode != null)
-                _puppetRootNode.ClearChildren();
+            _puppetRootNode?.ClearChildren();
             node.Parent = _puppetRootNode;
         }
     }
 
-    public void SelfSort()
+    internal void SelfSort()
     {
         RootParts.Sort((a, b) => b.ZSort.CompareTo(a.ZSort));
     }
 
-    public Node? FindNode(Node n, string name)
+    internal Node? FindNode(Node n, string name)
     {
         // Name matches!
         if (n.name == name) return n;
@@ -223,7 +222,7 @@ public class Puppet : IDisposable
         return null;
     }
 
-    public Node? FindNode(Node n, uint uuid)
+    internal Node? FindNode(Node n, uint uuid)
     {
         // Name matches!
         if (n.UUID == uuid) return n;
@@ -375,7 +374,7 @@ public class Puppet : IDisposable
     /// 
     /// Run this every time you change the layout of the puppet's node tree
     /// </summary>
-    public void RescanNodes()
+    internal void RescanNodes()
     {
         ScanParts(Root, false);
     }
@@ -383,7 +382,7 @@ public class Puppet : IDisposable
     /// <summary>
     /// Updates the texture state for all texture slots.
     /// </summary>
-    public void UpdateTextureState()
+    internal void UpdateTextureState()
     {
         // Update filtering mode for texture slots
         foreach (var texutre in TextureSlots)
@@ -452,7 +451,7 @@ public class Puppet : IDisposable
     /// </summary>
     /// <param name="texture"></param>
     /// <returns></returns>
-    public uint AddTextureToSlot(Texture texture)
+    internal uint AddTextureToSlot(Texture texture)
     {
         // Add texture if we can't find it.
         if (!TextureSlots.Contains(texture)) TextureSlots.Add(texture);
@@ -462,13 +461,13 @@ public class Puppet : IDisposable
     /// <summary>
     /// Populate texture slots with all visible textures in the model
     /// </summary>
-    public void PopulateTextureSlots()
+    internal void PopulateTextureSlots()
     {
         if (TextureSlots.Count > 0) TextureSlots.Clear();
 
         foreach (var part in FetAllParts())
         {
-            foreach (var texture in part.textures)
+            foreach (var texture in part.Textures)
             {
                 if (texture != null) AddTextureToSlot(texture);
             }
@@ -480,7 +479,7 @@ public class Puppet : IDisposable
     /// </summary>
     /// <param name="uuid"></param>
     /// <returns></returns>
-    public Texture? FindTextureByRuntimeUUID(uint uuid)
+    internal Texture? FindTextureByRuntimeUUID(uint uuid)
     {
         foreach (var slot in TextureSlots)
         {
@@ -494,7 +493,7 @@ public class Puppet : IDisposable
     /// Sets thumbnail of this puppet
     /// </summary>
     /// <param name="texture"></param>
-    public void SetThumbnail(Texture texture)
+    internal void SetThumbnail(Texture texture)
     {
         if (Meta.ThumbnailId == NO_THUMBNAIL)
         {
@@ -513,7 +512,7 @@ public class Puppet : IDisposable
     /// </summary>
     /// <param name="texture"></param>
     /// <returns></returns>
-    public int GetTextureSlotIndexFor(Texture texture)
+    internal int GetTextureSlotIndexFor(Texture texture)
     {
         return TextureSlots.IndexOf(texture);
     }
@@ -524,9 +523,8 @@ public class Puppet : IDisposable
     /// By default it does not delete the texture assigned, pass in true to delete texture
     /// </summary>
     /// <param name="deleteTexture"></param>
-    public void ClearThumbnail(bool deleteTexture = false)
+    internal void ClearThumbnail(bool deleteTexture = false)
     {
-
         if (deleteTexture)
         {
             TextureSlots.RemoveAll(texture => texture.Id == Meta.ThumbnailId);
@@ -698,7 +696,7 @@ public class Puppet : IDisposable
         FinalizeDeserialization(data);
     }
 
-    public void Reconstruct()
+    internal void Reconstruct()
     {
         Root.Reconstruct();
         foreach (var parameter in Parameters.ToArray())
@@ -715,7 +713,7 @@ public class Puppet : IDisposable
         }
     }
 
-    public void JsonLoadDone()
+    internal void JsonLoadDone()
     {
         Root.Puppet = this;
         Root.name = "Root";
@@ -743,14 +741,14 @@ public class Puppet : IDisposable
     /// Finalizer
     /// </summary>
     /// <param name="data"></param>
-    public void FinalizeDeserialization(JsonObject data)
+    internal void FinalizeDeserialization(JsonObject data)
     {
         // reconstruct object path so that object is located at final position
         Reconstruct();
         JsonLoadDone();
     }
 
-    public void ApplyDeformToChildren()
+    internal void ApplyDeformToChildren()
     {
         var nodes = FindNodesType<MeshGroup>(Root);
         foreach (var node in nodes)
@@ -764,13 +762,29 @@ public class Puppet : IDisposable
     /// </summary>
     /// <param name="reupdate"></param>
     /// <returns></returns>
-    public Vector4 GetCombinedBounds(bool reupdate = false)
+    internal Vector4 GetCombinedBounds(bool reupdate = false)
     {
         return Root.GetCombinedBounds(reupdate, true);
     }
 
     public void Dispose()
     {
-        
+        Animations.Clear();
+        Automation.Clear();
+        Parameters.Clear();
+
+        foreach (var item in RootParts)
+        {
+            item.Dispose();
+        }
+        foreach (var item in Drivers)
+        {
+            item.Dispose();
+        }
+
+        foreach (var item in TextureSlots)
+        { 
+            
+        }
     }
 }

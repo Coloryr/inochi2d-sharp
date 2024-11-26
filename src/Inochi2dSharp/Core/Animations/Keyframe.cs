@@ -11,15 +11,15 @@ public record Keyframe
     /// <summary>
     /// The frame at which this frame occurs
     /// </summary>
-    public int Frame { get; set; }
+    public int Frame;
     /// <summary>
     /// The value of the parameter at the given frame
     /// </summary>
-    public float Value { get; set; }
+    public float Value;
     /// <summary>
     /// Interpolation tension for cubic/inout
     /// </summary>
-    public float Tension { get; set; } = 0.5f;
+    public float Tension = 0.5f;
 
     public void Serialize(JsonObject obj)
     {

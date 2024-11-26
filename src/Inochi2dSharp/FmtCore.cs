@@ -13,7 +13,7 @@ public partial class I2dCore
     public const uint IN_TEX_TGA = 1u; /// TGA encoded Inochi2D texture
     public const uint IN_TEX_BC7 = 2u; /// BC7 encoded Inochi2D texture
 
-    public bool IsLoadingINP { get; set; }
+    public bool IsLoadingINP;
 
     /// <summary>
     /// Loads a puppet from a file

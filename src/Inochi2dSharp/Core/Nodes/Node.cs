@@ -31,11 +31,11 @@ public class Node : IDisposable
     /// <summary>
     /// A list of this node's children
     /// </summary>
-    public List<Node> Children { get; private set; } = [];
+    public List<Node> Children  = [];
     /// <summary>
     /// Returns the unique identifier for this node
     /// </summary>
-    public uint UUID { get; private set; }
+    public uint UUID;
 
     /// <summary>
     /// The relative Z sorting
@@ -97,10 +97,10 @@ public class Node : IDisposable
 
     private bool _lockToRoot;
 
-    public string NodePath { get; private set; }
+    public string NodePath;
 
-    protected bool preProcessed = false;
-    protected bool postProcessed = false;
+    protected bool PreProcessed = false;
+    protected bool PostProcessed = false;
 
     /// <summary>
     /// The offset to the transform to apply
@@ -238,9 +238,9 @@ public class Node : IDisposable
 
     public unsafe virtual void PreProcess()
     {
-        if (preProcessed)
+        if (PreProcessed)
             return;
-        preProcessed = true;
+        PreProcessed = true;
         if (PreProcessFilter != null)
         {
             OverrideTransformMatrix = null;
@@ -258,9 +258,9 @@ public class Node : IDisposable
 
     public virtual void PostProcess()
     {
-        if (postProcessed)
+        if (PostProcessed)
             return;
-        postProcessed = true;
+        PostProcessed = true;
         if (PostProcessFilter != null)
         {
             OverrideTransformMatrix = null;
@@ -693,8 +693,8 @@ public class Node : IDisposable
 
     public virtual void BeginUpdate()
     {
-        preProcessed = false;
-        postProcessed = false;
+        PreProcessed = false;
+        PostProcessed = false;
 
         OffsetSort = 0;
         OffsetTransform.Clear();

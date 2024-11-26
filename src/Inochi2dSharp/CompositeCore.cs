@@ -18,8 +18,8 @@ public partial class I2dCore
     public void InInitComposite()
     {
         CShader = new Shader(this, "composite",
-            Integration.CompositeVert,
-            Integration.CompositeFrag
+            ShaderCode.CompositeVert,
+            ShaderCode.CompositeFrag
         );
 
         CShader.Use();
@@ -31,8 +31,8 @@ public partial class I2dCore
         CShader.SetUniform(CShader.GetUniformLocation("bumpmap"), 2);
 
         CShaderMask = new Shader(this, "composite (mask)",
-            Integration.CompositeVert,
-            Integration.CompositeMaskFrag
+            ShaderCode.CompositeVert,
+            ShaderCode.CompositeMaskFrag
         );
         CShaderMask.Use();
         Mthreshold = CShader.GetUniformLocation("threshold");

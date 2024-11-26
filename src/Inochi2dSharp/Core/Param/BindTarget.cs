@@ -10,10 +10,10 @@ public record BindTarget
     /// <summary>
     /// The node to bind to
     /// </summary>
-    public Node node;
+    public Node Node;
 
     /// <summary>
     /// The parameter to bind
     /// </summary>
-    public string paramName;
+    public string ParamName;
 }

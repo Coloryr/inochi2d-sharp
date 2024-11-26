@@ -7,7 +7,7 @@ public class Animation
     /// <summary>
     /// The timestep of each frame
     /// </summary>
-    public float Timestep { get; private set; } = 0.0166f;
+    public float Timestep = 0.0166f;
 
     /// <summary>
     /// Whether the animation is additive.
@@ -27,22 +27,22 @@ public class Animation
     /// <summary>
     /// All of the animation lanes in this animation
     /// </summary>
-    public List<AnimationLane> Lanes { get; init; } = [];
+    public List<AnimationLane> Lanes = [];
 
     /// <summary>
     /// Length in frames
     /// </summary>
-    public int Length { get; private set; }
+    public int Length;
 
     /// <summary>
     /// Time where the lead-in ends
     /// </summary>
-    public int LeadIn { get; private set; } = -1;
+    public int LeadIn = -1;
 
     /// <summary>
     /// Time where the lead-out starts
     /// </summary>
-    public int LeadOut { get; private set; } = -1;
+    public int LeadOut = -1;
 
     public void Reconstruct(Puppet puppet)
     {

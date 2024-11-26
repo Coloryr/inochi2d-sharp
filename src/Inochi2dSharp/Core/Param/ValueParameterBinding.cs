@@ -11,7 +11,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <summary>
     /// The value at each 2D keypoint
     /// </summary>
-    public List<List<float>> values;
+    public List<List<float>> Values;
 
     public ValueParameterBinding(Parameter parameter) : base(parameter)
     {
@@ -29,9 +29,9 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <param name="serializer"></param>
     public override void Serialize(JsonObject serializer)
     {
-        serializer.Add("node", Target.node.UUID);
-        serializer.Add("param_name", Target.paramName);
-        serializer.Add("values", values.ToToken());
+        serializer.Add("node", Target.Node.UUID);
+        serializer.Add("param_name", Target.ParamName);
+        serializer.Add("values", Values.ToToken());
         serializer.Add("isSet", IsSet.ToToken());
         serializer.Add("interpolate_mode", InterpolateMode.ToString());
     }
@@ -48,12 +48,12 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
         if (data.TryGetPropertyValue("param_name", out temp) && temp != null)
         {
-            Target.paramName = temp.GetValue<string>();
+            Target.ParamName = temp.GetValue<string>();
         }
 
         if (data.TryGetPropertyValue("values", out temp) && temp is JsonArray array)
         {
-            values = array.ToListList<float>();
+            Values = array.ToListList<float>();
         }
 
         if (data.TryGetPropertyValue("isSet", out temp) && temp is JsonArray array1)
@@ -74,11 +74,11 @@ public class ValueParameterBinding : ParameterBindingImpl
         int xCount = Parameter.AxisPointCount(0);
         int yCount = Parameter.AxisPointCount(1);
 
-        if (values.Count != xCount)
+        if (Values.Count != xCount)
         {
             throw new Exception("Mismatched X value count");
         }
-        foreach (var i in values)
+        foreach (var i in Values)
         {
             if (i.Count != yCount)
             {
@@ -107,26 +107,26 @@ public class ValueParameterBinding : ParameterBindingImpl
         int xCount = Parameter.AxisPointCount(0);
         int yCount = Parameter.AxisPointCount(1);
 
-        values = [];
+        Values = [];
         IsSet = [];
         for (int x = 0; x < xCount; x++)
         {
             IsSet.Add([]);
-            values.Add([]);
+            Values.Add([]);
             for (int y = 0; y < yCount; y++)
             {
                 IsSet[x].Add(false);
-                values[x].Add(0);
-                var value = values[x][y];
+                Values[x].Add(0);
+                var value = Values[x][y];
                 ClearValue(ref value);
-                values[x][y] = value;
+                Values[x][y] = value;
             }
         }
     }
 
     public void ClearValue(ref float val)
     {
-        val = Target.node.GetDefaultValue(Target.paramName);
+        val = Target.Node.GetDefaultValue(Target.ParamName);
     }
 
     /// <summary>
@@ -136,7 +136,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <returns></returns>
     public float GetValue(Vector2Int point)
     {
-        return values[point.X][point.Y];
+        return Values[point.X][point.Y];
     }
 
     /// <summary>
@@ -146,7 +146,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <param name="value"></param>
     public void SetValue(Vector2Int point, float value)
     {
-        values[point.X][point.Y] = value;
+        Values[point.X][point.Y] = value;
         IsSet[point.X][point.Y] = true;
 
         ReInterpolate();
@@ -158,9 +158,9 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <param name="point"></param>
     public override void Unset(Vector2Int point)
     {
-        var value = values[point.X][point.Y];
+        var value = Values[point.X][point.Y];
         ClearValue(ref value);
-        values[point.X][point.Y] = value;
+        Values[point.X][point.Y] = value;
         IsSet[point.X][point.Y] = false;
 
         ReInterpolate();
@@ -172,9 +172,9 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <param name="point"></param>
     public override void Reset(Vector2Int point)
     {
-        var value = values[point.X][point.Y];
+        var value = Values[point.X][point.Y];
         ClearValue(ref value);
-        values[point.X][point.Y] = value;
+        Values[point.X][point.Y] = value;
         IsSet[point.X][point.Y] = true;
 
         ReInterpolate();
@@ -188,14 +188,14 @@ public class ValueParameterBinding : ParameterBindingImpl
     {
         if (axis == 0)
         {
-            values.Reverse();
+            Values.Reverse();
             IsSet.Reverse();
         }
         else
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                values[i].Reverse();
+                Values[i].Reverse();
             }
             for (int i = 0; i < IsSet.Count; i++)
             {
@@ -274,8 +274,8 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
         float Get(int maj, int min)
         {
-            if (yMajor) return values[min][maj];
-            else return values[maj][min];
+            if (yMajor) return Values[min][maj];
+            else return Values[maj][min];
         }
         float GetDistance(int maj, int min)
         {
@@ -291,7 +291,7 @@ public class ValueParameterBinding : ParameterBindingImpl
                 {
                     throw new Exception("valid error");
                 }
-                values[min][maj] = val;
+                Values[min][maj] = val;
                 interpDistance[min][maj] = distance;
                 newlySet[min][maj] = true;
             }
@@ -302,7 +302,7 @@ public class ValueParameterBinding : ParameterBindingImpl
                 {
                     throw new Exception("valid error");
                 }
-                values[maj][min] = val;
+                Values[maj][min] = val;
                 interpDistance[maj][min] = distance;
                 newlySet[maj][min] = true;
             }
@@ -397,10 +397,10 @@ public class ValueParameterBinding : ParameterBindingImpl
 
             void ExtrapolateCorner(int baseX, int baseY, int offX, int offY)
             {
-                float base1 = values[baseX][baseY];
-                float dX = values[baseX + offX][baseY] + (base1 * -1f);
-                float dY = values[baseX][baseY + offY] + (base1 * -1f);
-                values[baseX + offX][baseY + offY] = base1 + dX + dY;
+                float base1 = Values[baseX][baseY];
+                float dX = Values[baseX + offX][baseY] + (base1 * -1f);
+                float dY = Values[baseX][baseY + offY] + (base1 * -1f);
+                Values[baseX + offX][baseY + offY] = base1 + dX + dY;
                 commitPoints.Add(new Vector2Int(baseX + offX, baseY + offY));
             }
 
@@ -557,11 +557,11 @@ public class ValueParameterBinding : ParameterBindingImpl
         if (Parameter.IsVec2)
         {
             var py = leftKeypoint.Y + ((offset.Y >= 0.5) ? 1 : 0);
-            return values[px][py];
+            return Values[px][py];
         }
         else
         {
-            return values[px][0];
+            return Values[px][0];
         }
     }
 
@@ -571,17 +571,17 @@ public class ValueParameterBinding : ParameterBindingImpl
 
         if (Parameter.IsVec2)
         {
-            float p00 = values[leftKeypoint.X][leftKeypoint.Y];
-            float p01 = values[leftKeypoint.X][leftKeypoint.Y + 1];
-            float p10 = values[leftKeypoint.X + 1][leftKeypoint.Y];
-            float p11 = values[leftKeypoint.X + 1][leftKeypoint.Y + 1];
+            float p00 = Values[leftKeypoint.X][leftKeypoint.Y];
+            float p01 = Values[leftKeypoint.X][leftKeypoint.Y + 1];
+            float p10 = Values[leftKeypoint.X + 1][leftKeypoint.Y];
+            float p11 = Values[leftKeypoint.X + 1][leftKeypoint.Y + 1];
             p0 = float.Lerp(p00, p01, offset.Y);
             p1 = float.Lerp(p10, p11, offset.Y);
         }
         else
         {
-            p0 = values[leftKeypoint.X][0];
-            p1 = values[leftKeypoint.X + 1][0];
+            p0 = Values[leftKeypoint.X][0];
+            p1 = Values[leftKeypoint.X + 1][0];
         }
 
         return float.Lerp(p0, p1, offset.X);
@@ -596,8 +596,8 @@ public class ValueParameterBinding : ParameterBindingImpl
             float p01, p02, p03, p04;
             float[] pOut = new float[4];
 
-            var xlen = values.Count - 1;
-            var ylen = values[0].Count - 1;
+            var xlen = Values.Count - 1;
+            var ylen = Values[0].Count - 1;
             var xkp = leftKeypoint.X;
             var ykp = leftKeypoint.Y;
 
@@ -605,10 +605,10 @@ public class ValueParameterBinding : ParameterBindingImpl
             {
                 var yp = float.Clamp(ykp + y - 1, 0, ylen);
 
-                p01 = values[int.Max(xkp - 1, 0)][(int)yp];
-                p02 = values[xkp][(int)yp];
-                p03 = values[xkp + 1][(int)yp];
-                p04 = values[int.Min(xkp + 2, xlen)][(int)yp];
+                p01 = Values[int.Max(xkp - 1, 0)][(int)yp];
+                p02 = Values[xkp][(int)yp];
+                p03 = Values[xkp + 1][(int)yp];
+                p04 = Values[int.Min(xkp + 2, xlen)][(int)yp];
                 pOut[y] = MathHelper.Cubic(p01, p02, p03, p04, xt);
             }
 
@@ -622,12 +622,12 @@ public class ValueParameterBinding : ParameterBindingImpl
         else
         {
             var xkp = leftKeypoint.X;
-            var xlen = values.Count - 1;
+            var xlen = Values.Count - 1;
 
-            p0 = values[int.Max(xkp - 1, 0)][0];
-            p1 = values[xkp][0];
-            p2 = values[xkp + 1][0];
-            p3 = values[int.Min(xkp + 2, xlen)][0];
+            p0 = Values[int.Max(xkp - 1, 0)][0];
+            p1 = Values[xkp][0];
+            p2 = Values[xkp + 1][0];
+            p3 = Values[int.Min(xkp + 2, xlen)][0];
             return MathHelper.Cubic(p0, p1, p2, p3, offset.X);
         }
     }
@@ -648,19 +648,19 @@ public class ValueParameterBinding : ParameterBindingImpl
         {
             int yCount = Parameter.AxisPointCount(1);
 
-            values.Insert(index, []);
+            Values.Insert(index, []);
             IsSet.Insert(index, []);
             for (int i = 0; i < yCount; i++)
             {
-                values[index].Add(0);
+                Values[index].Add(0);
                 IsSet[index].Add(false);
             }
         }
         else if (axis == 1)
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                var item = values[i];
+                var item = Values[i];
                 item.Insert(index, 0);
             }
             for (int i = 0; i < IsSet.Count; i++)
@@ -683,9 +683,9 @@ public class ValueParameterBinding : ParameterBindingImpl
         if (axis == 0)
         {
             {
-                var swap = values[oldindex];
-                values.RemoveAt(oldindex);
-                values.Insert(newindex, swap);
+                var swap = Values[oldindex];
+                Values.RemoveAt(oldindex);
+                Values.Insert(newindex, swap);
             }
 
             {
@@ -696,9 +696,9 @@ public class ValueParameterBinding : ParameterBindingImpl
         }
         else if (axis == 1)
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                var item = values[i];
+                var item = Values[i];
                 var swap = item[oldindex];
                 item.RemoveAt(oldindex);
                 item.Insert(newindex, swap);
@@ -724,14 +724,14 @@ public class ValueParameterBinding : ParameterBindingImpl
 
         if (axis == 0)
         {
-            values.RemoveAt(index);
+            Values.RemoveAt(index);
             IsSet.RemoveAt(index);
         }
         else if (axis == 1)
         {
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < Values.Count; i++)
             {
-                values[i].RemoveAt(index);
+                Values[i].RemoveAt(index);
             }
             for (int i = 0; i < IsSet.Count; i++)
             {
@@ -745,7 +745,7 @@ public class ValueParameterBinding : ParameterBindingImpl
     public override void ScaleValueAt(Vector2Int index, int axis, float scale)
     {
         /* Nodes know how to do axis-aware scaling */
-        SetValue(index, Node.ScaleValue(Target.paramName, GetValue(index), axis, scale));
+        SetValue(index, Node.ScaleValue(Target.ParamName, GetValue(index), axis, scale));
     }
 
     public override void ExtrapolateValueAt(Vector2Int index, int axis)
@@ -794,9 +794,9 @@ public class ValueParameterBinding : ParameterBindingImpl
             float otherVal = o.GetValue(dest);
 
             // Swap directly, to avoid clobbering by update
-            o.values[dest.X][dest.Y] = thisVal;
+            o.Values[dest.X][dest.Y] = thisVal;
             o.IsSet[dest.X][dest.Y] = thisSet;
-            values[src.X][src.Y] = otherVal;
+            Values[src.X][src.Y] = otherVal;
             IsSet[src.X][src.Y] = otherSet;
 
             ReInterpolate();
@@ -814,11 +814,11 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// <param name="value"></param>
     public void ApplyToTarget(float value)
     {
-        Target.node.SetValue(Target.paramName, value);
+        Target.Node.SetValue(Target.ParamName, value);
     }
 
     public override bool IsCompatibleWithNode(Node other)
     {
-        return other.HasParam(Target.paramName);
+        return other.HasParam(Target.ParamName);
     }
 }

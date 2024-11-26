@@ -7,7 +7,7 @@ public class I2dView : IDisposable
     private readonly GlApi _gl;
     private readonly I2dCore _core;
 
-    private readonly List<Puppet> _models = [];
+    private readonly List<I2dModel> _models = [];
 
     public I2dView(GlApi gl)
     {
@@ -22,22 +22,22 @@ public class I2dView : IDisposable
         _core.InSetViewport(width, height);
     }
 
-    public Puppet LoadModel(string file)
+    public I2dModel LoadModel(string file)
     {
-        var model = _core.InLoadPuppet(file);
+        var model = new I2dModel(_core.InLoadPuppet(file));
         _models.Add(model);
 
         return model;
     }
 
-    public void Tick(float time)
+    public void Tick(float delta)
     {
-        _core.TickTime(time);
+        _core.TickTime(delta);
         _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT | GlApi.GL_DEPTH_BUFFER_BIT);
         _core.InBeginScene();
         foreach (var item in _models)
         {
-            item.Update();
+            item.Update(delta);
             item.Draw();
         }
         _core.InEndScene();
@@ -49,8 +49,9 @@ public class I2dView : IDisposable
     {
         foreach (var item in _models)
         {
-            item.JsonLoadDone();
+            item.Dispose();
         }
+        _models.Clear();
         _core.Dispose();
     }
 }

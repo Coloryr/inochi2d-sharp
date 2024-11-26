@@ -6,14 +6,14 @@
 /// <param name="puppet"></param>
 public class AnimationPlayer(Puppet puppet)
 {
-    public List<AnimationPlayback> PlayingAnimations { get; init; } = [];
+    public List<AnimationPlayback> PlayingAnimations = [];
 
     public Puppet Puppet => puppet;
 
     /// <summary>
     /// Whether to snap to framerate
     /// </summary>
-    public bool SnapToFramerate { get; private set; } = false;
+    public bool SnapToFramerate = false;
 
     /// <summary>
     /// Run an update step for the animation player
@@ -90,7 +90,7 @@ public class AnimationPlayer(Puppet puppet)
     /// <summary>
     /// Destroy all animations
     /// </summary>
-    public void DestroyAll()
+    public void Dispose()
     {
         foreach (var anim in PlayingAnimations)
         {

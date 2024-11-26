@@ -12,12 +12,12 @@ public class AnimationLane
     /// <summary>
     /// Reference to parameter if any
     /// </summary>
-    public AnimationParameterRef ParamRef { get; private set; }
+    public AnimationParameterRef ParamRef;
 
     /// <summary>
     /// List of frames in the lane
     /// </summary>
-    public List<Keyframe> Frames { get; init; } = [];
+    public List<Keyframe> Frames  = [];
 
     /// <summary>
     /// The interpolation between each frame in the lane
@@ -28,7 +28,7 @@ public class AnimationLane
     /// Merging mode of the lane
     /// <see cref = "ParamMergeMode" />
     /// </summary>
-    public string MergeMode { get; private set; } = ParamMergeMode.Forced;
+    public string MergeMode  = ParamMergeMode.Forced;
 
     /// <summary>
     /// Serialization function

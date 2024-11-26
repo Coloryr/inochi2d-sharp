@@ -35,8 +35,8 @@ public abstract class ParameterBindingImpl : ParameterBinding
         Parameter = parameter;
         Target = new()
         {
-            node = targetNode,
-            paramName = paramName
+            Node = targetNode,
+            ParamName = paramName
         };
 
         Clear();
@@ -57,7 +57,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override string GetName()
     {
-        return Target.paramName;
+        return Target.ParamName;
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     /// <returns></returns>
     public override Node GetNode()
     {
-        return Target.node;
+        return Target.Node;
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public abstract class ParameterBindingImpl : ParameterBinding
     public override void Finalize(Puppet puppet)
     {
         //        writefln("finalize binding %s", this.getName());
-        Target.node = puppet.Find<Node>(NodeRef)!;
+        Target.Node = puppet.Find<Node>(NodeRef)!;
         //        writefln("node for %d = %x", nodeRef, &(target.node));
     }
 

@@ -14,6 +14,8 @@ public class Pendulum : PhysicsSystem
 
     private readonly I2dCore _core;
 
+    private bool _isDispose;
+
     public unsafe Pendulum(I2dCore core, SimplePhysics driver)
     {
         _driver = driver;
@@ -30,6 +32,13 @@ public class Pendulum : PhysicsSystem
 
     public override unsafe void Dispose()
     {
+        if (_isDispose)
+        {
+            return;
+        }
+
+        _isDispose = true;
+
         GC.SuppressFinalize(this);
         Marshal.FreeHGlobal(new nint(_angle));
         Marshal.FreeHGlobal(new nint(_dAngle));

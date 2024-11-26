@@ -56,10 +56,10 @@ public partial class I2dCore
 
     public void InInitPart()
     {
-        partShader = new Shader(this, "part", Integration.BasicVert, Integration.BasicFrag);
-        partShaderStage1 = new Shader(this, "part (stage 1)", Integration.BasicVert, Integration.BasicStage1);
-        partShaderStage2 = new Shader(this, "part (stage 2)", Integration.BasicVert, Integration.BasicStage2);
-        partMaskShader = new Shader(this, "part (mask)", Integration.BasicVert, Integration.BasicMask);
+        partShader = new Shader(this, "part", ShaderCode.BasicVert, ShaderCode.BasicFrag);
+        partShaderStage1 = new Shader(this, "part (stage 1)", ShaderCode.BasicVert, ShaderCode.BasicStage1);
+        partShaderStage2 = new Shader(this, "part (stage 2)", ShaderCode.BasicVert, ShaderCode.BasicStage2);
+        partMaskShader = new Shader(this, "part (mask)", ShaderCode.BasicVert, ShaderCode.BasicMask);
 
         IncDrawableBindVAO();
 
@@ -202,9 +202,9 @@ public partial class I2dCore
         partShader.SetUniform(mvpViewProjection,
             InCamera.Matrix()
         );
-        partShader.SetUniform(gopacity, part.opacity);
+        partShader.SetUniform(gopacity, part.Opacity);
         partShader.SetUniform(gMultColor, part.Tint);
-        partShader.SetUniform(gScreenColor, part.screenTint);
+        partShader.SetUniform(gScreenColor, part.ScreenTint);
 
         // Bind the texture
         texture.Bind();

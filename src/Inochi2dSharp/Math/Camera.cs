@@ -8,8 +8,6 @@ namespace Inochi2dSharp.Math;
 /// </summary>
 public class Camera(I2dCore core)
 {
-    private Matrix4x4 _projection;
-
     /// <summary>
     /// Position of camera
     /// </summary>
