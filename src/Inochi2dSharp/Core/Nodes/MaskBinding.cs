@@ -14,13 +14,13 @@ public record MaskBinding
 
     public void Serialize(JsonObject obj)
     {
-        obj.Add("maskSrcUUID", MaskSrcUUID);
+        obj.Add("source", MaskSrcUUID);
         obj.Add("mode", Mode.ToString());
     }
 
     public void Deserialize(JsonObject obj)
     {
-        if (obj.TryGetPropertyValue("maskSrcUUID", out var temp) && temp != null)
+        if (obj.TryGetPropertyValue("source", out var temp) && temp != null)
         {
             MaskSrcUUID = temp.GetValue<uint>();
         }

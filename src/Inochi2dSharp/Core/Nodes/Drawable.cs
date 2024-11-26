@@ -416,9 +416,9 @@ public abstract class Drawable : Node
     /// <param name="data"></param>
     public virtual void Rebuffer(MeshData data)
     {
-        this.Data = data;
-        this.UpdateIndices();
-        this.UpdateVertices();
+        Data = data;
+        UpdateIndices();
+        UpdateVertices();
     }
 
     /// <summary>
@@ -427,47 +427,6 @@ public abstract class Drawable : Node
     public void Reset()
     {
         Vertices = [.. Data.Vertices];
-    }
-
-    /// <summary>
-    /// Begins a mask
-    /// 
-    /// This causes the next draw calls until inBeginMaskContent/inBeginDodgeContent or inEndMask
-    /// to be written to the current mask.
-    /// 
-    /// This also clears whatever old mask there was.
-    /// </summary>
-    /// <param name="hasMasks"></param>
-    public void InBeginMask(bool hasMasks)
-    {
-        // Enable and clear the stencil buffer so we can write our mask to it
-        _core.gl.Enable(GlApi.GL_STENCIL_TEST);
-        _core.gl.ClearStencil(hasMasks ? 0 : 1);
-        _core.gl.Clear(GlApi.GL_STENCIL_BUFFER_BIT);
-    }
-
-    /// <summary>
-    /// End masking
-    /// 
-    /// Once masking is ended content will no longer be masked by the defined mask.
-    /// </summary>
-    public void InEndMask()
-    {
-        // We're done stencil testing, disable it again so that we don't accidentally mask more stuff out
-        _core.gl.StencilMask(0xFF);
-        _core.gl.StencilFunc(GlApi.GL_ALWAYS, 1, 0xFF);
-        _core.gl.Disable(GlApi.GL_STENCIL_TEST);
-    }
-
-    /// <summary>
-    /// Starts masking content
-    /// 
-    /// NOTE: This have to be run within a inBeginMask and inEndMask block!
-    /// </summary>
-    public void InBeginMaskContent()
-    {
-        _core.gl.StencilFunc(GlApi.GL_EQUAL, 1, 0xFF);
-        _core.gl.StencilMask(0x00);
     }
 
     protected void UpdateNode()

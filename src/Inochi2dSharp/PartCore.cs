@@ -197,7 +197,7 @@ public partial class I2dCore
         partShader.Use();
         var temp = part.Transform().Matrix.Multiply(new Vector4(1, 1, 1, 1));
         partShader.SetUniform(mvpModel,
-            Matrix4x4.CreateTranslation(new Vector3(temp.X, temp.Y, temp.Z))
+            MathHelper.Translation(temp.X, temp.Y, temp.Z)
         );
         partShader.SetUniform(mvpViewProjection,
             InCamera.Matrix()
@@ -282,7 +282,7 @@ public partial class I2dCore
 
         partShader.Use();
         partShader.SetUniform(mvpModel,
-            Matrix4x4.CreateScale(1, 1, 1) * Matrix4x4.CreateTranslation(new Vector3(position, 0))
+            MathHelper.Scaling(1, 1, 1) * MathHelper.Translation(new Vector3(position, 0))
         );
         partShader.SetUniform(mvpViewProjection,
             InCamera.Matrix()
@@ -370,7 +370,7 @@ public partial class I2dCore
         s.Use();
         s.SetUniform(s.GetUniformLocation("mvp"),
             cam.Matrix() *
-            Matrix4x4.CreateScale(1, 1, 1)
+            MathHelper.Scaling(1, 1, 1)
         );
         s.SetUniform(s.GetUniformLocation("opacity"), opacity);
         s.SetUniform(s.GetUniformLocation("multColor"), color);

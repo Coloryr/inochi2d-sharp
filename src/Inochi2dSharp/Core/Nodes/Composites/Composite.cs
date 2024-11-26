@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using System.Text.Json.Nodes;
-using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes.Parts;
 
 namespace Inochi2dSharp.Core.Nodes.Composites;
@@ -293,7 +292,7 @@ public class Composite : Node
 
     private void SelfSort()
     {
-        _subParts.Sort((a, b) => a.ZSort.CompareTo(b.ZSort));
+        _subParts.Sort((a, b) => b.ZSort.CompareTo(a.ZSort));
     }
 
     private void ScanPartsRecurse(Node node)

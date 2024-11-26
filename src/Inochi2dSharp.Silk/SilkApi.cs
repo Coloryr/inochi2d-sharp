@@ -255,7 +255,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
 
     public override bool HasKHRBlendEquationAdvancedCoherent()
     {
-        return false;
+        return true;
     }
 
     public override void LineWidth(float width)

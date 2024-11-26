@@ -220,7 +220,7 @@ public class SimplePhysics : Driver
         if (anchorPos != prevPos)
         {
             _anchor = anchorPos;
-            _prevTransMat = Transform().Matrix.Copy();
+            Matrix4x4.Invert(Transform().Matrix, out _prevTransMat);
             _prevAnchorSet = true;
         }
     }
@@ -239,7 +239,7 @@ public class SimplePhysics : Driver
         if (anchorPos != prevPos)
         {
             _anchor = anchorPos;
-            _prevTransMat = Transform().Matrix.Copy();
+            Matrix4x4.Invert(Transform().Matrix, out _prevTransMat);
             _prevAnchorSet = true;
         }
     }
@@ -256,9 +256,23 @@ public class SimplePhysics : Driver
         // Transform the physics output back into local space.
         // The origin here is the anchor. This gives us the local angle.
         Vector4 localPos4;
-        localPos4 = LocalOnly ?
-        new Vector4(_output.X, _output.Y, 0, 1) :
-        (_prevAnchorSet ? _prevTransMat : Transform().Matrix.Copy()).Multiply(new Vector4(_output.X, _output.Y, 0, 1));
+        if (LocalOnly)
+        {
+            localPos4 = new Vector4(_output.X, _output.Y, 0, 1);
+        }
+        else
+        {
+            var temp1 = new Vector4(_output.X, _output.Y, 0, 1);
+            if (_prevAnchorSet)
+            {
+                localPos4 = _prevTransMat.Multiply(temp1);
+            }
+            else
+            {
+                Matrix4x4.Invert(Transform().Matrix, out var temp);
+                localPos4 = temp.Multiply(temp1);
+            }
+        }
         var localAngle = Vector2.Normalize(new Vector2(localPos4.X, localPos4.Y));
 
         // Figure out the relative length. We can work this out directly in global space.

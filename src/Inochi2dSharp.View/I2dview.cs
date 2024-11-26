@@ -14,7 +14,7 @@ public class I2dView : IDisposable
         _gl = gl;
 
         _core = new(gl, null);
-        _core.InCamera.Scale = new(1);
+        _core.InCamera.Scale = new(0.1f);
     }
 
     public void SetView(int width, int height)
@@ -32,7 +32,7 @@ public class I2dView : IDisposable
 
     public void Tick(float time)
     {
-        _core.TickTime(time);
+        //_core.TickTime(time);
         _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT | GlApi.GL_DEPTH_BUFFER_BIT);
         _core.InBeginScene();
         foreach (var item in _models)

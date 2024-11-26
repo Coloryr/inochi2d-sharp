@@ -685,19 +685,19 @@ public class Part : Drawable
 
         if (masks.Count > 0)
         {
-            InBeginMask(cMasks > 0);
+            _core.InBeginMask(cMasks > 0);
 
             foreach (var mask in masks)
             {
                 mask.MaskSrc.RenderMask(mask.Mode == MaskingMode.DodgeMask);
             }
 
-            InBeginMaskContent();
+            _core.InBeginMaskContent();
 
             // We are the content
             DrawSelf();
 
-            InEndMask();
+            _core.InEndMask();
             return;
         }
 

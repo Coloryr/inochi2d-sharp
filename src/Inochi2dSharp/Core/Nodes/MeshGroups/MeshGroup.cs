@@ -76,7 +76,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
             }
             if (!Dynamic)
             {
-                var inv = centerMatrix.Copy();
+                Matrix4x4.Invert(centerMatrix, out var inv);
                 inv[0, 3] = 0;
                 inv[1, 3] = 0;
                 inv[2, 3] = 0;
@@ -119,7 +119,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
                                                         0, 0, 1) * triangles[index].OffsetMatrices;
             }
             forwardMatrix = Transform().Matrix;
-            inverseMatrix = GlobalTransform.Matrix.Copy();
+            Matrix4x4.Invert(GlobalTransform.Matrix, out inverseMatrix);
         }
 
         UpdateNode();
@@ -340,7 +340,7 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
             Precalculate();
         }
         forwardMatrix = Transform().Matrix;
-        inverseMatrix = GlobalTransform.Matrix.Copy();
+        Matrix4x4.Invert(GlobalTransform.Matrix, out inverseMatrix);
 
         foreach (var param in par)
         {
