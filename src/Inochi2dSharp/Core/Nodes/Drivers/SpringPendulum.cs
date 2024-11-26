@@ -19,6 +19,8 @@ public class SpringPendulum : PhysicsSystem
         _driver = driver;
 
         *_bob = driver.Anchor + new Vector2(0, driver.Length);
+        _dBob->X = 0;
+        _dBob->Y = 0;
 
         AddVariable(_bob);
         AddVariable(_dBob);

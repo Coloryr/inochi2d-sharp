@@ -21,6 +21,9 @@ public class Pendulum : PhysicsSystem
 
         _bob = driver.Anchor + new Vector2(0, driver.Length);
 
+        *_angle = 0;
+        *_dAngle = 0;
+
         AddVariable(_angle);
         AddVariable(_dAngle);
     }

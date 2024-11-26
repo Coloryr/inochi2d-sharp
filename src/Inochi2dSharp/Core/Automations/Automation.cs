@@ -118,7 +118,7 @@ public class Automation(Puppet puppet)
     /// <param name="value"></param>
     /// <param name="range"></param>
     /// <returns></returns>
-    protected float RemapRange(float value, Vector2 range)
+    protected static float RemapRange(float value, Vector2 range)
     {
         return range.X + value * (range.Y - range.X);
     }
