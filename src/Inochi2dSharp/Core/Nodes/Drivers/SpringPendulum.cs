@@ -18,7 +18,7 @@ public class SpringPendulum : PhysicsSystem
         _core = core;
         _driver = driver;
 
-        *_bob = driver._anchor + new Vector2(0, driver.Length);
+        *_bob = driver.Anchor + new Vector2(0, driver.Length);
 
         AddVariable(_bob);
         AddVariable(_dBob);
@@ -29,14 +29,14 @@ public class SpringPendulum : PhysicsSystem
         // Run the spring pendulum simulation
         base.Tick(h);
 
-        _driver._output = *_bob;
+        _driver.Output = *_bob;
     }
 
     public override unsafe void DrawDebug(Matrix4x4 trans)
     {
         Vector3[] points =
         [
-            new Vector3(_driver._anchor.X, _driver._anchor.Y, 0),
+            new Vector3(_driver.Anchor.X, _driver.Anchor.Y, 0),
             new Vector3(_bob->X, _bob->Y, 0),
         ];
 
@@ -47,7 +47,7 @@ public class SpringPendulum : PhysicsSystem
 
     public override unsafe void UpdateAnchor()
     {
-        *_bob = _driver._anchor + new Vector2(0, _driver.Length);
+        *_bob = _driver.Anchor + new Vector2(0, _driver.Length);
     }
 
     protected override unsafe void Eval(float t)
@@ -60,14 +60,14 @@ public class SpringPendulum : PhysicsSystem
         float g = _driver.Gravity;
         float restLength = _driver.Length - g / springK;
 
-        var offPos = *_bob - _driver._anchor;
+        var offPos = *_bob - _driver.Anchor;
         var offPosNorm = Vector2.Normalize(offPos);
 
         float lengthRatio = _driver.Gravity / _driver.Length;
         float critDampAngle = 2 * MathF.Sqrt(lengthRatio);
         float critDampLength = 2 * springKsqrt;
 
-        float dist = float.Abs(Vector2.Distance(_driver._anchor, *_bob));
+        float dist = float.Abs(Vector2.Distance(_driver.Anchor, *_bob));
         var force = new Vector2(0, g);
         force -= offPosNorm * (dist - restLength) * springK;
         var ddBob = force;

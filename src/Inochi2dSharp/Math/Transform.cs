@@ -106,7 +106,7 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
     {
         var strs = other.Matrix * v.Matrix;
 
-        var res = Vector4.Transform(new Vector4(1, 1, 1, 1), strs);
+        var res = strs.Multiply(new Vector4(1, 1, 1, 1));
 
         var tnew = new Transform
         {

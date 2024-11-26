@@ -103,7 +103,7 @@ public class AnimationLane
         {
             // If subframe snapping is turned on then we'll only run at the framerate
             // of the animation, without any smooth interpolation on faster app rates.
-            if (snapSubframes) frame = MathF.Floor(frame);
+            if (snapSubframes) frame = float.Floor(frame);
 
             // Fallback if there's only 1 frame
             if (Frames.Count == 1) return Frames[0].Value;
@@ -120,7 +120,7 @@ public class AnimationLane
                 // update step faster than the timestep of the animation
                 // This way it won't look choppy
                 float tonext = Frames[i].Frame - frame;
-                float ilen = Frames[i].Frame - (float)Frames[i - 1].Frame;
+                float ilen = (float)Frames[i].Frame - Frames[i - 1].Frame;
                 float t = 1 - (tonext / ilen);
 
                 // Interpolation tension 0->1

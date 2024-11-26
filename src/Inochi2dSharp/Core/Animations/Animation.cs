@@ -87,44 +87,37 @@ public class Animation
     /// <param name="data"></param>
     public void Deserialize(JsonObject data)
     {
-        var temp = data["timestep"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("timestep", out var temp) && temp != null)
         {
-            Timestep = (float)temp;
+            Timestep = temp.GetValue<float>();
         }
 
-        temp = data["additive"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("additive", out temp) && temp != null)
         {
-            _additive = (bool)temp;
+            _additive = temp.GetValue<bool>();
         }
 
-        temp = data["animationWeight"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("animationWeight", out temp) && temp != null)
         {
-            _animationWeight = (float)temp;
+            _animationWeight = temp.GetValue<float>();
         }
 
-        temp = data["length"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("length", out temp) && temp != null)
         {
-            Length = (int)temp;
+            Length = temp.GetValue<int>();
         }
 
-        temp = data["leadIn"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("leadIn", out temp) && temp != null)
         {
-            LeadIn = (int)temp;
+            LeadIn = temp.GetValue<int>();
         }
 
-        temp = data["leadOut"];
-        if (temp != null)
+        if (data.TryGetPropertyValue("leadOut", out temp) && temp != null)
         {
-            LeadOut = (int)temp;
+            LeadOut = temp.GetValue<int>();
         }
 
-        temp = data["lanes"];
-        if (temp is JsonArray array)
+        if (data.TryGetPropertyValue("lanes", out temp) && temp is JsonArray array)
         {
             foreach (JsonObject item in array.Cast<JsonObject>())
             {

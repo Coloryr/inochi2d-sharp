@@ -259,7 +259,6 @@ public class Puppet : IDisposable
             // Update parameters
             foreach (var parameter in Parameters)
             {
-
                 if (!EnableDrivers || !DrivenParameters.ContainsKey(parameter))
                     parameter.Update();
             }

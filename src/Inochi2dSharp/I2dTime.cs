@@ -62,6 +62,5 @@ public class I2dTime(Func<float>? timeFunc)
     {
         _deltaTime = time;
         _currentTime += time;
-        _lastTime += time;
     }
 }

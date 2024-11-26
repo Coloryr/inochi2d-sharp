@@ -19,7 +19,7 @@ public class Pendulum : PhysicsSystem
         _driver = driver;
         _core = core;
 
-        _bob = driver._anchor + new Vector2(0, driver.Length);
+        _bob = driver.Anchor + new Vector2(0, driver.Length);
 
         AddVariable(_angle);
         AddVariable(_dAngle);
@@ -35,23 +35,23 @@ public class Pendulum : PhysicsSystem
     public override unsafe void Tick(float h)
     {
         // Compute the angle against the updated anchor position
-        var dBob = _bob - _driver._anchor;
-        *_angle = float.Atan2(-dBob.X, dBob.Y);
+        var dBob = _bob - _driver.Anchor;
+        *_angle = MathF.Atan2(-dBob.X, dBob.Y);
 
         // Run the pendulum simulation in terms of angle
         base.Tick(h);
 
         // Update the bob position at the new angle
-        dBob = new(-float.Sin(*_angle), float.Cos(*_angle));
-        _bob = _driver._anchor + dBob * _driver.Length;
+        dBob = new(-MathF.Sin(*_angle), MathF.Cos(*_angle));
+        _bob = _driver.Anchor + dBob * _driver.Length;
 
-        _driver._output = _bob;
+        _driver.Output = _bob;
     }
 
     public override void DrawDebug(Matrix4x4 trans)
     {
         Vector3[] points = [
-            new Vector3(_driver._anchor.X, _driver._anchor.Y, 0),
+            new Vector3(_driver.Anchor.X, _driver.Anchor.Y, 0),
             new Vector3(_bob.X, _bob.Y, 0),
         ];
 
@@ -62,7 +62,7 @@ public class Pendulum : PhysicsSystem
 
     public override void UpdateAnchor()
     {
-        _bob = _driver._anchor + new Vector2(0, _driver.Length);
+        _bob = _driver.Anchor + new Vector2(0, _driver.Length);
     }
 
     protected override unsafe void Eval(float t)

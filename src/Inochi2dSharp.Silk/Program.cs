@@ -34,32 +34,24 @@ internal class Program
         {
             khr = new KhrBlendEquationAdvanced(window.GLContext);
             gl = window.CreateOpenGL();
-            var error = gl.GetError();
             view = new I2dView(new SilkApi(gl, khr));
-            error = gl.GetError();
             view.SetView(window.Size.X, window.Size.Y);
-            error = gl.GetError();
-            view.LoadModel("E:\\temp_code\\example-models\\Midori.inx");
-            error = gl.GetError();
+            view?.LoadModel("E:\\temp_code\\example-models\\Midori.inx");
         };
 
         // Handle resizes
         window.FramebufferResize += s =>
         {
-            var error = gl.GetError();
             // Adjust the viewport to the new window size
             gl?.Viewport(s);
 
             view?.SetView(s.X, s.Y);
-            error = gl.GetError();
         };
 
         // The render function
         window.Render += delta =>
         {
-            var error = gl.GetError();
             view?.Tick((float)delta);
-            error = gl.GetError();
         };
 
         // The closing function

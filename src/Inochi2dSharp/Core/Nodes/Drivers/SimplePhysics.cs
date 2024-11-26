@@ -61,9 +61,9 @@ public class SimplePhysics : Driver
 
     public bool _prevAnchorSet = false;
 
-    public Vector2 _anchor = new(0, 0);
+    public Vector2 Anchor = new(0, 0);
 
-    public Vector2 _output;
+    public Vector2 Output;
 
     public PhysicsSystem _system;
 
@@ -201,7 +201,7 @@ public class SimplePhysics : Driver
             var anchorPos = LocalOnly ?
                 new Vector4(TransformLocal().Translation, 1) :
                 Transform().Matrix.Multiply(new Vector4(0, 0, 0, 1));
-            _anchor = new Vector2(anchorPos.X, anchorPos.Y);
+            Anchor = new Vector2(anchorPos.X, anchorPos.Y);
         }
     }
 
@@ -218,7 +218,7 @@ public class SimplePhysics : Driver
         var anchorPos = new Vector2(temp.X, temp.Y);
         if (anchorPos != prevPos)
         {
-            _anchor = anchorPos;
+            Anchor = anchorPos;
             Matrix4x4.Invert(Transform().Matrix, out _prevTransMat);
             _prevAnchorSet = true;
         }
@@ -237,7 +237,7 @@ public class SimplePhysics : Driver
         var anchorPos = new Vector2(temp.X, temp.Y);
         if (anchorPos != prevPos)
         {
-            _anchor = anchorPos;
+            Anchor = anchorPos;
             Matrix4x4.Invert(Transform().Matrix, out _prevTransMat);
             _prevAnchorSet = true;
         }
@@ -257,11 +257,11 @@ public class SimplePhysics : Driver
         Vector4 localPos4;
         if (LocalOnly)
         {
-            localPos4 = new Vector4(_output.X, _output.Y, 0, 1);
+            localPos4 = new Vector4(Output.X, Output.Y, 0, 1);
         }
         else
         {
-            var temp1 = new Vector4(_output.X, _output.Y, 0, 1);
+            var temp1 = new Vector4(Output.X, Output.Y, 0, 1);
             if (_prevAnchorSet)
             {
                 localPos4 = _prevTransMat.Multiply(temp1);
@@ -275,7 +275,7 @@ public class SimplePhysics : Driver
         var localAngle = Vector2.Normalize(new Vector2(localPos4.X, localPos4.Y));
 
         // Figure out the relative length. We can work this out directly in global space.
-        var relLength = Vector2.Distance(_output, _anchor) / Length;
+        var relLength = Vector2.Distance(Output, Anchor) / Length;
 
         Vector2 paramVal;
         switch (MapMode)
