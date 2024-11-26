@@ -37,7 +37,6 @@ internal class Program
             view = new I2dView(new SilkApi(gl, khr));
             view.SetView(window.Size.X, window.Size.Y);
             var model = view.LoadModel("E:\\temp_code\\example-models\\Midori.inx");
-            model.Dispose();
         };
 
         // Handle resizes

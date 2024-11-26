@@ -437,8 +437,17 @@ public abstract class Drawable : Node
     public override void Dispose()
     {
         base.Dispose();
-        _core.gl.DeleteBuffer(_ibo);
-        _core.gl.DeleteBuffer(Vbo);
-        _core.gl.DeleteBuffer(Dbo);
+        if (_ibo > 0)
+        {
+            _core.gl.DeleteBuffer(_ibo);
+        }
+        if (Vbo > 0)
+        {
+            _core.gl.DeleteBuffer(Vbo);
+        }
+        if (Dbo > 0)
+        {
+            _core.gl.DeleteBuffer(Dbo);
+        }
     }
 }

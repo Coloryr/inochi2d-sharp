@@ -735,6 +735,9 @@ public class Puppet : IDisposable
         }
         ScanParts(Root, true);
         SelfSort();
+#if DEBUG
+        Console.WriteLine(ToString());
+#endif
     }
 
     /// <summary>
@@ -777,14 +780,16 @@ public class Puppet : IDisposable
         {
             item.Dispose();
         }
+        RootParts.Clear();
         foreach (var item in Drivers)
         {
             item.Dispose();
         }
-
+        Drivers.Clear();
         foreach (var item in TextureSlots)
-        { 
-            
+        {
+            item.Dispose();
         }
+        TextureSlots.Clear();
     }
 }
