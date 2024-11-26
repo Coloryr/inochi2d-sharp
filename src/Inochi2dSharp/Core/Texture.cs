@@ -300,6 +300,7 @@ public class Texture : IDisposable
         if (Id > 0)
         {
             _core.gl.DeleteTexture(Id);
+            _core.InUnloadUUID(UUID);
             Id = 0;
         }
     }

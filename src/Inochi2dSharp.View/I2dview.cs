@@ -24,7 +24,7 @@ public class I2dView : IDisposable
 
     public I2dModel LoadModel(string file)
     {
-        var model = new I2dModel(_core.InLoadPuppet(file));
+        var model = new I2dModel(file, _core.InLoadPuppet(file));
         _models.Add(model);
 
         return model;

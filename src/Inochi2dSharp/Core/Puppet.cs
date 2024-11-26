@@ -254,7 +254,6 @@ public class Puppet : IDisposable
 
         if (RenderParameters)
         {
-
             // Update parameters
             foreach (var parameter in Parameters)
             {
@@ -583,6 +582,37 @@ public class Puppet : IDisposable
         return ToStringBranch(Root, 0);
     }
 
+    public string GetParametersString()
+    {
+        var str = new StringBuilder();
+
+        int nameLength = Parameters.Max(d => d.Name.Length);
+        int isVec2Length = Parameters.Max(d => d.IsVec2.ToString().Length);
+        int nowLength = Parameters.Max(d => d.Value.ToString().Length);
+        int minLength = Parameters.Max(d => d.Min.ToString().Length);
+        int defaultLength = Parameters.Max(d => d.Defaults.ToString().Length);
+        int maxLength = Parameters.Max(d => d.Max.ToString().Length);
+
+        int arg1 = int.Max(nameLength, minLength - 4);
+        int arg2 = int.Max(isVec2Length, defaultLength);
+        int arg3 = int.Max(nowLength, maxLength);
+
+        foreach (var data in Parameters)
+        {
+            string formattedOutput =
+                $"Name: {data.Name.PadRight(arg1)} " +
+                $"IsVec2: {data.IsVec2.ToString().PadRight(arg2)}  " +
+                $"Now: {data.Value.ToString().PadRight(arg3)}\n" +
+                $"     Min: {data.Min.ToString().PadRight(arg1 - 4)} " +
+                $"Default: {data.Defaults.ToString().PadRight(arg2)} " +
+                $"Max: {data.Max.ToString().PadRight(arg3)}";
+
+            str.AppendLine(formattedOutput);
+        }
+
+        return str.ToString();
+    }
+
     public void SerializeSelf(JsonObject serializer)
     {
         var obj = new JsonObject();
@@ -735,9 +765,6 @@ public class Puppet : IDisposable
         }
         ScanParts(Root, true);
         SelfSort();
-#if DEBUG
-        Console.WriteLine(ToString());
-#endif
     }
 
     /// <summary>
@@ -774,8 +801,11 @@ public class Puppet : IDisposable
     {
         Animations.Clear();
         Automation.Clear();
+        foreach (var item in Parameters)
+        {
+            item.Dispose();
+        }
         Parameters.Clear();
-
         foreach (var item in RootParts)
         {
             item.Dispose();
