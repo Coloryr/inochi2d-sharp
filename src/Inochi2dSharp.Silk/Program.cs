@@ -1,4 +1,5 @@
-﻿using Inochi2dSharp.Silk;
+﻿using System.Numerics;
+using Inochi2dSharp.Silk;
 using Inochi2dSharp.View;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.KHR;

@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using System.Text.Json.Nodes;
-using Inochi2dSharp;
 using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Phys;
@@ -200,8 +199,8 @@ public class SimplePhysics : Driver
         else
         {
             var anchorPos = LocalOnly ?
-                (new Vector4(TransformLocal().Translation, 1)) :
-                (Transform().Matrix.Multiply(new Vector4(0, 0, 0, 1)));
+                new Vector4(TransformLocal().Translation, 1) :
+                Transform().Matrix.Multiply(new Vector4(0, 0, 0, 1));
             _anchor = new Vector2(anchorPos.X, anchorPos.Y);
         }
     }

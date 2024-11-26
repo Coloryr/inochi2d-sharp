@@ -61,7 +61,7 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
     {
         Matrix =
             MathHelper.Translation(Translation) *
-            Matrix4x4.CreateFromYawPitchRoll(Rotation.Z, Rotation.Y, Rotation.X) *
+            MathHelper.EulerRotation(Rotation.X, Rotation.Y, Rotation.Z).ToMatrix() * 
             MathHelper.Scaling(Scale.X, Scale.Y, 1);
     }
 

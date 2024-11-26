@@ -177,4 +177,56 @@ public static class MathHelper
 
         return ret;
     }
+
+    public static Quaternion EulerRotation(float roll, float pitch, float yaw)
+    {
+        var ret = new Quaternion();
+
+        float cr = MathF.Cos(roll / 2.0f);
+        float cp = MathF.Cos(pitch / 2.0f);
+        float cy = MathF.Cos(yaw / 2.0f);
+        float sr = MathF.Sin(roll / 2.0f);
+        float sp = MathF.Sin(pitch / 2.0f);
+        float sy = MathF.Sin(yaw / 2.0f);
+
+        ret.W = cr * cp * cy + sr * sp * sy;
+        ret.X = sr * cp * cy - cr * sp * sy;
+        ret.Y = cr * sp * cy + sr * cp * sy;
+        ret.Z = cr * cp * sy - sr * sp * cy;
+
+        return ret;
+    }
+
+    public static Matrix4x4 ToMatrix(this Quaternion quaternion)
+    {
+        float x = quaternion.X;
+        float y = quaternion.Y;
+        float z = quaternion.Z;
+        float w = quaternion.W;
+
+        var ret = Matrix4x4.Identity;
+        float xx = MathF.Pow(x, 2);
+        float xy = x * y;
+        float xz = x * z;
+        float xw = x * w;
+        float yy = MathF.Pow(y, 2);
+        float yz = y * z;
+        float yw = y * w;
+        float zz = MathF.Pow(z, 2);
+        float zw = z * w;
+
+        ret[0, 0] = 1 - 2 * (yy + zz);
+        ret[0, 1] = 2 * (xy - zw);
+        ret[0, 2] = 2 * (xz + yw);
+
+        ret[1, 0] = 2 * (xy + zw);
+        ret[1, 1] = 1 - 2 * (xx + zz);
+        ret[1, 2] = 2 * (yz - xw);
+
+        ret[2, 0] = 2 * (xz - yw);
+        ret[2, 1] = 2 * (yz + xw);
+        ret[2, 2] = 1 - 2 * (xx + yy);
+
+        return ret;
+    }
 }
