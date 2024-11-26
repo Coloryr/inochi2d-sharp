@@ -13,7 +13,7 @@ public partial class I2dCore
     /// <returns></returns>
     public float IncGetMaxAnisotropy()
     {
-        return gl.GetFloat(GlApi.GL_MAX_TEXTURE_MAX_ANISOTROPY);
+        return gl.GetFloatv(GlApi.GL_MAX_TEXTURE_MAX_ANISOTROPY);
     }
 
     /// <summary>

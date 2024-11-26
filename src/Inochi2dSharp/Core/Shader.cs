@@ -41,37 +41,37 @@ public class Shader : IDisposable
 
     public void SetUniform(int uniform, bool value)
     {
-        _core.gl.Uniform1(uniform, value ? 1 : 0);
+        _core.gl.Uniform1i(uniform, value ? 1 : 0);
     }
 
     public void SetUniform(int uniform, int value)
     {
-        _core.gl.Uniform1(uniform, value);
+        _core.gl.Uniform1i(uniform, value);
     }
 
     public void SetUniform(int uniform, float value)
     {
-        _core.gl.Uniform1(uniform, value);
+        _core.gl.Uniform1f(uniform, value);
     }
 
     public void SetUniform(int uniform, Vector2 value)
     {
-        _core.gl.Uniform2(uniform, value.X, value.Y);
+        _core.gl.Uniform2f(uniform, value.X, value.Y);
     }
 
     public void SetUniform(int uniform, Vector3 value)
     {
-        _core.gl.Uniform3(uniform, value.X, value.Y, value.Z);
+        _core.gl.Uniform3f(uniform, value.X, value.Y, value.Z);
     }
 
     public void SetUniform(int uniform, Vector4 value)
     {
-        _core.gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
+        _core.gl.Uniform4f(uniform, value.X, value.Y, value.Z, value.W);
     }
 
     public unsafe void SetUniform(int uniform, Matrix4x4 value)
     {
-        _core.gl.UniformMatrix4(uniform, 1, true, new(&value));
+        _core.gl.UniformMatrix4fv(uniform, 1, true, new(&value));
     }
 
     private void CompileShaders(string vertex, string fragment)

@@ -100,50 +100,12 @@ public abstract class GlApi
     public abstract void DeleteShader(uint shader);
     public abstract void UseProgram(uint program);
     public abstract int GetUniformLocation(uint programObj, string name);
-    /// <summary>
-    /// Uniform1i
-    /// </summary>
-    /// <param name="location"></param>
-    /// <param name="v0"></param>
-    public abstract void Uniform1(int location, int v0);
-    /// <summary>
-    /// Uniform1f
-    /// </summary>
-    /// <param name="location"></param>
-    /// <param name="v0"></param>
-    public abstract void Uniform1(int location, float v0);
-    /// <summary>
-    /// Uniform2f
-    /// </summary>
-    /// <param name="location"></param>
-    /// <param name="v0"></param>
-    /// <param name="v1"></param>
-    public abstract void Uniform2(int location, float v0, float v1);
-    /// <summary>
-    /// Uniform3f
-    /// </summary>
-    /// <param name="location"></param>
-    /// <param name="v0"></param>
-    /// <param name="v1"></param>
-    /// <param name="v2"></param>
-    public abstract void Uniform3(int location, float v0, float v1, float v2);
-    /// <summary>
-    /// Uniform4f
-    /// </summary>
-    /// <param name="location"></param>
-    /// <param name="v0"></param>
-    /// <param name="v1"></param>
-    /// <param name="v2"></param>
-    /// <param name="v3"></param>
-    public abstract void Uniform4(int location, float v0, float v1, float v2, float v3);
-    /// <summary>
-    /// UniformMatrix4fv
-    /// </summary>
-    /// <param name="location"></param>
-    /// <param name="count"></param>
-    /// <param name="transpose"></param>
-    /// <param name="value"></param>
-    public abstract void UniformMatrix4(int location, int count, bool transpose, nint value);
+    public abstract void Uniform1i(int location, int v0);
+    public abstract void Uniform1f(int location, float v0);
+    public abstract void Uniform2f(int location, float v0, float v1);
+    public abstract void Uniform3f(int location, float v0, float v1, float v2);
+    public abstract void Uniform4f(int location, float v0, float v1, float v2, float v3);
+    public abstract void UniformMatrix4fv(int location, int count, bool transpose, nint value);
     public abstract void Viewport(int x, int y, int width, int height);
     public abstract void BindVertexArray(uint array);
     public abstract void Disable(uint cap);
@@ -163,63 +125,30 @@ public abstract class GlApi
     public abstract void BindBuffer(uint target, uint buffer);
     public abstract void BufferData(uint target, int size, nint data, uint usage);
     public abstract uint GenBuffer();
-    public abstract void DrawElements(uint mode, int count, uint type, int indices);
+    public abstract void DrawElements(uint mode, int count, uint type, nint indices);
     public abstract uint GenVertexArray();
     public abstract uint GenFramebuffer();
     public abstract uint GenTexture();
     public abstract void BindFramebuffer(uint target, uint framebuffer);
     public abstract void FramebufferTexture2D(uint target, uint attachment, uint textarget, uint texture, int level);
-    /// <summary>
-    /// Enablei
-    /// </summary>
-    /// <param name="target"></param>
-    /// <param name="index"></param>
-    public abstract void Enable(uint target, uint index);
+    public abstract void Enablei(uint target, uint index);
     public abstract void DrawBuffers(int n, uint[] bufs);
     public abstract void ClearColor(float red, float green, float blue, float alpha);
     public abstract void Clear(uint mask);
     public abstract void Flush();
-    /// <summary>
-    /// Disablei
-    /// </summary>
-    /// <param name="target"></param>
-    /// <param name="index"></param>
-    public abstract void Disable(uint target, int index);
+    public abstract void Disablei(uint target, int index);
     public abstract void GenerateMipmap(uint target);
     public abstract void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, uint mask, uint filter);
     public abstract void TexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels);
-    public abstract void TexParameterI(uint target, uint pname, uint arg);
+    public abstract void TexParameteri(uint target, uint pname, uint arg);
     public abstract void GetTexImage(uint target, int level, uint format, uint type, nint pixels);
     public abstract void PointSize(float size);
     public abstract void LineWidth(float width);
     public abstract void DeleteTexture(uint textures);
-    /// <summary>
-    /// TexParameterf
-    /// </summary>
-    /// <param name="target"></param>
-    /// <param name="pname"></param>
-    /// <param name="param"></param>
-    public abstract void TexParameter(uint target, uint pname, float param);
-    /// <summary>
-    /// PixelStorei
-    /// </summary>
-    /// <param name="pname"></param>
-    /// <param name="param"></param>
-    public abstract void PixelStore(uint pname, int param);
-    /// <summary>
-    /// GetFloatv
-    /// </summary>
-    /// <param name="pname"></param>
-    /// <param name="index"></param>
-    /// <param name="res"></param>
-    public abstract float GetFloat(uint pname);
-    /// <summary>
-    /// TexParameterfv
-    /// </summary>
-    /// <param name="target"></param>
-    /// <param name="pname"></param>
-    /// <param name="arg"></param>
-    public abstract void TexParameter(uint target, uint pname, float[] arg);
+    public abstract void TexParameterf(uint target, uint pname, float param);
+    public abstract void PixelStorei(uint pname, int param);
+    public abstract float GetFloatv(uint pname);
+    public abstract void TexParameterfv(uint target, uint pname, nint arg);
     public abstract void TexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, nint pixels);
     public abstract void ClearStencil(int s);
     public abstract void StencilMask(int mask);

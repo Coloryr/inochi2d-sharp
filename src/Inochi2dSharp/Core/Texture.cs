@@ -132,13 +132,13 @@ public class Texture : IDisposable
     public void SetFiltering(Filtering filtering)
     {
         Bind();
-        _core.gl.TexParameterI(
+        _core.gl.TexParameteri(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MIN_FILTER,
             filtering == Filtering.Linear ? GlApi.GL_LINEAR_MIPMAP_LINEAR : GlApi.GL_NEAREST
         );
 
-        _core.gl.TexParameterI(
+        _core.gl.TexParameteri(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MAG_FILTER,
             filtering == Filtering.Linear ? GlApi.GL_LINEAR : GlApi.GL_NEAREST
@@ -148,7 +148,7 @@ public class Texture : IDisposable
     public void SetAnisotropy(float value)
     {
         Bind();
-        _core.gl.TexParameter(
+        _core.gl.TexParameterf(
             GlApi.GL_TEXTURE_2D,
             GlApi.GL_TEXTURE_MAX_ANISOTROPY,
             float.Clamp(value, 1, _core.IncGetMaxAnisotropy())
@@ -159,12 +159,16 @@ public class Texture : IDisposable
     /// Set the wrapping mode used for the texture
     /// </summary>
     /// <param name="wrapping"></param>
-    public void SetWrapping(Wrapping wrapping)
+    public unsafe void SetWrapping(Wrapping wrapping)
     {
         Bind();
-        _core.gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_S, (uint)wrapping);
-        _core.gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_T, (uint)wrapping);
-        _core.gl.TexParameter(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_BORDER_COLOR, [0f, 0f, 0f, 0f]);
+        _core.gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_S, (uint)wrapping);
+        _core.gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_WRAP_T, (uint)wrapping);
+        float[] temp = [0f, 0f, 0f, 0f];
+        fixed (void* ptr = temp)
+        {
+            _core.gl.TexParameterfv(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_BORDER_COLOR, new nint(ptr));
+        }
     }
 
     /// <summary>
@@ -174,8 +178,8 @@ public class Texture : IDisposable
     public unsafe void SetData(byte[] data)
     {
         Bind();
-        _core.gl.PixelStore(GlApi.GL_UNPACK_ALIGNMENT, 1);
-        _core.gl.PixelStore(GlApi.GL_PACK_ALIGNMENT, 1);
+        _core.gl.PixelStorei(GlApi.GL_UNPACK_ALIGNMENT, 1);
+        _core.gl.PixelStorei(GlApi.GL_PACK_ALIGNMENT, 1);
         fixed (void* ptr = data)
         {
             _core.gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, OutColorMode, Width, Height, 0, InColorMode, GlApi.GL_UNSIGNED_BYTE, new nint(ptr));

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Silk.NET.OpenGL;
+﻿using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.KHR;
 
 namespace Inochi2dSharp.Silk;
@@ -135,7 +130,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.Disable((GLEnum)cap);
     }
 
-    public override void Disable(uint target, int index)
+    public override void Disablei(uint target, int index)
     {
         gl.Disable((GLEnum)target, (uint)index);
     }
@@ -158,7 +153,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         }
     }
 
-    public override unsafe void DrawElements(uint mode, int count, uint type, int indices)
+    public override unsafe void DrawElements(uint mode, int count, uint type, nint indices)
     {
         gl.DrawElements((GLEnum)mode, (uint)count, (GLEnum)type, (void*)indices);
     }
@@ -168,7 +163,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.Enable((GLEnum)cap);
     }
 
-    public override void Enable(uint target, uint index)
+    public override void Enablei(uint target, uint index)
     {
         gl.Enable((GLEnum)target, index);
     }
@@ -218,7 +213,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         return (int)gl.GetError();
     }
 
-    public override float GetFloat(uint pname)
+    public override float GetFloatv(uint pname)
     {
         return gl.GetFloat((GLEnum)pname);
     }
@@ -273,7 +268,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.LinkProgram(program);
     }
 
-    public override void PixelStore(uint pname, int param)
+    public override void PixelStorei(uint pname, int param)
     {
         gl.PixelStore((GLEnum)pname, param);
     }
@@ -308,19 +303,19 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.TexImage2D((GLEnum)target, level, (int)internalformat, (uint)width, (uint)height, border, (GLEnum)format, (GLEnum)type, (void*)pixels);
     }
 
-    public override void TexParameter(uint target, uint pname, float param)
+    public override void TexParameterf(uint target, uint pname, float param)
     {
         gl.TexParameter((GLEnum)target, (GLEnum)pname, param);
     }
 
-    public override void TexParameter(uint target, uint pname, float[] arg)
+    public override void TexParameterfv(uint target, uint pname, nint arg)
     {
         gl.TexParameter((GLEnum)target, (GLEnum)pname, arg);
     }
 
-    public override unsafe void TexParameterI(uint target, uint pname, uint arg)
+    public override unsafe void TexParameteri(uint target, uint pname, uint arg)
     {
-        gl.TexParameterI((GLEnum)target, (GLEnum)pname, (int)arg);
+        gl.TexParameter((GLEnum)target, (GLEnum)pname, (int)arg);
     }
 
     public override unsafe void TexSubImage2D(uint target, int level, int xoffset, int yoffset, int width, int height, uint format, uint type, nint pixels)
@@ -328,32 +323,32 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.TexSubImage2D((GLEnum)target, level, xoffset, yoffset, (uint)width, (uint)height, (GLEnum)format, (GLEnum)type, (void*)pixels);
     }
 
-    public override void Uniform1(int location, int v0)
+    public override void Uniform1i(int location, int v0)
     {
         gl.Uniform1(location, v0);
     }
 
-    public override void Uniform1(int location, float v0)
+    public override void Uniform1f(int location, float v0)
     {
         gl.Uniform1(location, v0);
     }
 
-    public override void Uniform2(int location, float v0, float v1)
+    public override void Uniform2f(int location, float v0, float v1)
     {
         gl.Uniform2(location, v0, v1);
     }
 
-    public override void Uniform3(int location, float v0, float v1, float v2)
+    public override void Uniform3f(int location, float v0, float v1, float v2)
     {
         gl.Uniform3(location, v0, v1, v2);
     }
 
-    public override void Uniform4(int location, float v0, float v1, float v2, float v3)
+    public override void Uniform4f(int location, float v0, float v1, float v2, float v3)
     {
         gl.Uniform4(location, v0, v1, v2, v3);
     }
 
-    public override unsafe void UniformMatrix4(int location, int count, bool transpose, nint value)
+    public override unsafe void UniformMatrix4fv(int location, int count, bool transpose, nint value)
     {
         gl.UniformMatrix4(location, (uint)count, transpose, (float*)value);
     }

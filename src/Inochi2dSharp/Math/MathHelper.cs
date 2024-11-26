@@ -120,4 +120,61 @@ public static class MathHelper
 
         return (a * (t * t * t) + b * (t * t) + c * t + d);
     }
+
+    public static Matrix4x4 Orthographic(float left, float right, float bottom, float top, float near, float far)
+    {
+        var ret = new Matrix4x4();
+
+        ret[0, 0] = 2 / (right - left);
+        ret[0, 3] = -(right + left) / (right - left);
+        ret[1, 1] = 2 / (top - bottom);
+        ret[1, 3] = -(top + bottom) / (top - bottom);
+        ret[2, 2] = -2 / (far - near);
+        ret[2, 3] = -(far + near) / (far - near);
+        ret[3, 3] = 1;
+
+        return ret;
+    }
+
+    public static Matrix4x4 Translation(float x, float y, float z)
+    {
+        var ret = Matrix4x4.Identity;
+
+        ret[0, 3] = x;
+        ret[1, 3] = y;
+        ret[2, 3] = z;
+
+        return ret;
+    }
+
+    public static Matrix4x4 Translation(Vector3 vector)
+    {
+        return Translation(vector.X, vector.Y, vector.Z);
+    }
+
+    public static Matrix4x4 ZRotation(float alpha)
+    {
+        var ret = Matrix4x4.Identity;
+
+        float cosamt = MathF.Cos(alpha);
+        float sinamt = MathF.Sin(alpha);
+
+        ret[0, 0] = cosamt;
+        ret[0, 1] = -sinamt;
+        ret[1, 0] = sinamt;
+        ret[1, 1] = cosamt;
+
+        return ret;
+    }
+
+    public static Matrix4x4 Scaling(float x, float y, float z)
+    {
+        var ret = Matrix4x4.Identity;
+
+        ret[0, 0] = x;
+        ret[1, 1] = y;
+        ret[2, 2] = y;
+
+        return ret;
+    }
 }

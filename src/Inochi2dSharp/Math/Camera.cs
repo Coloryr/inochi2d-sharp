@@ -57,10 +57,11 @@ public class Camera(I2dCore core)
         var origin = new Vector2(realSize.X / 2, realSize.Y / 2);
         var pos = new Vector3(Position.X, Position.Y, -(ushort.MaxValue / 2));
 
-        return
-            Matrix4x4.CreateOrthographicOffCenter(0f, realSize.X, realSize.Y, 0, 0, ushort.MaxValue) *
-            Matrix4x4.CreateTranslation(origin.X, origin.Y, 0) *
-            Matrix4x4.CreateRotationZ(Rotation) *
-            Matrix4x4.CreateTranslation(pos);
+        var temp = MathHelper.Orthographic(0f, realSize.X, realSize.Y, 0, 0, ushort.MaxValue);
+        var temp1 = MathHelper.Translation(origin.X, origin.Y, 0);
+        var temp2 = MathHelper.ZRotation(Rotation);
+        var temp3 = MathHelper.Translation(pos);
+
+        return temp * temp1 * temp2 * temp3;
     }
 }

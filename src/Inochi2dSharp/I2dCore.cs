@@ -143,10 +143,10 @@ public partial class I2dCore : IDisposable
             Matrix4x4.Identity
         );
         shaderToUse.Shader.SetUniform(shaderToUse.GetUniform("mvpView"),
-            Matrix4x4.CreateTranslation(area.X, area.Y, 0)
+            MathHelper.Translation(area.X, area.Y, 0)
         );
         shaderToUse.Shader.SetUniform(shaderToUse.GetUniform("mvpProjection"),
-           Matrix4x4.CreateOrthographicOffCenter(0, area.Z, area.W, 0, 0, float.Max(area.Z, area.W))
+            MathHelper.Orthographic(0, area.Z, area.W, 0, 0, float.Max(area.Z, area.W))
         );
 
         // Ambient light
@@ -208,9 +208,9 @@ public partial class I2dCore : IDisposable
     {
         gl.BindVertexArray(_sceneVAO);
         gl.Enable(GlApi.GL_BLEND);
-        gl.Enable(GlApi.GL_BLEND, 0);
-        gl.Enable(GlApi.GL_BLEND, 1);
-        gl.Enable(GlApi.GL_BLEND, 2);
+        gl.Enablei(GlApi.GL_BLEND, 0);
+        gl.Enablei(GlApi.GL_BLEND, 1);
+        gl.Enablei(GlApi.GL_BLEND, 2);
         gl.Disable(GlApi.GL_DEPTH_TEST);
         gl.Disable(GlApi.GL_CULL_FACE);
 
@@ -283,9 +283,9 @@ public partial class I2dCore : IDisposable
     {
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, 0);
 
-        gl.Disable(GlApi.GL_BLEND, 0);
-        gl.Disable(GlApi.GL_BLEND, 1);
-        gl.Disable(GlApi.GL_BLEND, 2);
+        gl.Disablei(GlApi.GL_BLEND, 0);
+        gl.Disablei(GlApi.GL_BLEND, 1);
+        gl.Disablei(GlApi.GL_BLEND, 2);
         gl.Enable(GlApi.GL_DEPTH_TEST);
         gl.Enable(GlApi.GL_CULL_FACE);
         gl.Disable(GlApi.GL_BLEND);
@@ -469,18 +469,18 @@ public partial class I2dCore : IDisposable
         // Render Framebuffer
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _fAlbedo);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _fEmissive);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_FLOAT, 0);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _fBump);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _fStencil);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);
@@ -494,18 +494,18 @@ public partial class I2dCore : IDisposable
         // Composite framebuffer
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _cfAlbedo);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _cfEmissive);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_FLOAT, 0);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _cfBump);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_RGBA, width, height, 0, GlApi.GL_RGBA, GlApi.GL_UNSIGNED_BYTE, 0);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
-        gl.TexParameterI(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MIN_FILTER, GlApi.GL_LINEAR);
+        gl.TexParameteri(GlApi.GL_TEXTURE_2D, GlApi.GL_TEXTURE_MAG_FILTER, GlApi.GL_LINEAR);
 
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _cfStencil);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);

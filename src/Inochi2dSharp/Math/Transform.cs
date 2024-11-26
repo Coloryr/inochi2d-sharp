@@ -60,9 +60,9 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
     public void Update()
     {
         Matrix =
-            Matrix4x4.CreateTranslation(Translation) *
+            MathHelper.Translation(Translation) *
             Matrix4x4.CreateFromYawPitchRoll(Rotation.Z, Rotation.Y, Rotation.X) *
-            Matrix4x4.CreateScale(Scale.X, Scale.Y, 1);
+            MathHelper.Scaling(Scale.X, Scale.Y, 1);
     }
 
     public void Clear()
