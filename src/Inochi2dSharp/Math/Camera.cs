@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Inochi2dSharp.Core;
 
 namespace Inochi2dSharp.Math;
 

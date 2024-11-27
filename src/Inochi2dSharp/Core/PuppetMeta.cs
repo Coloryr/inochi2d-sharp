@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core;
 
@@ -53,79 +54,72 @@ public record PuppetMeta
     /// </summary>
     public bool PreservePixels { get; set; }
 
-    public void Serialize(JsonObject serializer)
+    public void Serialize(JsonObject data)
     {
-        serializer.Add("name", Name);
-        serializer.Add("version", Version);
-        serializer.Add("rigger", Rigger);
-        serializer.Add("artist", Artist);
+        data.Add("name", Name);
+        data.Add("version", Version);
+        data.Add("rigger", Rigger);
+        data.Add("artist", Artist);
         var obj = new JsonObject();
         Rights.Serialize(obj);
-        serializer.Add("rights", obj);
-        serializer.Add("copyright", Copyright);
-        serializer.Add("licenseURL", LicenseURL);
-        serializer.Add("contact", Contact);
-        serializer.Add("reference", Reference);
-        serializer.Add("thumbnailId", ThumbnailId);
-        serializer.Add("preservePixels", PreservePixels);
+        data.Add("rights", obj);
+        data.Add("copyright", Copyright);
+        data.Add("licenseURL", LicenseURL);
+        data.Add("contact", Contact);
+        data.Add("reference", Reference);
+        data.Add("thumbnailId", ThumbnailId);
+        data.Add("preservePixels", PreservePixels);
     }
 
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("name", out var temp) && temp != null)
-        {
-            Name = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("version", out temp) && temp != null)
-        {
-            Version = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("rigger", out temp) && temp != null)
-        {
-            Rigger = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("artist", out temp) && temp != null)
-        {
-            Artist = temp.GetValue<string>();
-        }
-
         Rights = new();
-        if (data.TryGetPropertyValue("rights", out temp) && temp is JsonObject obj)
+        foreach (var item in data.EnumerateObject())
         {
-            Rights.Deserialize(obj);
-        }
-
-        if (data.TryGetPropertyValue("copyright", out temp) && temp != null)
-        {
-            Copyright = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("licenseURL", out temp) && temp != null)
-        {
-            LicenseURL = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("contact", out temp) && temp != null)
-        {
-            Contact = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("reference", out temp) && temp != null)
-        {
-            Reference = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("thumbnailId", out temp) && temp != null)
-        {
-            ThumbnailId = temp.GetValue<uint>();
-        }
-
-        if (data.TryGetPropertyValue("preservePixels", out temp) && temp != null)
-        {
-            PreservePixels = temp.GetValue<bool>();
+            if (item.Name == "name" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Name = item.Value.GetString()!;
+            }
+            else if (item.Name == "version" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Version = item.Value.GetString()!;
+            }
+            else if (item.Name == "rigger" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Rigger = item.Value.GetString()!;
+            }
+            else if (item.Name == "artist" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Artist = item.Value.GetString()!;
+            }
+            else if (item.Name == "rights" && item.Value.ValueKind == JsonValueKind.Object)
+            {
+                Rights.Deserialize(item.Value);
+            }
+            else if (item.Name == "copyright" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Copyright = item.Value.GetString()!;
+            }
+            else if (item.Name == "licenseURL" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                LicenseURL = item.Value.GetString()!;
+            }
+            else if (item.Name == "contact" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Contact = item.Value.GetString()!;
+            }
+            else if (item.Name == "reference" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Reference = item.Value.GetString()!;
+            }
+            else if (item.Name == "thumbnailId" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                ThumbnailId = item.Value.GetUInt32();
+            }
+            else if (item.Name == "preservePixels" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                PreservePixels = item.Value.GetBoolean();
+            }
         }
     }
 }

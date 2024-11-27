@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
@@ -182,5 +183,5 @@ public abstract class ParameterBinding
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public abstract void Deserialize(JsonObject data);
+    public abstract void Deserialize(JsonElement data);
 }

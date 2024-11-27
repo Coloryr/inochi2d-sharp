@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes.Parts;
 
@@ -54,7 +55,7 @@ public class Composite : Node
     /// <param name="parent"></param>
     public Composite(I2dCore core, Node? parent = null) : this(core, core.InCreateUUID(), parent)
     {
-        
+
     }
 
     /// <summary>
@@ -375,53 +376,51 @@ public class Composite : Node
         }
     }
 
-    public override void Deserialize(JsonObject data)
+    public override void Deserialize(JsonElement data)
     {
-        // Older models may not have these tags
-        if (data.TryGetPropertyValue("opacity", out var temp) && temp != null)
+        PropagateMeshGroup = false;
+        foreach (var item in data.EnumerateObject())
         {
-            _opacity = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("mask_threshold", out temp) && temp != null)
-        {
-            _threshold = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("tint", out temp) && temp is JsonArray array)
-        {
-            _tint = array.ToVector3();
-        }
-
-        if (data.TryGetPropertyValue("screenTint", out temp) && temp is JsonArray array1)
-        {
-            _screenTint = array1.ToVector3();
-        }
-
-        if (data.TryGetPropertyValue("blend_mode", out temp) && temp != null)
-        {
-            _blendingMode = Enum.Parse<BlendMode>(temp.GetValue<string>());
-        }
-
-        if (data.TryGetPropertyValue("propagate_meshgroup", out temp) && temp != null)
-        {
-            PropagateMeshGroup = temp.GetValue<bool>();
-        }
-        else
-        {
-            PropagateMeshGroup = false;
-        }
-
-        if (data.TryGetPropertyValue("masks", out temp) && temp is JsonArray array2)
-        {
-            foreach (JsonObject item in array2.Cast<JsonObject>())
+            // Older models may not have these tags
+            if (item.Name == "opacity" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                var item1 = new MaskBinding();
-                item1.Deserialize(item);
-                _masks.Add(item1);
+                _opacity = item.Value.GetSingle();
+            }
+
+            else if (item.Name == "mask_threshold" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _threshold = item.Value.GetSingle();
+            }
+
+            else if (item.Name == "tint" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                _tint = item.Value.ToVector3();
+            }
+
+            else if (item.Name == "screenTint" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                _screenTint = item.Value.ToVector3();
+            }
+
+            else if (item.Name == "blend_mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _blendingMode = Enum.Parse<BlendMode>(item.Value.GetString()!);
+            }
+
+            else if (item.Name == "propagate_meshgroup" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                PropagateMeshGroup = item.Value.GetBoolean();
+            }
+            else if (item.Name == "masks" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var mask = new MaskBinding();
+                    mask.Deserialize(item1);
+                    _masks.Add(mask);
+                }
             }
         }
-
         base.Deserialize(data);
     }
 

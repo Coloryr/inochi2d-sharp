@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
 
@@ -49,16 +50,19 @@ internal class SineAutomation : Automation
         serializer.Add("sine_type", (int)_sineType);
     }
 
-    protected override void DeserializeSelf(JsonObject data)
+    protected override void DeserializeSelf(JsonElement data)
     {
-        if (data.TryGetPropertyValue("speed", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            _speed = temp.GetValue<int>();
-        }
+            if (item.Name == "speed" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _speed = item.Value.GetInt32();
+            }
 
-        if (data.TryGetPropertyValue("sine_type", out temp) && temp != null)
-        {
-            _sineType = (SineType)temp.GetValue<int>();
+            else if (item.Name == "sine_type" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _sineType = (SineType)item.Value.GetInt32();
+            }
         }
     }
 }

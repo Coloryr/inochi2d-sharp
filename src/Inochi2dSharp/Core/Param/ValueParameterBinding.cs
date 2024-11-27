@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
-using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 
@@ -40,35 +40,36 @@ public class ValueParameterBinding : ParameterBindingImpl
     /// Deserializes a binding
     /// </summary>
     /// <param name="data"></param>
-    public override void Deserialize(JsonObject data)
+    public override void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("node", out var temp) && temp != null)
-        {
-            NodeRef = temp.GetValue<uint>();
-        }
-        if (data.TryGetPropertyValue("param_name", out temp) && temp != null)
-        {
-            Target.ParamName = temp.GetValue<string>();
-        }
+        InterpolateMode = InterpolateMode.Linear;
 
-        if (data.TryGetPropertyValue("values", out temp) && temp is JsonArray array)
+        foreach (var item in data.EnumerateObject())
         {
-            Values = array.ToListList<float>();
-        }
+            if (item.Name == "node" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                NodeRef = item.Value.GetUInt32();
+            }
+            else if (item.Name == "param_name" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Target.ParamName = item.Value.GetString()!;
+            }
 
-        if (data.TryGetPropertyValue("isSet", out temp) && temp is JsonArray array1)
-        {
-            IsSet = array1.ToListList<bool>();
-        }
+            else if (item.Name == "values" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Values = item.Value.ToListList<float>();
+            }
 
-        if (data.TryGetPropertyValue("interpolate_mode", out temp) && temp != null
-            && !Enum.TryParse<InterpolateMode>(temp.GetValue<string>(), out var temp1))
-        {
-            InterpolateMode = temp1;
-        }
-        else
-        {
-            InterpolateMode = InterpolateMode.Linear;
+            else if (item.Name == "isSet" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                IsSet = item.Value.ToListList<bool>();
+            }
+
+            else if (item.Name == "interpolate_mode" && item.Value.ValueKind != JsonValueKind.Null
+                && !Enum.TryParse<InterpolateMode>(item.Value.GetString(), out var temp1))
+            {
+                InterpolateMode = temp1;
+            }
         }
 
         int xCount = Parameter.AxisPointCount(0);

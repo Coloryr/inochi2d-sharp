@@ -1,4 +1,6 @@
-﻿namespace Inochi2dSharp.Core.Animations;
+﻿
+
+namespace Inochi2dSharp.Core.Animations;
 
 /// <summary>
 /// Construct animation player
@@ -43,8 +45,9 @@ public class AnimationPlayer(Puppet puppet)
         // Create new playback
         if (Puppet.Animations.TryGetValue(name, out var anim))
         {
-            PlayingAnimations.Add(new AnimationPlayback(this, anim, name));
-            return PlayingAnimations[^1];
+            var item = new AnimationPlayback(this, anim, name);
+            PlayingAnimations.Add(item);
+            return item;
         }
 
         // Invalid state
@@ -52,16 +55,55 @@ public class AnimationPlayer(Puppet puppet)
     }
 
     /// <summary>
+    /// Play a custom animation
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="animation"></param>
+    /// <returns></returns>
+    public void Play(string name, Animation animation)
+    {
+        foreach (var anim1 in PlayingAnimations)
+        {
+            if (anim1.Name == name)
+            {
+                anim1.Play();
+            }
+        }
+
+         PlayingAnimations.Add(new AnimationPlayback(this, animation, name));
+    }
+
+    /// <summary>
     /// Convenience function which plays an animation
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public AnimationPlayback? Play(string name)
+    public void Play(string name)
     {
         var anim = CreateOrGet(name);
         anim?.Play();
+    }
 
-        return anim;
+    public void Pause(string name)
+    {
+        foreach (var anim1 in PlayingAnimations)
+        {
+            if (anim1.Name == name)
+            {
+                anim1.Pause();
+            }
+        }
+    }
+
+    public void Stop(string name, bool immediate = false)
+    {
+        foreach (var anim1 in PlayingAnimations)
+        {
+            if (anim1.Name == name)
+            {
+                anim1.Stop(immediate);
+            }
+        }
     }
 
     /// <summary>
@@ -97,5 +139,23 @@ public class AnimationPlayer(Puppet puppet)
             anim.Valid = false;
         }
         PlayingAnimations.Clear();
+    }
+
+    public bool IsPlay(string name)
+    {
+        foreach (var anim in PlayingAnimations)
+        {
+            if (anim.Name == name)
+            {
+                return anim.IsRunning;
+            }
+        }
+
+        return false;
+    }
+
+    public void Remove(string name)
+    {
+        PlayingAnimations.RemoveAll(item => item.Name == name);
     }
 }

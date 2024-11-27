@@ -176,7 +176,7 @@ public partial class I2dCore
 
         var p = new Part(this, data, [tex], parent)
         {
-            name = name
+            Name = name
         };
         return p;
     }

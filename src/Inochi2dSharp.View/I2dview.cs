@@ -1,6 +1,4 @@
-﻿using Inochi2dSharp.Core;
-
-namespace Inochi2dSharp.View;
+﻿namespace Inochi2dSharp.View;
 
 public class I2dView : IDisposable
 {
@@ -55,4 +53,3 @@ public class I2dView : IDisposable
         _core.Dispose();
     }
 }
-    

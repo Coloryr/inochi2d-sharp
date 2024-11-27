@@ -1,5 +1,6 @@
 ﻿
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Nodes;
@@ -18,16 +19,18 @@ public record MaskBinding
         obj.Add("mode", Mode.ToString());
     }
 
-    public void Deserialize(JsonObject obj)
+    public void Deserialize(JsonElement data)
     {
-        if (obj.TryGetPropertyValue("source", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            MaskSrcUUID = temp.GetValue<uint>();
-        }
-
-        if (obj.TryGetPropertyValue("mode", out temp) && temp != null)
-        {
-            Mode = Enum.Parse<MaskingMode>(temp.GetValue<string>());
+            if (item.Name == "source" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                MaskSrcUUID = item.Value.GetUInt32();
+            }
+            else if (item.Name == "mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Mode = Enum.Parse<MaskingMode>(item.Value.GetString()!);
+            }
         }
     }
 }

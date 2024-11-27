@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core;
 
@@ -47,41 +48,38 @@ public record PuppetUsageRights
         obj.Add("requireAttribution", RequireAttribution);
     }
 
-    public void Deserialize(JsonObject obj)
+    public void Deserialize(JsonElement data)
     {
-        if (obj.TryGetPropertyValue("allowedUsers", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            AllowedUsers = temp.GetValue<string>();
-        }
-
-        if (obj.TryGetPropertyValue("allowViolence", out temp) && temp != null)
-        {
-            AllowViolence = temp.GetValue<bool>();
-        }
-
-        if (obj.TryGetPropertyValue("allowSexual", out temp) && temp != null)
-        {
-            AllowSexual = temp.GetValue<bool>();
-        }
-
-        if (obj.TryGetPropertyValue("allowCommercial", out temp) && temp != null)
-        {
-            AllowCommercial = temp.GetValue<bool>();
-        }
-
-        if (obj.TryGetPropertyValue("allowRedistribution", out temp) && temp != null)
-        {
-            AllowRedistribution = temp.GetValue<string>();
-        }
-
-        if (obj.TryGetPropertyValue("allowModification", out temp) && temp != null)
-        {
-            AllowModification = temp.GetValue<string>();
-        }
-
-        if (obj.TryGetPropertyValue("requireAttribution", out temp) && temp != null)
-        {
-            RequireAttribution = temp.GetValue<bool>();
+            if (item.Name == "allowedUsers" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                AllowedUsers = item.Value.GetString()!;
+            }
+            else if (item.Name == "allowViolence" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                AllowViolence = item.Value.GetBoolean();
+            }
+            else if (item.Name == "allowSexual" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                AllowSexual = item.Value.GetBoolean();
+            }
+            else if (item.Name == "allowCommercial" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                AllowCommercial = item.Value.GetBoolean();
+            }
+            else if (item.Name == "allowRedistribution" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                AllowRedistribution = item.Value.GetString()!;
+            }
+            else if (item.Name == "allowModification" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                AllowModification = item.Value.GetString()!;
+            }
+            else if (item.Name == "requireAttribution" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                RequireAttribution = item.Value.GetBoolean(); ;
+            }
         }
     }
 }

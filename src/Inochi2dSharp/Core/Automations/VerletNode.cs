@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
@@ -36,21 +37,24 @@ public class VerletNode
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("distance", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            Distance = temp.GetValue<float>();
-        }
+            if (item.Name == "distance" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Distance = item.Value.GetSingle();
+            }
 
-        if (data.TryGetPropertyValue("position", out temp) && temp is JsonArray array)
-        {
-            Position = array.ToVector2();
-        }
+            else if (item.Name == "position" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Position = item.Value.ToVector2();
+            }
 
-        if (data.TryGetPropertyValue("old_position", out temp) && temp is JsonArray array1)
-        {
-            OldPosition = array1.ToVector2();
+            else if (item.Name == "old_position" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                OldPosition = item.Value.ToVector2();
+            }
         }
     }
 }

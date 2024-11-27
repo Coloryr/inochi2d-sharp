@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Math;
 
@@ -132,7 +133,7 @@ public abstract class Drawable : Node
         // Important check since the user can change this every frame
         if (Deformation.Length != Vertices.Count)
         {
-            throw new Exception($"Data length mismatch for {name}, deformation length={Deformation.Length} whereas vertices.length={Vertices.Count}, if you want to change the mesh you need to change its data with Part.rebuffer.");
+            throw new Exception($"Data length mismatch for {Name}, deformation length={Deformation.Length} whereas vertices.length={Vertices.Count}, if you want to change the mesh you need to change its data with Part.rebuffer.");
         }
 
         PostProcess();
@@ -170,16 +171,16 @@ public abstract class Drawable : Node
         serializer.Add("mesh", obj);
     }
 
-    public override void Deserialize(JsonObject obj)
+    public override void Deserialize(JsonElement obj)
     {
         base.Deserialize(obj);
-        if (!obj.TryGetPropertyValue("mesh", out var temp) || temp is not JsonObject obj1)
+        if (!obj.TryGetProperty("mesh", out var temp) || temp.ValueKind != JsonValueKind.Object)
         {
             return;
         }
 
         Data = new();
-        Data.Deserialize(obj1);
+        Data.Deserialize(temp);
 
         Vertices = [.. Data.Vertices];
 

@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.JavaScript;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Nodes.Parts;
@@ -56,12 +56,12 @@ public class Part : Drawable
     /// <summary>
     /// Multiplicative tint color
     /// </summary>
-    public Vector3 Tint  = new(1, 1, 1);
+    public Vector3 Tint = new(1, 1, 1);
 
     /// <summary>
     /// Screen tint color
     /// </summary>
-    public Vector3 ScreenTint  = new(0, 0, 0);
+    public Vector3 ScreenTint = new(0, 0, 0);
 
     /// <summary>
     /// Constructs a new part
@@ -162,103 +162,98 @@ public class Part : Drawable
         serializer.Add("opacity", Opacity);
     }
 
-    public override void Deserialize(JsonObject data)
+    public override void Deserialize(JsonElement data)
     {
         base.Deserialize(data);
 
-        if (_core.IsLoadingINP)
+        var maskmode = MaskingMode.Mask;
+        int i = 0;
+        foreach (var item in data.EnumerateObject())
         {
-            int i = 0;
-            if (data.TryGetPropertyValue("textures", out var temp1) && temp1 is JsonArray array4)
+            if (item.Name == "textures" && item.Value.ValueKind == JsonValueKind.Array)
             {
-                foreach (var texElement in array4)
+                if (_core.IsLoadingINP)
                 {
-                    if (texElement == null)
+                    foreach (JsonElement texElement in item.Value.EnumerateArray())
                     {
-                        continue;
-                    }
-                    uint textureId = texElement.GetValue<uint>();
+                        if (texElement.ValueKind == JsonValueKind.Null)
+                        {
+                            continue;
+                        }
+                        uint textureId = texElement.GetUInt32();
 
-                    // uint max = no texture set
-                    if (textureId == I2dCore.NO_TEXTURE)
-                    {
-                        continue;
-                    }
+                        // uint max = no texture set
+                        if (textureId == I2dCore.NO_TEXTURE)
+                        {
+                            continue;
+                        }
 
-                    _textureIds.Add(textureId);
-                    Textures[i++] = _core.InGetTextureFromId(textureId);
+                        _textureIds.Add(textureId);
+                        Textures[i++] = _core.InGetTextureFromId(textureId);
+                    }
+                }
+                else
+                {
+                    throw new Exception("Loading from texture path is deprecated.");
                 }
             }
-        }
-        else
-        {
-            throw new Exception("Loading from texture path is deprecated.");
-        }
-
-        if (data.TryGetPropertyValue("opacity", out var temp) && temp != null)
-        {
-            Opacity = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("mask_threshold", out temp) && temp != null)
-        {
-            _maskAlphaThreshold = temp.GetValue<float>();
-        }
-
-        // Older models may not have tint
-        if (data.TryGetPropertyValue("tint", out temp) && temp is JsonArray array1)
-        {
-            Tint = array1.ToVector3();
-        }
-
-        // Older models may not have screen tint
-        if (data.TryGetPropertyValue("screenTint", out temp) && temp is JsonArray array2)
-        {
-            ScreenTint = array2.ToVector3();
-        }
-
-        // Older models may not have emission
-        if (data.TryGetPropertyValue("emissionStrength", out temp) && temp is JsonArray array3)
-        {
-            Tint = array3.ToVector3();
-        }
-
-        // Older models may not have blend mode
-        if (data.TryGetPropertyValue("blend_mode", out temp) && temp != null)
-        {
-            _blendingMode = Enum.Parse<BlendMode>(temp.GetValue<string>());
-        }
-
-        if (data.TryGetPropertyValue("mask_mode", out temp) && temp != null)
-        {
-            var mode = Enum.Parse<MaskingMode>(temp.ToString());
-
-            // Go every masked part
-            if (data.TryGetPropertyValue("masked_by", out var temp1) && temp1 is JsonArray array4)
+            else if (item.Name == "opacity" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                foreach (var imask in array4)
+                Opacity = item.Value.GetSingle();
+            }
+            else if (item.Name == "mask_threshold" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _maskAlphaThreshold = item.Value.GetSingle();
+            }
+            // Older models may not have tint
+            else if (item.Name == "tint" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Tint = item.Value.ToVector3();
+            }
+            // Older models may not have screen tint
+            else if (item.Name == "screenTint" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                ScreenTint = item.Value.ToVector3();
+            }
+            // Older models may not have emission
+            else if (item.Name == "emissionStrength" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Tint = item.Value.ToVector3();
+            }
+            // Older models may not have blend mode
+            else if (item.Name == "blend_mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _blendingMode = Enum.Parse<BlendMode>(item.Value.GetString()!);
+            }
+            else if (item.Name == "mask_mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                maskmode = Enum.Parse<MaskingMode>(item.Value.ToString());
+            }
+            else if (item.Name == "masked_by" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                // Go every masked part
+                foreach (var item1 in item.Value.EnumerateArray())
                 {
-                    if (imask == null)
+                    if (item1.ValueKind == JsonValueKind.Null)
                     {
                         continue;
                     }
-                    uint uuid = imask.GetValue<uint>();
+                    uint uuid = item1.GetUInt32();
                     _masks.Add(new MaskBinding
                     {
                         MaskSrcUUID = uuid,
-                        Mode = mode
+                        Mode = maskmode
                     });
                 }
             }
-        }
-
-        if (data.TryGetPropertyValue("masks", out temp) && temp is JsonArray array)
-        {
-            foreach (var item in array.Cast<JsonObject>())
+            else if (item.Name == "masks" && item.Value.ValueKind == JsonValueKind.Array)
             {
-                var item1 = new MaskBinding();
-                item1.Deserialize(item);
-                _masks.Add(item1);
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var mask = new MaskBinding();
+                    mask.Deserialize(item1);
+                    _masks.Add(mask);
+                }
             }
         }
 

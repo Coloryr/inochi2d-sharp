@@ -76,7 +76,7 @@ public abstract class PhysicsSystem : IDisposable
     {
         var vals = new float[refs.Count];
 
-        for (int a=0;a<vals.Length;a++)
+        for (int a = 0; a < vals.Length; a++)
         {
             vals[a] = *(float*)refs[a];
         }

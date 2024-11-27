@@ -17,7 +17,7 @@ public class AnimationLane
     /// <summary>
     /// List of frames in the lane
     /// </summary>
-    public List<Keyframe> Frames  = [];
+    public List<Keyframe> Frames = [];
 
     /// <summary>
     /// The interpolation between each frame in the lane
@@ -28,7 +28,7 @@ public class AnimationLane
     /// Merging mode of the lane
     /// <see cref = "ParamMergeMode" />
     /// </summary>
-    public string MergeMode  = ParamMergeMode.Forced;
+    public string MergeMode = ParamMergeMode.Forced;
 
     /// <summary>
     /// Serialization function
@@ -55,38 +55,36 @@ public class AnimationLane
     /// Deserialization function
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("interpolation", out var temp) && temp != null)
-        {
-            _interpolation = Enum.Parse<InterpolateMode>(temp.GetValue<string>());
-        }
-
-        if (data.TryGetPropertyValue("uuid", out temp) && temp != null)
-        {
-            _refuuid = temp.GetValue<uint>();
-        }
-
         ParamRef = new AnimationParameterRef();
-
-        if (data.TryGetPropertyValue("target", out temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            ParamRef.TargetAxis = temp.GetValue<int>();
-        }
-
-        if (data.TryGetPropertyValue("keyframes", out temp) && temp is JsonArray array)
-        {
-            foreach (JsonObject item in array.Cast<JsonObject>())
+            if (item.Name == "interpolation" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                var temp1 = new Keyframe();
-                temp1.Deserialize(item);
-                Frames.Add(temp1);
+                _interpolation = Enum.Parse<InterpolateMode>(item.Value.GetString()!);
             }
-        }
-
-        if (data.TryGetPropertyValue("merge_mode", out temp) && temp != null)
-        {
-            MergeMode = temp.GetValue<string>();
+            else if (item.Name == "uuid" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _refuuid = item.Value.GetUInt32();
+            }
+            else if (item.Name == "target" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                ParamRef.TargetAxis = item.Value.GetInt32();
+            }
+            else if (item.Name == "keyframes" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var temp1 = new Keyframe();
+                    temp1.Deserialize(item1);
+                    Frames.Add(temp1);
+                }
+            }
+            else if (item.Name == "merge_mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                MergeMode = item.Value.GetString()!;
+            }
         }
     }
 

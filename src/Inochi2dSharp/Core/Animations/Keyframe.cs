@@ -1,5 +1,5 @@
-﻿using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Animations;
 
@@ -28,19 +28,22 @@ public record Keyframe
         obj.Add("tension", Tension);
     }
 
-    public void Deserialize(JsonObject obj)
+    public void Deserialize(JsonElement data)
     {
-        if (obj.TryGetPropertyValue("frame", out var value) && value != null)
+        foreach (var item in data.EnumerateObject())
         {
-            Frame = value.GetValue<int>();
-        }
-        if (obj.TryGetPropertyValue("value", out value) && value != null)
-        {
-            Value = value.GetValue<int>();
-        }
-        if (obj.TryGetPropertyValue("tension", out value) && value != null)
-        {
-            Tension = value.GetValue<int>();
+            if (item.Name == "frame" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Frame = item.Value.GetInt32();
+            }
+            else if (item.Name == "value" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Value = item.Value.GetSingle();
+            }
+            else if (item.Name == "tension" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Tension = item.Value.GetSingle();
+            }
         }
     }
 }

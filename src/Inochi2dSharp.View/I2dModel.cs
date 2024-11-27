@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Inochi2dSharp.Core;
 using Inochi2dSharp.Core.Animations;
+using Inochi2dSharp.Core.Nodes;
+using Inochi2dSharp.Math;
 
 namespace Inochi2dSharp.View;
 
@@ -13,6 +11,8 @@ public class I2dModel : IDisposable
     private readonly Puppet _model;
 
     private readonly AnimationPlayer _animation;
+
+    private readonly Dictionary<string, CustomAnimation> _customAnimations = [];
 
     public I2dModel(string file, Puppet model)
     {
@@ -47,6 +47,185 @@ public class I2dModel : IDisposable
 #endif
     }
 
+    private ModelPart GenInfo(Node node)
+    {
+        return new()
+        {
+            Name = node.Name,
+            UUID = node.UUID,
+            ZSort = node.ZSort,
+            Type = node.TypeId(),
+            Children = GetParts(node.Children)
+        };
+    }
+
+    public List<ModelAnimation> GetAnimations()
+    {
+        var list = new List<ModelAnimation>();
+        foreach (var item in _model.Animations)
+        {
+            list.Add(new()
+            {
+                Name = item.Key,
+                Length = item.Value.Length,
+                LeadIn = item.Value.LeadIn,
+                LeadOut = item.Value.LeadOut,
+                IsRun = _animation.IsPlay(item.Key)
+            });
+        }
+        foreach (var item in _customAnimations)
+        {
+            list.Add(new()
+            {
+                Name = item.Key,
+                Length = item.Value.Length,
+                LeadIn = item.Value.LeadIn,
+                LeadOut = item.Value.LeadOut,
+                IsRun = _animation.IsPlay(item.Key)
+            });
+        }
+        return list;
+    }
+
+    public List<ModelPart> GetParts(IEnumerable<Node> nodes)
+    {
+        var list = new List<ModelPart>();
+        foreach (var item in nodes)
+        {
+            list.Add(GenInfo(item));
+        }
+
+        return list;
+    }
+
+    public ModelPart GetParts()
+    {
+        return GenInfo(_model.Root);
+    }
+
+    public List<ModelParameter> GetParameters()
+    {
+        var list = new List<ModelParameter>();
+        for (int a=0;a < _model.Parameters.Count;a++)
+        {
+            var item = _model.Parameters[a];
+            list.Add(new()
+            {
+                Index = a,
+                UUID = item.UUID,
+                Name = item.Name,
+                Min = item.Min,
+                Max = item.Max,
+                Value = item.Value,
+                Default = item.Defaults,
+                IsVec2 = item.IsVec2
+            });
+        }
+
+        return list;
+    }
+
+    public void SetParameter(ModelParameter parameter)
+    {
+        var par = _model.Parameters[parameter.Index];
+        if (MathHelper.Contains(par.Min, par.Max, parameter.Value))
+        {
+            par.Value = parameter.Value;
+        }
+    }
+
+    public void SetParameter(int index, Vector2 value)
+    {
+        var par = _model.Parameters[index];
+        if (MathHelper.Contains(par.Min, par.Max, value))
+        {
+            par.Value = value;
+        }
+    }
+
+    public void SetParameter(uint uuid, Vector2 value)
+    {
+        var par = _model.FindParameter(uuid);
+        if (par == null)
+        {
+            return;
+        }
+        if (MathHelper.Contains(par.Min, par.Max, value))
+        {
+            par.Value = value;
+        }
+    }
+
+    public void ResetParameter(ModelParameter parameter)
+    {
+        var par = _model.Parameters[parameter.Index];
+        if (par == null)
+        {
+            return;
+        }
+        par.Value = par.Defaults;
+    }
+
+    public void ResetParameter(uint uuid)
+    {
+        var par = _model.FindParameter(uuid);
+        if (par == null)
+        {
+            return;
+        }
+        par.Value = par.Defaults;
+    }
+
+    public void ResetParameter(int index)
+    {
+        var par = _model.Parameters[index];
+        if (par == null)
+        {
+            return;
+        }
+        par.Value = par.Defaults;
+    }
+
+    public void PlayAnimation(string name)
+    {
+        if (_model.Animations.TryGetValue(name, out var animation))
+        {
+            _animation.Play(name, animation);
+        }
+        else if (_customAnimations.TryGetValue(name, out var animation1))
+        {
+            _animation.Play(name, animation1);
+        }
+    }
+
+    public void PauseAnimation(string name)
+    {
+        _animation.Pause(name);
+    }
+
+    public void StopAnimation(string name, bool immediate = false)
+    {
+        _animation.Stop(name, immediate);
+    }
+
+    public void AddCustomAnimation(CustomAnimation animation)
+    {
+        if (_customAnimations.ContainsKey(animation.Name)
+            || _model.Animations.ContainsKey(animation.Name))
+        {
+            throw new Exception($"Animation name: {animation.Name} is exist");
+        }
+
+        _customAnimations.Add(animation.Name, animation);
+    }
+
+    public void RemoveCustomAnimation(string name)
+    {
+        _animation.Stop(name);
+        _animation.Remove(name);
+        _customAnimations.Remove(name);
+    }
+
     public void Update(float delta)
     {
         _model.Update();
@@ -55,7 +234,6 @@ public class I2dModel : IDisposable
 
     public void Draw()
     {
-        _animation.PrerenderAll();
         _model.Draw();
     }
 

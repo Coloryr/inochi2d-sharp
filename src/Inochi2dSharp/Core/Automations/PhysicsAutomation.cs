@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
@@ -136,31 +137,32 @@ internal class PhysicsAutomation : Automation
         serializer.Add("gravity", Gravity);
     }
 
-    protected override void DeserializeSelf(JsonObject data)
+    protected override void DeserializeSelf(JsonElement data)
     {
-        if (data.TryGetPropertyValue("nodes", out var temp) && temp is JsonArray array)
+        foreach (var item in data.EnumerateObject())
         {
-            foreach (JsonObject item in array.Cast<JsonObject>())
+            if (item.Name == "nodes" && item.Value.ValueKind == JsonValueKind.Array)
             {
-                var node = new VerletNode();
-                node.Deserialize(item);
-                Nodes.Add(node);
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var node = new VerletNode();
+                    node.Deserialize(item1);
+                    Nodes.Add(node);
+                }
             }
-        }
+            else if (item.Name == "damping" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Damping = item.Value.GetSingle();
+            }
 
-        if (data.TryGetPropertyValue("damping", out temp) && temp != null)
-        {
-            Damping = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("bounciness", out temp) && temp != null)
-        {
-            Bounciness = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("gravity", out temp) && temp != null)
-        {
-            Gravity = temp.GetValue<float>();
+            else if (item.Name == "bounciness" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Bounciness = item.Value.GetSingle();
+            }
+            else if (item.Name == "gravity" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Gravity = item.Value.GetSingle();
+            }
         }
     }
 }

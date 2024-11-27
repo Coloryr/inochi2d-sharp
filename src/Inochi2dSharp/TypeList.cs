@@ -34,17 +34,17 @@ internal static class TypeList
 
     public static void RegisterNodeType<T>() where T : Node
     {
-        var typeId = GetTypeId<T>() 
+        var typeId = GetTypeId<T>()
             ?? throw new InvalidOperationException($"Type {typeof(T).Name} does not have a TypeId attribute.");
-        s_nodeTypes.Add(typeId, (I2dCore core, Node? parent) 
+        s_nodeTypes.Add(typeId, (I2dCore core, Node? parent)
             => (Activator.CreateInstance(typeof(T), core, parent) as T)!);
     }
 
     public static void RegisterAutomationType<T>() where T : Automation
     {
-        var typeId = GetTypeId<T>() 
+        var typeId = GetTypeId<T>()
             ?? throw new InvalidOperationException($"Type {typeof(T).Name} does not have a TypeId attribute.");
-        s_autoType.Add(typeId, (Puppet parent, I2dTime time) 
+        s_autoType.Add(typeId, (Puppet parent, I2dTime time)
             => (Activator.CreateInstance(typeof(T), parent, time) as T)!);
     }
 

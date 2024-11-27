@@ -6,6 +6,20 @@ namespace Inochi2dSharp.Math;
 public static class MathHelper
 {
     /// <summary>
+    /// Gets whether a point is within an axis aligned rectangle
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    public static bool Contains(Vector2 min, Vector2 max, Vector2 value)
+    {
+        return max.X >= value.X &&
+                max.Y >= value.Y &&
+                min.X <= value.X &&
+                min.Y <= value.Y;
+    }
+
+    /// <summary>
     /// 扩展方法用于矩阵左乘向量。
     /// </summary>
     /// <param name="matrix">4x4矩阵</param>

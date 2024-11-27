@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using Inochi2dSharp.Core;
-using Inochi2dSharp.Core.Nodes.MeshGroups;
 using Inochi2dSharp.Math;
 using Inochi2dSharp.Shaders;
 
@@ -606,6 +605,6 @@ public partial class I2dCore : IDisposable
 
     public void Dispose()
     {
-        
+
     }
 }

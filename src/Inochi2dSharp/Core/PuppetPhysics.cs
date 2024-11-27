@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core;
 
@@ -17,16 +18,18 @@ public record PuppetPhysics
         serializer.Add("gravity", Gravity);
     }
 
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("pixelsPerMeter", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            PixelsPerMeter = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("gravity", out temp) && temp != null)
-        {
-            Gravity = temp.GetValue<float>();
+            if (item.Name == "pixelsPerMeter" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                PixelsPerMeter = item.Value.GetSingle();
+            }
+            else if (item.Name == "gravity" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Gravity = item.Value.GetSingle();
+            }
         }
     }
 }

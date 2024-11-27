@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp;
 
@@ -16,26 +17,28 @@ public static class Serialization
         return new JsonArray() { vector.X, vector.Y, vector.Z };
     }
 
-    public static Vector2 ToVector2(this JsonArray array)
+    public static Vector2 ToVector2(this JsonElement array)
     {
-        if (array.Count != 2)
+        if (array.GetArrayLength() != 2)
         {
             return new();
         }
 
-        var list = array.GetValues<float>().ToArray();
-        return new(list[0], list[1]);
+        var temp = array.EnumerateArray().ToArray();
+
+        return new(temp[0].GetSingle(), temp[1].GetSingle());
     }
 
-    public static Vector3 ToVector3(this JsonArray array)
+    public static Vector3 ToVector3(this JsonElement array)
     {
-        if (array.Count != 3)
+        if (array.GetArrayLength() != 3)
         {
             return new();
         }
 
-        var list = array.GetValues<float>().ToArray();
-        return new(list[0], list[1], list[2]);
+        var temp = array.EnumerateArray().ToArray();
+
+        return new(temp[0].GetSingle(), temp[1].GetSingle(), temp[2].GetSingle());
     }
 
     public static JsonNode ToToken(this List<float>[] floats)
@@ -70,12 +73,20 @@ public static class Serialization
         return list;
     }
 
-    public static List<List<T>> ToListList<T>(this JsonArray array)
+    public static List<List<T>> ToListList<T>(this JsonElement array)
     {
         var list = new List<List<T>>();
-        foreach (JsonArray item in array.Cast<JsonArray>())
+        foreach (JsonElement item in array.EnumerateArray())
         {
-            list.Add(item.GetValues<T>().ToList());
+            if (item.ValueKind == JsonValueKind.Array)
+            {
+                var list1 = new List<T>();
+                foreach (var item1 in item.EnumerateArray())
+                {
+                    list1.Add(item1.Deserialize<T>()!);
+                }
+                list.Add(list1);
+            }
         }
 
         return list;
@@ -98,14 +109,8 @@ public static class Serialization
         return list;
     }
 
-    public static T[][] ToArray<T>(this JsonArray array)
+    public static T[][] ToArray<T>(this JsonElement array)
     {
-        var list = new List<List<T>>();
-        foreach (JsonArray item in array.Cast<JsonArray>())
-        {
-            list.Add(item.GetValues<T>().ToList());
-        }
-
-        return list.Select(item => item.ToArray()).ToArray();
+        return ToListList<T>(array).Select(item => item.ToArray()).ToArray();
     }
 }

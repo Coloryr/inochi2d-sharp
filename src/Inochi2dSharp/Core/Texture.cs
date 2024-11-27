@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Inochi2dSharp.Math;
+﻿using Inochi2dSharp.Math;
 using StbImageSharp;
 
 namespace Inochi2dSharp.Core;
@@ -22,7 +21,7 @@ public class Texture : IDisposable
 
     private readonly ImageResult? _image;
     private readonly I2dCore _core;
-    public Texture(I2dCore core, ShallowTexture shallow) 
+    public Texture(I2dCore core, ShallowTexture shallow)
         : this(core, shallow.Data, shallow.Width, shallow.Height, shallow.Channels, shallow.ConvChannels)
     {
         _core = core;

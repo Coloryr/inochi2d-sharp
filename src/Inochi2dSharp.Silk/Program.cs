@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using Inochi2dSharp.Silk;
+﻿using Inochi2dSharp.Silk;
 using Inochi2dSharp.View;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.KHR;
@@ -29,6 +28,8 @@ internal class Program
         KhrBlendEquationAdvanced khr;
         I2dView view = null;
 
+        I2dModel model;
+
         // Our loading function
         window.Load += () =>
         {
@@ -36,7 +37,9 @@ internal class Program
             gl = window.CreateOpenGL();
             view = new I2dView(new SilkApi(gl, khr));
             view.SetView(window.Size.X, window.Size.Y);
-            var model = view.LoadModel("E:\\temp_code\\example-models\\Midori.inx");
+            model = view.LoadModel("E:\\temp_code\\example-models\\Aka.inx");
+            var parts = model.GetParts();
+            var pars = model.GetParameters();
         };
 
         // Handle resizes

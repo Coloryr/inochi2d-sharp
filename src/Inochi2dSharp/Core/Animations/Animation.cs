@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Animations;
 
@@ -85,45 +86,42 @@ public class Animation
     /// Deserialization function
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("timestep", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            Timestep = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("additive", out temp) && temp != null)
-        {
-            _additive = temp.GetValue<bool>();
-        }
-
-        if (data.TryGetPropertyValue("animationWeight", out temp) && temp != null)
-        {
-            _animationWeight = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("length", out temp) && temp != null)
-        {
-            Length = temp.GetValue<int>();
-        }
-
-        if (data.TryGetPropertyValue("leadIn", out temp) && temp != null)
-        {
-            LeadIn = temp.GetValue<int>();
-        }
-
-        if (data.TryGetPropertyValue("leadOut", out temp) && temp != null)
-        {
-            LeadOut = temp.GetValue<int>();
-        }
-
-        if (data.TryGetPropertyValue("lanes", out temp) && temp is JsonArray array)
-        {
-            foreach (JsonObject item in array.Cast<JsonObject>())
+            if (item.Name == "timestep" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                var land = new AnimationLane();
-                land.Deserialize(item);
-                Lanes.Add(land);
+                Timestep= item.Value.GetSingle();
+            }
+            else if (item.Name == "additive" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _additive= item.Value.GetBoolean();
+            }
+            else if (item.Name == "animationWeight" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _animationWeight= item.Value.GetSingle();
+            }
+            else if (item.Name == "length" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Length= item.Value.GetInt32();
+            }
+            else if (item.Name == "leadIn" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                LeadIn= item.Value.GetInt32();
+            }
+            else if (item.Name == "leadOut" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                LeadOut= item.Value.GetInt32();
+            }
+            else if (item.Name == "lanes" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var land = new AnimationLane();
+                    land.Deserialize(item1);
+                    Lanes.Add(land);
+                }
             }
         }
     }

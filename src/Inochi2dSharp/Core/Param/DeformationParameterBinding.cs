@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
-using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 
@@ -52,45 +52,43 @@ public class DeformationParameterBinding : ParameterBindingImpl
     /// Deserializes a binding
     /// </summary>
     /// <param name="data"></param>
-    public override void Deserialize(JsonObject data)
+    public override void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("node", out var temp) && temp != null)
-        {
-            NodeRef = temp.GetValue<uint>();
-        }
-        if (data.TryGetPropertyValue("param_name", out temp) && temp != null)
-        {
-            Target.ParamName = temp.GetValue<string>();
-        }
+        InterpolateMode = InterpolateMode.Linear;
 
-        if (data.TryGetPropertyValue("values", out temp) && temp is JsonArray array)
+        foreach (var item in data.EnumerateObject())
         {
-            foreach (JsonArray item in array.Cast<JsonArray>())
+            if (item.Name == "node" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                var list = new List<Deformation>();
-                foreach (JsonArray item1 in item.Cast<JsonArray>())
-                {
-                    var item2 = new Deformation();
-                    item2.Deserialize(item1);
-                    list.Add(item2);
-                }
-                Values.Add(list);
+                NodeRef = item.Value.GetUInt32();
             }
-        }
-
-        if (data.TryGetPropertyValue("isSet", out temp) && temp is JsonArray array1)
-        {
-            IsSet = array1.ToListList<bool>();
-        }
-
-        if (data.TryGetPropertyValue("interpolate_mode", out temp) && temp != null 
-            && !Enum.TryParse<InterpolateMode>(temp.GetValue<string>(), out var _interpolateMode))
-        {
-            InterpolateMode = _interpolateMode;
-        }
-        else
-        {
-            InterpolateMode = InterpolateMode.Linear;
+            else if (item.Name == "param_name" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Target.ParamName = item.Value.GetString()!;
+            }
+            else if (item.Name == "values" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var list = new List<Deformation>();
+                    foreach (JsonElement item2 in item1.EnumerateArray())
+                    {
+                        var deformation = new Deformation();
+                        deformation.Deserialize(item2);
+                        list.Add(deformation);
+                    }
+                    Values.Add(list);
+                }
+            }
+            else if (item.Name == "isSet" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                IsSet = item.Value.ToListList<bool>();
+            }
+            else if (item.Name == "interpolate_mode" && item.Value.ValueKind != JsonValueKind.Null
+                && !Enum.TryParse<InterpolateMode>(item.Value.GetString(), out var _interpolateMode))
+            {
+                InterpolateMode = _interpolateMode;
+            }
         }
 
         int xCount = Parameter.AxisPointCount(0);

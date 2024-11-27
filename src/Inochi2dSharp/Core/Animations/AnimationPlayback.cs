@@ -6,7 +6,7 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
     /// <summary>
     /// Whether this instance is valid
     /// </summary>
-    public bool Valid  = true;
+    public bool Valid = true;
 
     /// <summary>
     /// Gets the name of the animation

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Math;
@@ -61,7 +62,7 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
     {
         Matrix =
             MathHelper.Translation(Translation) *
-            MathHelper.EulerRotation(Rotation.X, Rotation.Y, Rotation.Z).ToMatrix() * 
+            MathHelper.EulerRotation(Rotation.X, Rotation.Y, Rotation.Z).ToMatrix() *
             MathHelper.Scaling(Scale.X, Scale.Y, 1);
     }
 
@@ -79,21 +80,22 @@ public class Transform(Vector3 translation, Vector3 rotation, Vector2 scale)
         obj.Add("scale", Scale.ToToken());
     }
 
-    public void Deserialize(JsonObject obj)
+    public void Deserialize(JsonElement data)
     {
-        if (obj.TryGetPropertyValue("trans", out var temp) && temp is JsonArray array)
+        foreach (var item in data.EnumerateObject())
         {
-            Translation = array.ToVector3();
-        }
-
-        if (obj.TryGetPropertyValue("rot", out temp) && temp is JsonArray array1)
-        {
-            Rotation = array1.ToVector3();
-        }
-
-        if (obj.TryGetPropertyValue("scale", out temp) && temp is JsonArray array2)
-        {
-            Scale = array2.ToVector2();
+            if (item.Name == "trans" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Translation = item.Value.ToVector3();
+            }
+            else if (item.Name == "rot" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Rotation = item.Value.ToVector3();
+            }
+            else if (item.Name == "scale" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Scale = item.Value.ToVector2();
+            }
         }
     }
 

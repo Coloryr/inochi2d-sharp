@@ -111,7 +111,7 @@ public class Puppet : IDisposable
         Physics = new PuppetPhysics();
         Root = new Node(core, _puppetRootNode)
         {
-            name = "Root"
+            Name = "Root"
         };
         Transform = new Transform();
     }
@@ -127,7 +127,7 @@ public class Puppet : IDisposable
         Physics = new PuppetPhysics();
         Root = root;
         _puppetRootNode = new Node(core, this);
-        Root.name = "Root";
+        Root.Name = "Root";
         ScanParts(Root, true);
         Transform = new Transform();
         SelfSort();
@@ -210,7 +210,7 @@ public class Puppet : IDisposable
     internal Node? FindNode(Node n, string name)
     {
         // Name matches!
-        if (n.name == name) return n;
+        if (n.Name == name) return n;
 
         // Recurse through children
         foreach (var child in n.Children)
@@ -560,7 +560,7 @@ public class Puppet : IDisposable
 
             string iden = GetLineSet();
             var s = new StringBuilder();
-            s.AppendFormat("{0}[{1}] {2} <{3}>\n", n.Children.Count > 0 ? "╭─" : "", n.TypeId(), n.name, n.UUID);
+            s.AppendFormat("{0}[{1}] {2} <{3}>\n", n.Children.Count > 0 ? "╭─" : "", n.TypeId(), n.Name, n.UUID);
 
             for (int i = 0; i < n.Children.Count; i++)
             {
@@ -663,45 +663,47 @@ public class Puppet : IDisposable
     /// Deserializes a puppet
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
         Meta = new();
-        if (data.TryGetPropertyValue("meta", out var temp) && temp is JsonObject obj)
-        {
-            Meta.Deserialize(obj);
-        }
-
         Physics = new();
-        if (data.TryGetPropertyValue("physics", out temp) && temp is JsonObject obj1)
-        {
-            Physics.Deserialize(obj1);
-        }
-
         Root = new(_core);
-        if (data.TryGetPropertyValue("nodes", out temp) && temp is JsonObject obj2)
+        foreach (var item in data.EnumerateObject())
         {
-            Root.Deserialize(obj2);
-        }
-
-        if (data.TryGetPropertyValue("param", out temp) && temp is JsonArray array)
-        {
-            // Allow parameter loading to be overridden (for Inochi Creator)
-            foreach (JsonObject key in array.Cast<JsonObject>())
+            if (item.Name == "meta" && item.Value.ValueKind == JsonValueKind.Object)
             {
-                var param = new Parameter(_core);
-                param.Deserialize(key);
-                Parameters.Add(param);
+                Meta.Deserialize(item.Value);
             }
-        }
-
-        // Deserialize automation
-        if (data.TryGetPropertyValue("automation", out temp) && temp is JsonArray array1)
-        {
-            foreach (JsonObject key in array1.Cast<JsonObject>())
+            else if (item.Name == "physics" && item.Value.ValueKind == JsonValueKind.Object)
             {
-                if (key.TryGetPropertyValue("type", out var temp1) && temp1 != null)
+                Physics.Deserialize(item.Value);
+            }
+            else if (item.Name == "nodes" && item.Value.ValueKind == JsonValueKind.Object)
+            {
+                Root.Deserialize(item.Value);
+            }
+            else if (item.Name == "param" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                // Allow parameter loading to be overridden (for Inochi Creator)
+                foreach (JsonElement key in item.Value.EnumerateArray())
                 {
-                    string type = temp1.GetValue<string>();
+                    var param = new Parameter(_core);
+                    param.Deserialize(key);
+                    Parameters.Add(param);
+                }
+            }
+
+            // Deserialize automation
+            else if (item.Name == "automation" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement key in item.Value.EnumerateArray())
+                {
+                    if (!key.TryGetProperty("type", out var temp1) || temp1.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+
+                    var type = temp1.GetString()!;
 
                     if (TypeList.HasAutomationType(type))
                     {
@@ -710,17 +712,18 @@ public class Puppet : IDisposable
                         Automation.Add(auto_);
                     }
                 }
-               
             }
-        }
-
-        if (data.TryGetPropertyValue("animations", out temp) && temp is JsonObject obj3)
-        {
-            foreach (var obj4 in obj3.Cast<KeyValuePair<string, JsonObject>>())
+            else if (item.Name == "animations" && item.Value.ValueKind == JsonValueKind.Object)
             {
-                var item = new Animation();
-                item.Deserialize(obj4.Value);
-                Animations.Add(obj4.Key, item);
+                foreach (var obj4 in item.Value.EnumerateObject())
+                {
+                    if (obj4.Value.ValueKind == JsonValueKind.Object)
+                    {
+                        var item1 = new Animation();
+                        item1.Deserialize(obj4.Value);
+                        Animations.Add(obj4.Name, item1);
+                    }
+                }
             }
         }
         FinalizeDeserialization(data);
@@ -746,7 +749,7 @@ public class Puppet : IDisposable
     internal void JsonLoadDone()
     {
         Root.Puppet = this;
-        Root.name = "Root";
+        Root.Name = "Root";
         _puppetRootNode = new Node(_core, this);
 
         // Finally update link etc.
@@ -771,7 +774,7 @@ public class Puppet : IDisposable
     /// Finalizer
     /// </summary>
     /// <param name="data"></param>
-    internal void FinalizeDeserialization(JsonObject data)
+    internal void FinalizeDeserialization(JsonElement data)
     {
         // reconstruct object path so that object is located at final position
         Reconstruct();

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp;
 using Inochi2dSharp.Math;
@@ -197,45 +198,50 @@ public record MeshData
         }
     }
 
-    public void Deserialize(JsonObject obj)
+    public void Deserialize(JsonElement data)
     {
-        if (obj.TryGetPropertyValue("verts", out var temp) && temp is JsonArray arrar)
+        foreach (var item in data.EnumerateObject())
         {
-            var list1 = arrar.GetValues<float>().ToArray();
-            for (int a = 0; a < arrar.Count;)
+            if (item.Name == "verts" && item.Value.ValueKind == JsonValueKind.Array)
             {
-                Vertices.Add(new(list1[a++], list1[a++]));
-            }
-        }
-        if (obj.TryGetPropertyValue("uvs", out temp) && temp is JsonArray arrar1)
-        {
-            var list1 = arrar1.GetValues<float>().ToArray();
-            for (int a = 0; a < arrar1.Count;)
-            {
-                Uvs.Add(new(list1[a++], list1[a++]));
-            }
-        }
-        if (obj.TryGetPropertyValue("origin", out temp) && temp is JsonArray array2)
-        {
-            Origin = array2.ToVector2();
-        }
-
-        if (obj.TryGetPropertyValue("grid_axes", out temp) && temp is JsonArray array3)
-        {
-            GridAxes = array3.ToListList<float>();
-        }
-        if (obj.TryGetPropertyValue("indices", out temp) && temp is JsonArray array4)
-        {
-            foreach (var indiceData in array4)
-            {
-                if (indiceData == null)
+                var list1 = item.Value.EnumerateArray().ToArray();
+                for (int a = 0; a < list1.Length;)
                 {
-                    continue;
+                    var temp1 = list1[a++].GetSingle();
+                    var temp2 = list1[a++].GetSingle();
+                    Vertices.Add(new(temp1, temp2));
                 }
-                Indices.Add(indiceData.GetValue<ushort>());
+            }
+            else if (item.Name == "uvs" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                var list1 = item.Value.EnumerateArray().ToArray();
+                for (int a = 0; a < list1.Length;)
+                {
+                    var temp1 = list1[a++].GetSingle();
+                    var temp2 = list1[a++].GetSingle();
+                    Uvs.Add(new(temp1, temp2));
+                }
+            }
+            else if (item.Name == "origin" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Origin = item.Value.ToVector2();
+            }
+
+            else if (item.Name == "grid_axes" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                GridAxes = item.Value.ToListList<float>();
+            }
+            else if (item.Name == "indices" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement indiceData in item.Value.EnumerateArray())
+                {
+                    if (indiceData.ValueKind != JsonValueKind.Null)
+                    {
+                        Indices.Add(indiceData.GetUInt16());
+                    }
+                }
             }
         }
-
     }
 
     public static MeshData CreateQuadMesh(Vector2Int size, Vector4 uvBounds)

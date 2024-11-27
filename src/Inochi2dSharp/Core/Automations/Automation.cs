@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Automations;
@@ -87,25 +88,26 @@ public class Automation(Puppet puppet)
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("name", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            _name = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("type", out temp) && temp != null)
-        {
-            TypeId = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("bindings", out temp) && temp is JsonArray array)
-        {
-            foreach (JsonObject obj in array.Cast<JsonObject>())
+            if (item.Name == "name" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                var item = new AutomationBinding();
-                item.Deserialize(obj);
-                Bindings.Add(item);
+                _name = item.Value.GetString()!;
+            }
+            else if (item.Name == "type" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                TypeId = item.Value.GetString()!;
+            }
+            else if (item.Name == "bindings" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
+                {
+                    var auto = new AutomationBinding();
+                    auto.Deserialize(item1);
+                    Bindings.Add(auto);
+                }
             }
         }
         DeserializeSelf(data);
@@ -133,5 +135,5 @@ public class Automation(Puppet puppet)
     protected virtual void OnUpdate() { }
 
     protected virtual void SerializeSelf(JsonObject serializer) { }
-    protected virtual void DeserializeSelf(JsonObject data) { }
+    protected virtual void DeserializeSelf(JsonElement data) { }
 }

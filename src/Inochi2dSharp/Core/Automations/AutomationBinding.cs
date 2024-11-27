@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Param;
 
@@ -88,21 +89,22 @@ public class AutomationBinding
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("param", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            _paramId = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("axis", out temp) && temp != null)
-        {
-            _axis = temp.GetValue<int>();
-        }
-
-        if (data.TryGetPropertyValue("range", out temp) && temp is JsonArray array)
-        {
-            Range = array.ToVector2();
+            if (item.Name == "param" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _paramId = item.Value.GetString()!;
+            }
+            else if (item.Name == "axis" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _axis = item.Value.GetInt32();
+            }
+            else if (item.Name == "range" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Range = item.Value.ToVector2();
+            }
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes.Composites;
 using Inochi2dSharp.Core.Param;
@@ -264,22 +265,20 @@ public class MeshGroup(I2dCore core, Node? parent = null) : Drawable(core, paren
         serializer.Add("translate_children", _translateChildren);
     }
 
-    public override void Deserialize(JsonObject data)
+    public override void Deserialize(JsonElement data)
     {
         base.Deserialize(data);
-
-        if (data.TryGetPropertyValue("dynamic_deformation", out var temp) && temp != null)
+        _translateChildren = false;
+        foreach (var item in data.EnumerateObject())
         {
-            Dynamic = temp.GetValue<bool>();
-        }
-
-        if (data.TryGetPropertyValue("translate_children", out temp) && temp != null)
-        {
-            _translateChildren = temp.GetValue<bool>();
-        }
-        else
-        {
-            _translateChildren = false;
+            if (item.Name == "dynamic_deformation" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Dynamic = item.Value.GetBoolean();
+            }
+            else if (item.Name == "translate_children" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _translateChildren = item.Value.GetBoolean();
+            }
         }
     }
 

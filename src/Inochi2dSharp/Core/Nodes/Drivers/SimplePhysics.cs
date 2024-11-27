@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Param;
 using Inochi2dSharp.Math;
@@ -436,58 +437,52 @@ public class SimplePhysics : Driver
         serializer.Add("local_only", LocalOnly);
     }
 
-    public override void Deserialize(JsonObject data)
+    public override void Deserialize(JsonElement data)
     {
         base.Deserialize(data);
 
-        if (data.TryGetPropertyValue("param", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            _paramRef = temp.GetValue<uint>();
-        }
-
-        if (data.TryGetPropertyValue("model_type", out temp) && temp != null)
-        {
-            _modelType = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("map_mode", out temp) && temp != null)
-        {
-            MapMode = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("gravity", out temp) && temp != null)
-        {
-            _gravity = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("length", out temp) && temp != null)
-        {
-            _length = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("frequency", out temp) && temp != null)
-        {
-            _frequency = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("angle_damping", out temp) && temp != null)
-        {
-            _angleDamping = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("length_damping", out temp) && temp != null)
-        {
-            _lengthDamping = temp.GetValue<float>();
-        }
-
-        if (data.TryGetPropertyValue("output_scale", out temp) && temp is JsonArray array)
-        {
-            _outputScale = array.ToVector2();
-        }
-
-        if (data.TryGetPropertyValue("local_only", out temp) && temp != null)
-        {
-            LocalOnly = temp.GetValue<bool>();
+            if (item.Name == "param" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _paramRef = item.Value.GetUInt32();
+            }
+            else if (item.Name == "model_type" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _modelType = item.Value.GetString()!;
+            }
+            else if (item.Name == "map_mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                MapMode = item.Value.GetString()!;
+            }
+            else if (item.Name == "gravity" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _gravity = item.Value.GetSingle();
+            }
+            else if (item.Name == "length" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _length = item.Value.GetSingle();
+            }
+            else if (item.Name == "frequency" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _frequency = item.Value.GetSingle();
+            }
+            else if (item.Name == "angle_damping" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _angleDamping = item.Value.GetSingle();
+            }
+            else if (item.Name == "length_damping" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _lengthDamping = item.Value.GetSingle();
+            }
+            else if (item.Name == "output_scale" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                _outputScale = item.Value.ToVector2();
+            }
+            else if (item.Name == "local_only" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                LocalOnly = item.Value.GetBoolean(); ;
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes.MeshGroups;
 using Inochi2dSharp.Math;
@@ -31,7 +32,7 @@ public class Node : IDisposable
     /// <summary>
     /// A list of this node's children
     /// </summary>
-    public List<Node> Children  = [];
+    public List<Node> Children = [];
     /// <summary>
     /// Returns the unique identifier for this node
     /// </summary>
@@ -146,8 +147,7 @@ public class Node : IDisposable
     /// <summary>
     /// Visual name of the node
     /// </summary>
-    public string name = "Unnamed Node";
-
+    public string Name = "Unnamed Node";
 
     /// <summary>
     /// The local transform of the node
@@ -205,7 +205,7 @@ public class Node : IDisposable
     protected virtual void SerializeSelfImpl(JsonObject obj, bool recursive = true)
     {
         obj.Add("uuid", UUID);
-        obj.Add("name", name);
+        obj.Add("name", Name);
         obj.Add("type", TypeId());
         obj.Add("enabled", enabled);
         obj.Add("zsort", _zsort);
@@ -414,7 +414,7 @@ public class Node : IDisposable
         Node? parent = this;
         while (parent != null)
         {
-            pathSegments.Append(parent.name).Append('/');
+            pathSegments.Append(parent.Name).Append('/');
             parent = parent.Parent;
         }
 
@@ -737,7 +737,7 @@ public class Node : IDisposable
 
     public override string ToString()
     {
-        return name;
+        return Name;
     }
 
     /// <summary>
@@ -753,62 +753,56 @@ public class Node : IDisposable
     ///  Deserializes node from Fghj formatted JSON data.
     /// </summary>
     /// <param name="data"></param>
-    public virtual void Deserialize(JsonObject data)
+    public virtual void Deserialize(JsonElement data)
     {
-        if (!data.TryGetPropertyValue("uuid", out var temp) || temp == null)
-        {
-            return;
-        }
-        UUID = temp.GetValue<uint>();
-
-        if(data.TryGetPropertyValue("name", out temp) && temp != null)
-        {
-            name = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("enabled", out temp) && temp != null)
-        {
-            enabled = temp.GetValue<bool>();
-        }
-       
-        if (data.TryGetPropertyValue("zsort", out temp) && temp != null)
-        {
-            _zsort = temp.GetValue<float>();
-        }
-
         LocalTransform = new();
-        if (data.TryGetPropertyValue("transform", out temp) && temp is JsonObject obj)
+        foreach (var item in data.EnumerateObject())
         {
-            LocalTransform.Deserialize(obj);
-        }
-
-        if (data.TryGetPropertyValue("lockToRoot", out temp) && temp != null)
-        {
-            LockToRoot = temp.GetValue<bool>();
-        }
-
-        if (!data.TryGetPropertyValue("children", out temp) || temp is not JsonArray array)
-        {
-            return;
-        }
-
-        // Pre-populate our children with the correct types
-        foreach (JsonObject child in array.Cast<JsonObject>())
-        {
-            if (!child.TryGetPropertyValue("type", out var type1) || type1 == null)
+            if (item.Name == "uuid" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                continue;
+                UUID = item.Value.GetUInt32();
             }
-            // Fetch type from json
-            var type = type1.GetValue<string>();
+            else if (item.Name == "name" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Name = item.Value.GetString()!;
+            }
+            else if (item.Name == "enabled" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                enabled = item.Value.GetBoolean(); ;
+            }
+            else if (item.Name == "zsort" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                _zsort = item.Value.GetSingle();
+            }
+            else if (item.Name == "transform" && item.Value.ValueKind == JsonValueKind.Object)
+            {
+                LocalTransform.Deserialize(item.Value);
+            }
+            else if (item.Name == "lockToRoot" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                LockToRoot = item.Value.GetBoolean(); ;
+            }
+            else if (item.Name == "children" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                // Pre-populate our children with the correct types
+                foreach (JsonElement child in item.Value.EnumerateArray())
+                {
+                    if (!child.TryGetProperty("type", out var type1) || type1.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+                    // Fetch type from json
+                    var type = type1.GetString()!;
 
-            // Skips unknown node types
-            // TODO: A logging system that shows a warning for this?
-            if (!TypeList.HasNodeType(type)) continue;
+                    // Skips unknown node types
+                    // TODO: A logging system that shows a warning for this?
+                    if (!TypeList.HasNodeType(type)) continue;
 
-            // instantiate it
-            var n = TypeList.InstantiateNode(type, _core, this);
-            n.Deserialize(child);
+                    // instantiate it
+                    var n = TypeList.InstantiateNode(type, _core, this);
+                    n.Deserialize(child);
+                }
+            }
         }
     }
 
@@ -1014,6 +1008,6 @@ public class Node : IDisposable
 
     public virtual void Dispose()
     {
-        
+
     }
 }

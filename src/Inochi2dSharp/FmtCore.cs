@@ -61,7 +61,8 @@ public partial class I2dCore
     public Puppet InLoadPuppetFromMemory(byte[] data)
     {
         var temp = Encoding.UTF8.GetString(data);
-        var obj = JsonNode.Parse(temp)!.AsObject();
+        using var doc = JsonDocument.Parse(temp);
+        var obj = doc.RootElement;
         var puppet = new Puppet(this);
         puppet.Deserialize(obj);
         return puppet;
@@ -97,6 +98,8 @@ public partial class I2dCore
         buffer.ReadExactly(temp);
 
         string puppetData = Encoding.UTF8.GetString(temp);
+
+        File.WriteAllText("test.json", puppetData);
 
         if (!BinFmt.InVerifyTexBytes(buffer))
         {
@@ -145,7 +148,8 @@ public partial class I2dCore
         }
 
         var puppet = new Puppet(this);
-        var obj = JsonNode.Parse(puppetData)!.AsObject();
+        using var doc = JsonDocument.Parse(puppetData);
+        var obj = doc.RootElement;
         puppet.Deserialize(obj);
         puppet.TextureSlots = slots;
         puppet.UpdateTextureState();

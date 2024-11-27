@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
-using Inochi2dSharp;
 using Inochi2dSharp.Core.Nodes;
 using Inochi2dSharp.Math;
 
@@ -158,68 +158,63 @@ public class Parameter : IDisposable
     /// Deserializes a parameter
     /// </summary>
     /// <param name="data"></param>
-    public void Deserialize(JsonObject data)
+    public void Deserialize(JsonElement data)
     {
-        if (data.TryGetPropertyValue("uuid", out var temp) && temp != null)
+        foreach (var item in data.EnumerateObject())
         {
-            UUID = temp.GetValue<uint>();
-        }
-
-        if (data.TryGetPropertyValue("name", out temp) && temp != null)
-        {
-            Name = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("is_vec2", out temp) && temp != null)
-        {
-            IsVec2 = temp.GetValue<bool>();
-        }
-
-        if (data.TryGetPropertyValue("min", out temp) && temp is JsonArray array)
-        {
-            Min = array.ToVector2();
-        }
-
-        if (data.TryGetPropertyValue("max", out temp) && temp is JsonArray array1)
-        {
-            Max = array1.ToVector2();
-        }
-
-        if (data.TryGetPropertyValue("axis_points", out temp) && temp is JsonArray array2)
-        {
-            AxisPoints = array2.ToListList<float>();
-        }
-
-        if (data.TryGetPropertyValue("defaults", out temp) && temp is JsonArray array3)
-        {
-            Defaults = array3.ToVector2();
-        }
-
-        if (data.TryGetPropertyValue("merge_mode", out temp) && temp != null)
-        {
-            MergeMode = temp.GetValue<string>();
-        }
-
-        if (data.TryGetPropertyValue("bindings", out temp) && temp is JsonArray array4)
-        {
-            foreach (JsonObject child in array4.Cast<JsonObject>())
+            if (item.Name == "uuid" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                // Skip empty children
-                if (child.TryGetPropertyValue("param_name", out var temp1) && temp1 != null)
+                UUID = item.Value.GetUInt32();
+            }
+            else if (item.Name == "name" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                Name = item.Value.GetString()!;
+            }
+            else if (item.Name == "is_vec2" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                IsVec2 = item.Value.GetBoolean(); ;
+            }
+            else if (item.Name == "min" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Min = item.Value.ToVector2();
+            }
+            else if (item.Name == "max" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Max = item.Value.ToVector2();
+            }
+            else if (item.Name == "axis_points" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                AxisPoints = item.Value.ToListList<float>();
+            }
+            else if (item.Name == "defaults" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                Defaults = item.Value.ToVector2();
+            }
+            else if (item.Name == "merge_mode" && item.Value.ValueKind != JsonValueKind.Null)
+            {
+                MergeMode = item.Value.GetString()!;
+            }
+            else if (item.Name == "bindings" && item.Value.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item1 in item.Value.EnumerateArray())
                 {
-                    var paramName = temp1.GetValue<string>();
+                    // Skip empty children
+                    if (item1.TryGetProperty("param_name", out var temp1) && temp1.ValueKind != JsonValueKind.Null)
+                    {
+                        var paramName = temp1.GetString();
 
-                    if (paramName == "deform")
-                    {
-                        var binding = new DeformationParameterBinding(this);
-                        binding.Deserialize(child);
-                        Bindings.Add(binding);
-                    }
-                    else
-                    {
-                        var binding = new ValueParameterBinding(this);
-                        binding.Deserialize(child);
-                        Bindings.Add(binding);
+                        if (paramName == "deform")
+                        {
+                            var binding = new DeformationParameterBinding(this);
+                            binding.Deserialize(item1);
+                            Bindings.Add(binding);
+                        }
+                        else
+                        {
+                            var binding = new ValueParameterBinding(this);
+                            binding.Deserialize(item1);
+                            Bindings.Add(binding);
+                        }
                     }
                 }
             }

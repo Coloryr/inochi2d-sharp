@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
-using Inochi2dSharp;
 
 namespace Inochi2dSharp.Core.Nodes;
 
@@ -47,9 +47,9 @@ public record Deformation
         }
     }
 
-    public void Deserialize(JsonArray data)
+    public void Deserialize(JsonElement data)
     {
-        foreach (var elem in data.Cast<JsonArray>())
+        foreach (var elem in data.EnumerateArray())
         {
             VertexOffsets.Add(elem.ToVector2());
         }
