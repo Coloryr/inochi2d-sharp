@@ -281,31 +281,25 @@ layout(location = 0) in vec2 verts;
 layout(location = 1) in vec2 uvs;
 
 out vec2 texUVs;
-out vec3 viewPosition;
-out vec3 fragPosition;
 
 void main() {
-    fragPosition = vec3(verts.x, verts.y, 0);
-    viewPosition = (mvpModel * vec4(fragPosition, 1.0)).xyz;
+    vec3 vpos = vec3(verts.x, verts.y, 0);
+    gl_Position = mvpProjection * mvpView * mvpModel * vec4(vpos, 1.0);
     texUVs = uvs;
-
-    gl_Position = mvpProjection * mvpView * mvpModel * vec4(fragPosition, 1.0);
 }
 """;
     public const string LighingFrag =
 """
 #version 330
 in vec2 texUVs;
-in vec3 viewPosition;
-in vec3 fragPosition;
 
 layout(location = 0) out vec4 outAlbedo;
 layout(location = 1) out vec4 outEmissive;
 layout(location = 2) out vec4 outBump;
 
 uniform vec3 ambientLight;
+uniform vec3 inLightDir;
 uniform vec3 lightColor;
-uniform vec3 lightDirection;
 uniform vec2 fbSize;
 
 uniform sampler2D albedo;
@@ -338,8 +332,13 @@ vec4 bloom(sampler2D sp, vec2 uv, vec2 scale) {
 // This function takes a light and shadow color
 // This allows coloring the shadowed parts.
 vec4 normalMapping(vec3 bump, vec4 albedo, vec3 light, vec3 ambientLight) {
-    vec3 lightDir = vec3(lightDirection.xy, clamp(-lightDirection.z, -1, 1));
-    vec3 viewDir = vec3(0, 0, -1);
+    vec3 lightDir = normalize(vec3(inLightDir.xy, 1));
+    vec3 viewDir = -lightDir;
+
+    // Allows setting strength of light.
+    lightDir *= inLightDir.z;
+    viewDir *= inLightDir.z;
+
     vec3 halfwayDir = normalize(lightDir + viewDir);
     vec3 normal = normalize((bump * 2.0) - 1.0);
 
@@ -499,6 +498,7 @@ void main() {
     vec4 origin = mvpModel * vec4(0, 0, 0, 1);
     vec4 bumpAngle = texture(bumpmap, texUVs) * 2.0 - 1.0;
     vec4 normal = mvpModel * (vec4(-bumpAngle.x, bumpAngle.yz, 1.0));
+    normal.z = abs(normal.z); // It should always somewhat face the camera.
     normal = normalize(normal-origin) * 0.5 + 0.5;
 
     // Out color math

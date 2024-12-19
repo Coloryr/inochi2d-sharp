@@ -55,7 +55,7 @@ public partial class I2dCore : IDisposable
     /// <summary>
     /// Unit vector describing the direction of the light
     /// </summary>
-    public Vector3 InSceneLightDirection = new(0, 0, 1);
+    public Vector3 InSceneLightDir = new(0, 0, 1);
 
     private int _indiceCount;
     private uint _cVBO;
@@ -154,8 +154,8 @@ public partial class I2dCore : IDisposable
 
 
         // Light direction
-        int lightDirectionUniform = shaderToUse.GetUniform("lightDirection");
-        if (lightDirectionUniform != -1) shaderToUse.Shader.SetUniform(lightDirectionUniform, InSceneLightDirection);
+        int lightDirUniform = shaderToUse.GetUniform("inLightDir");
+        if (lightDirUniform != -1) shaderToUse.Shader.SetUniform(lightDirUniform, InSceneLightDir);
 
         // Colored light
         int lightColorUniform = shaderToUse.GetUniform("lightColor");
@@ -189,15 +189,6 @@ public partial class I2dCore : IDisposable
         gl.DisableVertexAttribArray(1);
 
         gl.Disable(GlApi.GL_BLEND);
-    }
-
-    /// <summary>
-    /// Sets the light direction in 2D.
-    /// </summary>
-    /// <param name="radians"></param>
-    public void InSceneSetLightDirection(float radians)
-    {
-        InSceneLightDirection = new(MathF.Cos(radians), MathF.Sin(radians), InSceneLightDirection.Z);
     }
 
     /// <summary>
