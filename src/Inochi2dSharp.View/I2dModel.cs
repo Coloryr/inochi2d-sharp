@@ -14,10 +14,46 @@ public class I2dModel : IDisposable
 
     private readonly Dictionary<string, CustomAnimation> _customAnimations = [];
 
+    private readonly List<Action<I2dModel, string>> _animationStartEvents = [];
+    private readonly List<Action<I2dModel, string>> _animationStopEvents = [];
+
+    /// <summary>
+    /// 模型动画开始
+    /// </summary>
+    public event Action<I2dModel, string> AnimationStart
+    {
+        add
+        {
+            _animationStartEvents.Add(value);
+        }
+        remove
+        {
+            _animationStartEvents.Remove(value);
+        }
+    }
+
+    /// <summary>
+    /// 模型动画结束
+    /// </summary>
+    public event Action<I2dModel, string> AnimationStop
+    {
+        add
+        {
+            _animationStopEvents.Add(value);
+        }
+        remove
+        {
+            _animationStopEvents.Remove(value);
+        }
+    }
+
     public I2dModel(string file, Puppet model)
     {
         _model = model;
-        _animation = new(model);
+        _animation = new(model)
+        {
+            AnimStop = OnStopAnimation
+        };
 
 #if DEBUG
         Console.WriteLine($"Model load {file} done");
@@ -191,10 +227,12 @@ public class I2dModel : IDisposable
         if (_model.Animations.TryGetValue(name, out var animation))
         {
             _animation.Play(name, animation);
+            OnPlayAnimation(name);
         }
         else if (_customAnimations.TryGetValue(name, out var animation1))
         {
             _animation.Play(name, animation1);
+            OnPlayAnimation(name);
         }
     }
 
@@ -235,6 +273,42 @@ public class I2dModel : IDisposable
     public void Draw()
     {
         _model.Draw();
+    }
+
+    private void OnPlayAnimation(string name)
+    {
+        Task.Run(() =>
+        {
+            foreach (var item in _animationStartEvents)
+            {
+                try
+                {
+                    item.Invoke(this, name);
+                }
+                catch(Exception e)
+                { 
+                    
+                }
+            }
+        });
+    }
+
+    private void OnStopAnimation(string name)
+    {
+        Task.Run(() =>
+        {
+            foreach (var item in _animationStopEvents)
+            {
+                try
+                {
+                    item.Invoke(this, name);
+                }
+                catch (Exception e)
+                {
+
+                }
+            }
+        });
     }
 
     public void Dispose()

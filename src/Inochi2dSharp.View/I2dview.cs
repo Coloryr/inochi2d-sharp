@@ -1,6 +1,6 @@
 ﻿namespace Inochi2dSharp.View;
 
-public class I2dView : IDisposable
+public partial class I2dView : IDisposable
 {
     private readonly GlApi _gl;
     private readonly I2dCore _core;

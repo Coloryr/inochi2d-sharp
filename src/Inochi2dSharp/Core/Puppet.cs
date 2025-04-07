@@ -207,7 +207,7 @@ public class Puppet : IDisposable
         RootParts.Sort((a, b) => b.ZSort.CompareTo(a.ZSort));
     }
 
-    internal Node? FindNode(Node n, string name)
+    internal static Node? FindNode(Node n, string name)
     {
         // Name matches!
         if (n.Name == name) return n;
@@ -222,7 +222,7 @@ public class Puppet : IDisposable
         return null;
     }
 
-    internal Node? FindNode(Node n, uint uuid)
+    internal static Node? FindNode(Node n, uint uuid)
     {
         // Name matches!
         if (n.UUID == uuid) return n;
@@ -482,8 +482,10 @@ public class Puppet : IDisposable
     {
         foreach (var slot in TextureSlots)
         {
-            if (slot.UUID != 0)
+            if (slot.UUID == uuid)
+            {
                 return slot;
+            }
         }
         return null;
     }

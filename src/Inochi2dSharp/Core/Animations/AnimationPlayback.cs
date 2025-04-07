@@ -131,6 +131,8 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
     /// </summary>
     public int Frames => Anim.Length;
 
+    public Action<string> AnimStop;
+
     public Puppet GetPuppet() { return player.Puppet; }
 
     /// Gets the playback ID
@@ -272,6 +274,8 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
                 _stopping = false;
                 _time = 0;
                 _looped = 0;
+
+                AnimStop?.Invoke(name);
             }
         }
     }

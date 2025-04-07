@@ -10,6 +10,8 @@ public class AnimationPlayer(Puppet puppet)
 {
     public List<AnimationPlayback> PlayingAnimations = [];
 
+    public Action<string> AnimStop;
+
     public Puppet Puppet => puppet;
 
     /// <summary>
@@ -25,34 +27,40 @@ public class AnimationPlayer(Puppet puppet)
     {
         foreach (var anim in PlayingAnimations)
         {
-            if (anim.Valid) anim.Update(delta);
+            if (anim.Valid)
+            {
+                anim.Update(delta);
+            }
         }
     }
 
-    /// <summary>
-    /// Gets an animation
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public AnimationPlayback? CreateOrGet(string name)
-    {
-        // Try fetching from pre-existing
-        foreach (var anim1 in PlayingAnimations)
-        {
-            if (anim1.Name == name) return anim1;
-        }
+    ///// <summary>
+    ///// Gets an animation
+    ///// </summary>
+    ///// <param name="name"></param>
+    ///// <returns></returns>
+    //public AnimationPlayback? CreateOrGet(string name)
+    //{
+    //    // Try fetching from pre-existing
+    //    foreach (var anim1 in PlayingAnimations)
+    //    {
+    //        if (anim1.Name == name) return anim1;
+    //    }
 
-        // Create new playback
-        if (Puppet.Animations.TryGetValue(name, out var anim))
-        {
-            var item = new AnimationPlayback(this, anim, name);
-            PlayingAnimations.Add(item);
-            return item;
-        }
+    //    // Create new playback
+    //    if (Puppet.Animations.TryGetValue(name, out var anim))
+    //    {
+    //        var item = new AnimationPlayback(this, anim, name)
+    //        {
+    //            AnimStop = AnimStop
+    //        };
+    //        PlayingAnimations.Add(item);
+    //        return item;
+    //    }
 
-        // Invalid state
-        return null;
-    }
+    //    // Invalid state
+    //    return null;
+    //}
 
     /// <summary>
     /// Play a custom animation
@@ -67,22 +75,26 @@ public class AnimationPlayer(Puppet puppet)
             if (anim1.Name == name)
             {
                 anim1.Play();
+                return;
             }
         }
 
-         PlayingAnimations.Add(new AnimationPlayback(this, animation, name));
+         PlayingAnimations.Add(new AnimationPlayback(this, animation, name)
+         {
+             AnimStop = AnimStop
+         });
     }
 
-    /// <summary>
-    /// Convenience function which plays an animation
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public void Play(string name)
-    {
-        var anim = CreateOrGet(name);
-        anim?.Play();
-    }
+    ///// <summary>
+    ///// Convenience function which plays an animation
+    ///// </summary>
+    ///// <param name="name"></param>
+    ///// <returns></returns>
+    //public void Play(string name)
+    //{
+    //    var anim = CreateOrGet(name);
+    //    anim?.Play();
+    //}
 
     public void Pause(string name)
     {

@@ -40,6 +40,11 @@ internal class Program
             model = view.LoadModel("E:\\temp_code\\example-models\\Aka.inx");
             var parts = model.GetParts();
             var pars = model.GetParameters();
+            var anima = model.GetAnimations();
+            var par = pars.First();
+            model.SetParameter(par.Index, new(1, 0));
+
+            model.PlayAnimation(anima.First().Name);
         };
 
         // Handle resizes
