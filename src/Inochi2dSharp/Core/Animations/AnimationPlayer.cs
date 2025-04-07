@@ -79,10 +79,12 @@ public class AnimationPlayer(Puppet puppet)
             }
         }
 
-         PlayingAnimations.Add(new AnimationPlayback(this, animation, name)
-         {
-             AnimStop = AnimStop
-         });
+        var item = new AnimationPlayback(this, animation, name)
+        {
+            AnimStop = AnimStop
+        };
+        item.Play();
+        PlayingAnimations.Add(item);
     }
 
     ///// <summary>

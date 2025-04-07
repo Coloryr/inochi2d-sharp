@@ -2,7 +2,7 @@
 
 public class AnimationPlayback(AnimationPlayer player, Animation anim, string name)
 {
-    public Animation Anim = anim;
+    public Animation Anim => anim;
     /// <summary>
     /// Whether this instance is valid
     /// </summary>
@@ -11,7 +11,7 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
     /// <summary>
     /// Gets the name of the animation
     /// </summary>
-    public string Name = name;
+    public string Name => name;
 
     // Runtime
     private bool _playLeadOut = false;
@@ -131,7 +131,7 @@ public class AnimationPlayback(AnimationPlayer player, Animation anim, string na
     /// </summary>
     public int Frames => Anim.Length;
 
-    public Action<string> AnimStop;
+    internal Action<string> AnimStop;
 
     public Puppet GetPuppet() { return player.Puppet; }
 
