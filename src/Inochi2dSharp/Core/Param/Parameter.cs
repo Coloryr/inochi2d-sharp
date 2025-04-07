@@ -398,7 +398,7 @@ public class Parameter : IDisposable
 
             AxisPoints[axis] = [.. tempList];
 #if DEBUG
-            Console.WriteLine("after move ", AxisPointCount(0));
+            Console.WriteLine($"after move {AxisPointCount(0)}");
 #endif
         }
 

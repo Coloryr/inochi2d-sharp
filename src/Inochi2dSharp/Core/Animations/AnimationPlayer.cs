@@ -1,6 +1,4 @@
-﻿
-
-namespace Inochi2dSharp.Core.Animations;
+﻿namespace Inochi2dSharp.Core.Animations;
 
 /// <summary>
 /// Construct animation player
@@ -79,10 +77,7 @@ public class AnimationPlayer(Puppet puppet)
             }
         }
 
-        var item = new AnimationPlayback(this, animation, name)
-        {
-            AnimStop = AnimStop
-        };
+        var item = new AnimationPlayback(this, animation, name);
         item.Play();
         PlayingAnimations.Add(item);
     }

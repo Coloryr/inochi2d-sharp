@@ -92,27 +92,27 @@ public class Animation
         {
             if (item.Name == "timestep" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                Timestep= item.Value.GetSingle();
+                Timestep = item.Value.GetSingle();
             }
             else if (item.Name == "additive" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                _additive= item.Value.GetBoolean();
+                _additive = item.Value.GetBoolean();
             }
             else if (item.Name == "animationWeight" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                _animationWeight= item.Value.GetSingle();
+                _animationWeight = item.Value.GetSingle();
             }
             else if (item.Name == "length" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                Length= item.Value.GetInt32();
+                Length = item.Value.GetInt32();
             }
             else if (item.Name == "leadIn" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                LeadIn= item.Value.GetInt32();
+                LeadIn = item.Value.GetInt32();
             }
             else if (item.Name == "leadOut" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                LeadOut= item.Value.GetInt32();
+                LeadOut = item.Value.GetInt32();
             }
             else if (item.Name == "lanes" && item.Value.ValueKind == JsonValueKind.Array)
             {

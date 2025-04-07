@@ -1,10 +1,9 @@
-﻿using Inochi2dSharp.Silk;
-using Inochi2dSharp.View;
+﻿using Inochi2dSharp.View;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.KHR;
 using Silk.NET.Windowing;
 
-namespace Inochi2dSharp.Slik;
+namespace Inochi2dSharp.Silk;
 
 internal class Program
 {
@@ -41,10 +40,10 @@ internal class Program
             var parts = model.GetParts();
             var pars = model.GetParameters();
             var anima = model.GetAnimations();
-            var par = pars.First();
-            model.SetParameter(par.Index, new(1, 0));
+            //var par = pars.First();
+            //model.SetParameter(par.Index, new(1, 0));
 
-            model.PlayAnimation(anima.First().Name);
+            //model.PlayAnimation(anima.First().Name);
         };
 
         // Handle resizes

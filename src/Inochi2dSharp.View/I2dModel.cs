@@ -142,7 +142,7 @@ public class I2dModel : IDisposable
     public List<ModelParameter> GetParameters()
     {
         var list = new List<ModelParameter>();
-        for (int a=0;a < _model.Parameters.Count;a++)
+        for (int a = 0; a < _model.Parameters.Count; a++)
         {
             var item = _model.Parameters[a];
             list.Add(new()
@@ -285,9 +285,9 @@ public class I2dModel : IDisposable
                 {
                     item.Invoke(this, name);
                 }
-                catch(Exception e)
-                { 
-                    
+                catch (Exception e)
+                {
+
                 }
             }
         });
