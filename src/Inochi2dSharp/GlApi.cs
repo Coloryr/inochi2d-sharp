@@ -159,5 +159,5 @@ public abstract class GlApi
     public abstract void StencilOp(uint fail, uint zfail, uint zpass);
     public abstract int GetError();
     public abstract void DeleteBuffer(uint uvbo);
-    public abstract uint GetIntegerv(uint target);
+    public abstract int GetIntegerv(uint target);
 }

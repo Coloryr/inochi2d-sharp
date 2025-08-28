@@ -108,7 +108,7 @@ public partial class I2dCore : IDisposable
         _cfBump = gl.GenTexture();
         _cfStencil = gl.GenTexture();
 
-        _lastFBO = gl.GetIntegerv(GlApi.GL_FRAMEBUFFER_BINDING);
+        _lastFBO = (uint)gl.GetIntegerv(GlApi.GL_FRAMEBUFFER_BINDING);
 
         // Set the viewport and by extension set the textures
         InSetViewport(640, 480);
@@ -202,7 +202,7 @@ public partial class I2dCore : IDisposable
     /// </summary>
     public void InBeginScene()
     {
-        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _lastFBO);
+        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER_BINDING, _lastFBO);
 
         gl.BindVertexArray(_sceneVAO);
         gl.Enable(GlApi.GL_BLEND);
@@ -483,6 +483,8 @@ public partial class I2dCore : IDisposable
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _fStencil);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);
 
+        _lastFBO = (uint)gl.GetIntegerv(GlApi.GL_FRAMEBUFFER_BINDING);
+
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _fBuffer);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, _fAlbedo, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_TEXTURE_2D, _fEmissive, 0);
@@ -508,7 +510,6 @@ public partial class I2dCore : IDisposable
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _cfStencil);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);
 
-        _lastFBO = gl.GetIntegerv(GlApi.GL_FRAMEBUFFER_BINDING);
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _cfBuffer);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, _cfAlbedo, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_TEXTURE_2D, _cfEmissive, 0);

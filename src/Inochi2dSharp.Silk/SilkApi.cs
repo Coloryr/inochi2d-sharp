@@ -372,4 +372,9 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
     {
         gl.DeleteBuffer(uvbo);
     }
+
+    public override int GetIntegerv(uint target)
+    {
+        return gl.GetInteger((GLEnum)target);
+    }
 }

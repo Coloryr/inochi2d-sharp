@@ -19,8 +19,8 @@ public partial class I2dCore
 
     private void InInitDebug()
     {
-        DbgShaderLine = new Shader(this, "debug line", ShaderCode.DebugVert, ShaderCode.DebugLineFrag);
-        DbgShaderPoint = new Shader(this, "debug point", ShaderCode.DebugVert, ShaderCode.DebugPointFrag);
+        DbgShaderLine = new Shader(this, "debug line", ShaderCode.DebugVert, ShaderCode.DbgFrag);
+        DbgShaderPoint = new Shader(this, "debug point", ShaderCode.DebugVert, ShaderCode.DbgFragPoint);
         DbgVAO = gl.GenVertexArray();
         DbgVBO = gl.GenBuffer();
         DbgIBO = gl.GenBuffer();
@@ -112,11 +112,6 @@ public partial class I2dCore
     public void InDbgSetBuffer(Vector3[] points, ushort[] indices)
     {
         InUpdateDbgVerts(points, indices);
-    }
-
-    public void InDbgDrawPoints(Vector4 color)
-    {
-        InDbgDrawPoints(color, Matrix4x4.Identity);
     }
 
     /// <summary>

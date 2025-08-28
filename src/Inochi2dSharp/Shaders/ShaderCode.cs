@@ -6,8 +6,18 @@ public static class ShaderCode
 """
 #version 330
 
-#ifdef I2D_POINT
+    layout(location = 0) out vec4 outColor;
 
+    uniform vec4 color;
+
+    void main() {
+        outColor = color;
+    }
+""";
+
+    public const string DbgFragPoint =
+"""
+#version 330
     layout(location = 0) out vec4 outColor;
     uniform vec4 color;
 
@@ -26,15 +36,6 @@ public static class ShaderCode
         alpha = 1.0 - smoothstep(1.0 - epsilon, 1.0 + epsilon, r);
         outColor = color * alpha;
     }
-#else
-    layout(location = 0) out vec4 outColor;
-
-    uniform vec4 color;
-
-    void main() {
-        outColor = color;
-    }
-#endif
 """;
 
     public const string PartMaskShader =
