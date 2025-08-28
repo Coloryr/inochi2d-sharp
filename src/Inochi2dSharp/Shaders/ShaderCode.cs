@@ -2,6 +2,41 @@
 
 public static class ShaderCode
 {
+    public const string DbgFrag =
+"""
+#version 330
+
+#ifdef I2D_POINT
+
+    layout(location = 0) out vec4 outColor;
+    uniform vec4 color;
+
+    void main() {
+        float r = 0.0; // radius
+        float alpha = 1.0; // alpha
+
+        // r = point in circle compared against circle raidus
+        vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+        r = dot(cxy, cxy);
+
+        // epsilon width
+        float epsilon = fwidth(r)*0.5;
+
+        // apply delta
+        alpha = 1.0 - smoothstep(1.0 - epsilon, 1.0 + epsilon, r);
+        outColor = color * alpha;
+    }
+#else
+    layout(location = 0) out vec4 outColor;
+
+    uniform vec4 color;
+
+    void main() {
+        outColor = color;
+    }
+#endif
+""";
+
     public const string PartMaskShader =
 """
 #version 330
@@ -219,40 +254,6 @@ out vec2 texUVs;
 
 void main() {
     gl_Position = mvp * vec4(verts.x, verts.y, verts.z, 1);
-}
-""";
-    public const string DebugLineFrag =
-"""
-#version 330
-layout(location = 0) out vec4 outColor;
-
-uniform vec4 color;
-
-void main() {
-    outColor = color;
-}
-""";
-    public const string DebugPointFrag =
-"""
-#version 330
-layout(location = 0) out vec4 outColor;
-
-uniform vec4 color;
-
-void main() {
-    float r = 0.0; // radius
-    float alpha = 1.0; // alpha
-
-    // r = point in circle compared against circle raidus
-    vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-    r = dot(cxy, cxy);
-
-    // epsilon width
-    float epsilon = fwidth(r)*0.5;
-
-    // apply delta
-    alpha = 1.0 - smoothstep(1.0 - epsilon, 1.0 + epsilon, r);
-    outColor = color * alpha;
 }
 """;
     public const string SceneFrag =

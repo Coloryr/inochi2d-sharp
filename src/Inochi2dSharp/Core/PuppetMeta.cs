@@ -60,9 +60,12 @@ public record PuppetMeta
         data.Add("version", Version);
         data.Add("rigger", Rigger);
         data.Add("artist", Artist);
-        var obj = new JsonObject();
-        Rights.Serialize(obj);
-        data.Add("rights", obj);
+        if (Rights != null)
+        {
+            var obj = new JsonObject();
+            Rights.Serialize(obj);
+            data.Add("rights", obj);
+        }
         data.Add("copyright", Copyright);
         data.Add("licenseURL", LicenseURL);
         data.Add("contact", Contact);
@@ -73,7 +76,6 @@ public record PuppetMeta
 
     public void Deserialize(JsonElement data)
     {
-        Rights = new();
         foreach (var item in data.EnumerateObject())
         {
             if (item.Name == "name" && item.Value.ValueKind != JsonValueKind.Null)
@@ -94,6 +96,7 @@ public record PuppetMeta
             }
             else if (item.Name == "rights" && item.Value.ValueKind == JsonValueKind.Object)
             {
+                Rights = new();
                 Rights.Deserialize(item.Value);
             }
             else if (item.Name == "copyright" && item.Value.ValueKind != JsonValueKind.Null)

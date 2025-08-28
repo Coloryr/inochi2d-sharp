@@ -66,6 +66,7 @@ public abstract class GlApi
     public const uint GL_VERTEX_SHADER = 0x8B31;
     public const uint GL_COMPILE_STATUS = 0x8B81;
     public const uint GL_LINK_STATUS = 0x8B82;
+    public const uint GL_FRAMEBUFFER_BINDING = 0x8CA6;
     public const uint GL_READ_FRAMEBUFFER = 0x8CA8;
     public const uint GL_DRAW_FRAMEBUFFER = 0x8CA9;
     public const uint GL_COLOR_ATTACHMENT0 = 0x8CE0;
@@ -158,4 +159,5 @@ public abstract class GlApi
     public abstract void StencilOp(uint fail, uint zfail, uint zpass);
     public abstract int GetError();
     public abstract void DeleteBuffer(uint uvbo);
+    public abstract uint GetIntegerv(uint target);
 }

@@ -113,6 +113,42 @@ public partial class I2dCore
         };
     }
 
+    public static BlendMode ToBlendMode(string name)
+    {
+        return name switch
+        {
+            "Multiply" => BlendMode.Multiply,
+            "Screen" => BlendMode.Screen,
+            "Overlay" => BlendMode.Overlay,
+            "Darken" => BlendMode.Darken,
+            "Lighten" => BlendMode.Lighten,
+            "ColorDodge" => BlendMode.ColorDodge,
+            "LinearDodge" => BlendMode.LinearDodge,
+            "AddGlow" => BlendMode.AddGlow,
+            "ColorBurn" => BlendMode.ColorBurn,
+            "HardLight" => BlendMode.HardLight,
+            "SoftLight" => BlendMode.SoftLight,
+            "Difference" => BlendMode.Difference,
+            "Exclusion" => BlendMode.Exclusion,
+            "Subtract" => BlendMode.Subtract,
+            "Inverse" => BlendMode.Inverse,
+            "DestinationIn" => BlendMode.DestinationIn,
+            "ClipToLower" => BlendMode.ClipToLower,
+            "SliceFromLower" => BlendMode.SliceFromLower,
+            _ => BlendMode.Normal,
+        };
+    }
+
+    public static MaskingMode ToMaskingMode(string name)
+    {
+        return name switch
+        {
+            "Mask" => MaskingMode.Mask,
+            "DodgeMask" => MaskingMode.DodgeMask,
+            _ => MaskingMode.Mask,
+        };
+    }
+
     public void InSetBlendMode(BlendMode blendingMode, bool legacyOnly = false)
     {
         if (!_inAdvancedBlending || legacyOnly) InSetBlendModeLegacy(blendingMode);

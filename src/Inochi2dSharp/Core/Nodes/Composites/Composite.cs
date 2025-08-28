@@ -404,7 +404,8 @@ public class Composite : Node
 
             else if (item.Name == "blend_mode" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                _blendingMode = Enum.Parse<BlendMode>(item.Value.GetString()!);
+                var str = item.Value.GetString()!;
+                _blendingMode = I2dCore.ToBlendMode(str);
             }
 
             else if (item.Name == "propagate_meshgroup" && item.Value.ValueKind != JsonValueKind.Null)

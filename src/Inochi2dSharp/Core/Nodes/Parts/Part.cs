@@ -223,7 +223,8 @@ public class Part : Drawable
             // Older models may not have blend mode
             else if (item.Name == "blend_mode" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                _blendingMode = Enum.Parse<BlendMode>(item.Value.GetString()!);
+                var str = item.Value.GetString()!;
+                _blendingMode = I2dCore.ToBlendMode(str);
             }
             else if (item.Name == "mask_mode" && item.Value.ValueKind != JsonValueKind.Null)
             {

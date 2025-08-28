@@ -28,6 +28,8 @@ public partial class I2dCore : IDisposable
     private readonly uint _cfBump;
     private readonly uint _cfStencil;
 
+    private uint _lastFBO;
+
     private Vector4 _inClearColor;
 
     private readonly PostProcessingShader _basicSceneShader;
@@ -56,6 +58,8 @@ public partial class I2dCore : IDisposable
     /// Unit vector describing the direction of the light
     /// </summary>
     public Vector3 InSceneLightDir = new(0, 0, 1);
+
+    public bool inDepthBufferMasks = true;
 
     private int _indiceCount;
     private uint _cVBO;
@@ -104,6 +108,8 @@ public partial class I2dCore : IDisposable
         _cfBump = gl.GenTexture();
         _cfStencil = gl.GenTexture();
 
+        _lastFBO = gl.GetIntegerv(GlApi.GL_FRAMEBUFFER_BINDING);
+
         // Set the viewport and by extension set the textures
         InSetViewport(640, 480);
 
@@ -121,7 +127,7 @@ public partial class I2dCore : IDisposable
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_DEPTH_STENCIL_ATTACHMENT, GlApi.GL_TEXTURE_2D, _cfStencil, 0);
 
         // go back to default fb
-        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, 0);
+        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _lastFBO);
     }
 
     public void RenderScene(Vector4 area, PostProcessingShader shaderToUse, uint albedo, uint emissive, uint bump)
@@ -196,6 +202,8 @@ public partial class I2dCore : IDisposable
     /// </summary>
     public void InBeginScene()
     {
+        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _lastFBO);
+
         gl.BindVertexArray(_sceneVAO);
         gl.Enable(GlApi.GL_BLEND);
         gl.Enablei(GlApi.GL_BLEND, 0);
@@ -271,7 +279,7 @@ public partial class I2dCore : IDisposable
     /// </summary>
     public void InEndScene()
     {
-        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, 0);
+        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _lastFBO);
 
         gl.Disablei(GlApi.GL_BLEND, 0);
         gl.Disablei(GlApi.GL_BLEND, 1);
@@ -360,7 +368,7 @@ public partial class I2dCore : IDisposable
             );
         }
 
-        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, 0);
+        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _lastFBO);
     }
 
     /// <summary>
@@ -500,13 +508,14 @@ public partial class I2dCore : IDisposable
         gl.BindTexture(GlApi.GL_TEXTURE_2D, _cfStencil);
         gl.TexImage2D(GlApi.GL_TEXTURE_2D, 0, GlApi.GL_DEPTH24_STENCIL8, width, height, 0, GlApi.GL_DEPTH_STENCIL, GlApi.GL_UNSIGNED_INT_24_8, 0);
 
+        _lastFBO = gl.GetIntegerv(GlApi.GL_FRAMEBUFFER_BINDING);
         gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _cfBuffer);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT0, GlApi.GL_TEXTURE_2D, _cfAlbedo, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT1, GlApi.GL_TEXTURE_2D, _cfEmissive, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_COLOR_ATTACHMENT2, GlApi.GL_TEXTURE_2D, _cfBump, 0);
         gl.FramebufferTexture2D(GlApi.GL_FRAMEBUFFER, GlApi.GL_DEPTH_STENCIL_ATTACHMENT, GlApi.GL_TEXTURE_2D, _cfStencil, 0);
 
-        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, 0);
+        gl.BindFramebuffer(GlApi.GL_FRAMEBUFFER, _lastFBO);
 
         gl.Viewport(0, 0, width, height);
     }

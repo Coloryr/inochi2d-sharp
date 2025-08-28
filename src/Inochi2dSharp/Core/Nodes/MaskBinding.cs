@@ -29,7 +29,8 @@ public record MaskBinding
             }
             else if (item.Name == "mode" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                Mode = Enum.Parse<MaskingMode>(item.Value.GetString()!);
+                var str = item.Value.GetString()!;
+                Mode = I2dCore.ToMaskingMode(str);
             }
         }
     }
