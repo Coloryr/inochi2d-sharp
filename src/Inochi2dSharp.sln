@@ -14,7 +14,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.View", "Inoch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Silk", "Inochi2dSharp.Silk\Inochi2dSharp.Silk.csproj", "{4E32059C-17CB-4106-831B-CD792088B57B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Opengl", "Inochi2dSharp.Opengl\Inochi2dSharp.Opengl.csproj", "{F329E6E3-C7A4-4761-B62C-99A5B583701E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.OpenGL", "Inochi2dSharp.OpenGL\Inochi2dSharp.OpenGL.csproj", "{F329E6E3-C7A4-4761-B62C-99A5B583701E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Core.Test", "Inochi2dSharp.Core.Test\Inochi2dSharp.Core.Test.csproj", "{B4859992-F955-4E32-A6C8-C038770B549D}"
 EndProject
