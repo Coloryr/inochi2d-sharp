@@ -2,12 +2,9 @@
 
 public partial class I2dView : IDisposable
 {
-    private readonly GlApi _gl;
-    private readonly I2dCore _core;
-
     private readonly List<I2dModel> _models = [];
 
-    public I2dView(GlApi gl)
+    public I2dView()
     {
         _gl = gl;
 

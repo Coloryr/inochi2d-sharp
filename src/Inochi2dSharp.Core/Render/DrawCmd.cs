@@ -1,9 +1,11 @@
-﻿namespace Inochi2dSharp.Core.Render;
+﻿using System.Runtime.InteropServices;
+
+namespace Inochi2dSharp.Core.Render;
 
 /// <summary>
 /// A drawing command that is sent to the GPU.
 /// </summary>
-public record DrawCmd
+public record DrawCmd : IDisposable
 {
     /// <summary>
     /// Maximum number of texture attachments.
@@ -58,10 +60,19 @@ public record DrawCmd
     /// <summary>
     /// Variables passed to the draw list.
     /// </summary>
-    public object[] Variables = new object[64];
+    public IntPtr Variables = Marshal.AllocHGlobal(64);
 
     /// <summary>
     /// Whether the command is empty.
     /// </summary>
     public bool IsEmpty => ElemCount == 0;
+
+    public void Dispose()
+    {
+        if (Variables != IntPtr.Zero)
+        {
+            Marshal.FreeHGlobal(Variables);
+            Variables = IntPtr.Zero;
+        }
+    }
 }

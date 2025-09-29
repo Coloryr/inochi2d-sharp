@@ -779,7 +779,7 @@ public abstract class ParameterBindingImpl<T> : ParameterBinding
         T bicubicInterp(Vector2UInt left, float xt, float yt)
         {
             T p01, p02, p03, p04;
-            T[] pOut= new T[4];
+            T[] pOut = new T[4];
 
             var xlen = (uint)Values.Length - 1;
             var ylen = Values[0].Length - 1;
@@ -893,7 +893,7 @@ public abstract class ParameterBindingImpl<T> : ParameterBinding
         ReInterpolate();
     }
 
-    public override  void DeleteKeypoints(uint axis, uint index)
+    public override void DeleteKeypoints(uint axis, uint index)
     {
         if (!(axis == 0 || axis == 1))
         {
@@ -961,9 +961,11 @@ public abstract class ParameterBindingImpl<T> : ParameterBinding
         {
             other.Unset(dest);
         }
-        else if (other is ParameterBindingImpl<T> o) {
+        else if (other is ParameterBindingImpl<T> o)
+        {
             o.SetValue(dest, GetValue(src));
-        } else
+        }
+        else
         {
             throw new Exception("ParameterBinding class mismatch");
         }

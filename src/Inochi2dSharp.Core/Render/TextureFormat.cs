@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp.Core.Render;
+﻿namespace Inochi2dSharp.Core.Render;
 
 /// <summary>
 /// Format of texture data.

@@ -2,7 +2,6 @@
 using Inochi2dSharp.Core;
 using Inochi2dSharp.Core.Animations;
 using Inochi2dSharp.Core.Nodes;
-using Inochi2dSharp.Math;
 
 namespace Inochi2dSharp.View;
 

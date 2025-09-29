@@ -14,8 +14,8 @@ public abstract class Driver : Node
     public virtual Parameter[] AffectedParameters => null!;
 
     public Driver()
-    { 
-    
+    {
+
     }
 
     public Driver(Guid guid, Node? parent) : base(guid, parent)
@@ -30,7 +30,7 @@ public abstract class Driver : Node
     /// <returns><see langword="true"/> if the parameter is affected by  the driver, <see langword="false"/> otherwise.</returns>
     public bool AffectsParameter(Parameter param)
     {
-        foreach (var p in AffectedParameters) 
+        foreach (var p in AffectedParameters)
         {
             if (p.Guid == param.Guid)
                 return true;

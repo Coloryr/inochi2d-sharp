@@ -12,11 +12,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.View", "Inochi2dSharp.View\Inochi2dSharp.View.csproj", "{F943CC20-766C-449F-81C5-0CA67494C748}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Silk", "Inochi2dSharp.Silk\Inochi2dSharp.Silk.csproj", "{4E32059C-17CB-4106-831B-CD792088B57B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.OpenGL.Silk", "Inochi2dSharp.OpenGL.Silk\Inochi2dSharp.OpenGL.Silk.csproj", "{4E32059C-17CB-4106-831B-CD792088B57B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.OpenGL", "Inochi2dSharp.OpenGL\Inochi2dSharp.OpenGL.csproj", "{F329E6E3-C7A4-4761-B62C-99A5B583701E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Core.Test", "Inochi2dSharp.Core.Test\Inochi2dSharp.Core.Test.csproj", "{B4859992-F955-4E32-A6C8-C038770B549D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{1872A386-5B0C-4989-9A04-74F7ECA31B59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{A58CFA5D-0CF2-468F-9AF8-672D69BBED35}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenGL", "OpenGL", "{4FE0FDFB-359E-4172-8714-99E06FD24BDC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +53,13 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F10B4919-0BFF-4557-8070-2E84075A3295} = {1872A386-5B0C-4989-9A04-74F7ECA31B59}
+		{F943CC20-766C-449F-81C5-0CA67494C748} = {1872A386-5B0C-4989-9A04-74F7ECA31B59}
+		{4E32059C-17CB-4106-831B-CD792088B57B} = {4FE0FDFB-359E-4172-8714-99E06FD24BDC}
+		{F329E6E3-C7A4-4761-B62C-99A5B583701E} = {4FE0FDFB-359E-4172-8714-99E06FD24BDC}
+		{B4859992-F955-4E32-A6C8-C038770B549D} = {A58CFA5D-0CF2-468F-9AF8-672D69BBED35}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A7B13E82-3EA1-4903-A7A8-2891CCB59918}

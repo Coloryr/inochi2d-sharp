@@ -594,7 +594,7 @@ public class Node : IDisposable
         offsetSort = 0;
 
         if (!enabled) return;
-        foreach (var child in Children) 
+        foreach (var child in Children)
         {
             child.PreUpdate(drawList);
         }
@@ -620,7 +620,7 @@ public class Node : IDisposable
     public virtual void PostUpdate(DrawList drawList)
     {
         if (!enabled) return;
-        foreach (var child in Children) 
+        foreach (var child in Children)
         {
             child.PostUpdate(drawList);
         }
@@ -631,7 +631,7 @@ public class Node : IDisposable
     /// </summary>
     public virtual void Draw(float delta, DrawList drawList)
     {
-        
+
     }
 
     /// <summary>
@@ -749,7 +749,8 @@ public class Node : IDisposable
     public virtual void Finalized()
     {
         _nid = TypeId.Nid;
-        foreach (var child in Children) {
+        foreach (var child in Children)
+        {
             child.Finalized();
         }
     }
@@ -841,6 +842,6 @@ public class Node : IDisposable
 
     public virtual void Dispose()
     {
-        
+
     }
 }

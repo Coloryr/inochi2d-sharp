@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Inochi2dSharp.Core.Math;
 using Inochi2dSharp.Core.Nodes;
 
@@ -13,8 +8,8 @@ namespace Inochi2dSharp.Core.Param;
 public class ValueParameterBinding : ParameterBindingImpl<float>
 {
     public ValueParameterBinding(Parameter parameter) : base(parameter)
-    { 
-        
+    {
+
     }
 
     public ValueParameterBinding(Parameter parameter, Node targetNode, string paramName) : base(parameter, targetNode, paramName)

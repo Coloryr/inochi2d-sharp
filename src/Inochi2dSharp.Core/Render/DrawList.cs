@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace Inochi2dSharp.Core.Render;
 
@@ -21,11 +16,11 @@ public class DrawList : IDisposable
     private int _cmdp;
 
     // Vertex Data
-    private readonly List<VtxData> _vtxs = [];
+    private VtxData[] _vtxs = [];
     private int _vtxp;
 
     // Index Data
-    private readonly List<uint> _idxs = [];
+    private uint[] _idxs = [];
     private int _idxp;
 
     // Buffer allocations
@@ -48,12 +43,12 @@ public class DrawList : IDisposable
     /// <summary>
     /// Vertex data
     /// </summary>
-    public List<VtxData> Vertices => _vtxs;
+    public VtxData[] Vertices => _vtxs;
 
     /// <summary>
     /// Index data
     /// </summary>
-    public List<uint> Indices => _idxs;
+    public uint[] Indices => _idxs;
 
     /// <summary>
     /// Allocated meshes
@@ -71,12 +66,6 @@ public class DrawList : IDisposable
         if (idx.Length != 0 && (idx.Length % 3) != 0)
             return null;
 
-        //// Resize if stuff doesn't fit.
-        //if (_vtxp + vtx.Length >= _vtxs.Count)
-        //    _vtxs.resize(_vtxp + vtx.Length + 1);
-        //if (_idxp + idx.Length >= _idxs.Count)
-        //    _idxs.resize(_idxp + idx.Length + 1);
-
         // Meshes supply their own index data, as such
         // we offset it here to fit within our buffer.
         if (!UseBaseVertex)
@@ -87,8 +76,12 @@ public class DrawList : IDisposable
             }
         }
 
-        _vtxs.AddRange(vtx);
-        _idxs.AddRange(idx);
+        var list = new List<VtxData>(_vtxs);
+        list.AddRange(vtx);
+        _vtxs = [.. list];
+        var list1 = new List<uint>(_idxs);
+        list1.AddRange(idx);
+        _idxs = [.. list1];
         _vtxp += vtx.Length;
         _idxp += idx.Length;
 
@@ -156,15 +149,12 @@ public class DrawList : IDisposable
     /// </summary>
     /// <param name="nid"></param>
     /// <param name="value"></param>
+    /// <param name="size"></param>
     /// <exception cref="Exception"></exception>
-    public void SetVariables(uint nid, object value) 
+    public unsafe void SetVariables(uint nid, void* value, int size)
     {
-        if (Marshal.SizeOf(value) > Marshal.SizeOf(_ccmd.Variables))
-        {
-            throw new Exception("value size to bigger");
-        }
         _ccmd.TypeId = nid;
-        _ccmd.Variables[0] = value;
+        Buffer.MemoryCopy(value, (void*)_ccmd.Variables, 64, size);
     }
 
     /// <summary>
@@ -226,9 +216,11 @@ public class DrawList : IDisposable
 
     public void Dispose()
     {
+        foreach (var item in _cmds)
+        {
+            item.Dispose();
+        }
         _cmds.Clear();
-        _vtxs.Clear();
-        _idxs.Clear();
         _allocs.Clear();
         _targetsStack.Clear();
     }

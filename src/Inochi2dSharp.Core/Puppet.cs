@@ -41,7 +41,7 @@ public class Puppet : IDisposable
     /// <summary>
     /// A list of parameters that are driven by drivers
     /// </summary>
-    private readonly Dictionary<Parameter, Driver> _drivenParameters  = [];
+    private readonly Dictionary<Parameter, Driver> _drivenParameters = [];
 
     /// <summary>
     /// A dictionary of named animations

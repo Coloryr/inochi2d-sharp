@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inochi2dSharp.Core.Render;
+﻿namespace Inochi2dSharp.Core.Render;
 
 /// <summary>
 /// A cache of textures in use by a model.
@@ -14,7 +8,7 @@ public class TextureCache
     private readonly List<Texture> _textures = [];
 
     public int Size => _textures.Count;
-    public Texture[] Cache => [.. _textures];
+    public List<Texture> Cache => _textures;
 
     /// <summary>
     /// Adds a texture to the cache, adding a retain count to the texture. Texture caches only allow a single instance of a texture to be stored within.
@@ -42,7 +36,7 @@ public class TextureCache
     public void Prune()
     {
         var alive = 0;
-        foreach (var item in _textures.ToArray()) 
+        foreach (var item in _textures.ToArray())
         {
             if (item.Released())
             {

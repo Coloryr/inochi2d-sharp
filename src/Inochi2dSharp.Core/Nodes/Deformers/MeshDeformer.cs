@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
+﻿using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Inochi2dSharp.Core.Math;
 using Inochi2dSharp.Core.Render;
 
@@ -73,8 +68,8 @@ public class MeshDeformer : Deformer
     /// Constructs a new MeshGroup node
     /// </summary>
     public MeshDeformer(Node? parent = null) : base(parent)
-    { 
-        
+    {
+
     }
 
     /// <summary>
@@ -102,7 +97,7 @@ public class MeshDeformer : Deformer
         ResetDeform();
     }
 
-    public override  void Update(float delta, DrawList drawList)
+    public override void Update(float delta, DrawList drawList)
     {
         _base.PushMatrix(WorldTransform.Matrix);
         _deformed.PushMatrix(WorldTransform.Matrix);

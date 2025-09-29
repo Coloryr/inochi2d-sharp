@@ -107,7 +107,7 @@ public class SimplePhysics : Driver
     /// <summary>
     /// The affected parameters of the driver.
     /// </summary>
-    public override Parameter[] AffectedParameters => _param != null ? [_param]: null!;
+    public override Parameter[] AffectedParameters => _param != null ? [_param] : null!;
 
     /// <summary>
     /// Physics scale.

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
+﻿using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Inochi2dSharp.Core.Math;
 using Inochi2dSharp.Core.Render;
 
@@ -70,8 +65,8 @@ public abstract class Drawable : Node, IDeformable
     /// </summary>
     /// <param name="parent"></param>
     public Drawable(Node? parent = null) : base(parent)
-    { 
-        
+    {
+
     }
 
     /// <summary>
@@ -80,8 +75,8 @@ public abstract class Drawable : Node, IDeformable
     /// <param name="data"></param>
     /// <param name="parent"></param>
     public Drawable(MeshData data, Node? parent = null) : this(data, Guid.NewGuid(), parent)
-    { 
-    
+    {
+
     }
 
     /// <summary>
@@ -211,7 +206,7 @@ public abstract class Drawable : Node, IDeformable
 
         deformed_ = new DeformedMesh();
         base_ = new DeformedMesh();
-        
+
         if (data.TryGetProperty("mesh", out var item) && item.ValueKind != JsonValueKind.Null)
         {
             var data1 = new MeshData();

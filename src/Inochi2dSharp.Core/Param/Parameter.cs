@@ -99,7 +99,7 @@ public class Parameter
 
     public Parameter()
     {
-        
+
     }
 
     public Parameter(string name, bool isVec2)

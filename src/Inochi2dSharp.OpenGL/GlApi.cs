@@ -1,4 +1,4 @@
-﻿namespace Inochi2dSharp.Opengl;
+﻿namespace Inochi2dSharp.OpenGL;
 
 public abstract class GlApi
 {
@@ -16,6 +16,7 @@ public abstract class GlApi
     public const uint GL_PACK_ALIGNMENT = 0x0D05;
     public const uint GL_TEXTURE_BORDER_COLOR = 0x1004;
     public const uint GL_UNSIGNED_BYTE = 0x1401;
+    public const uint GL_UNSIGNED_INT = 0x1405;
     public const uint GL_FLOAT = 0x1406;
     public const uint GL_RED = 0x1903;
     public const uint GL_RGB = 0x1907;
@@ -62,6 +63,7 @@ public abstract class GlApi
     public const uint GL_ARRAY_BUFFER = 0x8892;
     public const uint GL_DEPTH24_STENCIL8 = 0x88F0;
     public const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+    public const uint GL_UNIFORM_BUFFER = 0x8A11;
     public const uint GL_FRAGMENT_SHADER = 0x8B30;
     public const uint GL_VERTEX_SHADER = 0x8B31;
     public const uint GL_COMPILE_STATUS = 0x8B81;
@@ -85,6 +87,9 @@ public abstract class GlApi
     public const uint GL_SOFTLIGHT_KHR = 0x929C;
     public const uint GL_DIFFERENCE_KHR = 0x929E;
     public const uint GL_EXCLUSION_KHR = 0x92A0;
+
+    public bool IsGLES { get; }
+    public bool IsMacos { get; }
 
     public abstract uint CreateShader(uint type);
     public abstract void ShaderSource(uint shader, string code);
@@ -139,9 +144,10 @@ public abstract class GlApi
     public abstract void Flush();
     public abstract void Disablei(uint target, int index);
     public abstract void GenerateMipmap(uint target);
-    public abstract void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, uint mask, uint filter);
-    public abstract void TexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels);
+    public abstract void BlitFramebuffer(uint srcX0, uint srcY0, uint srcX1, uint srcY1, uint dstX0, uint dstY0, uint dstX1, uint dstY1, uint mask, uint filter);
+    public abstract void TexImage2D(uint target, int level, uint internalformat, uint width, uint height, int border, uint format, uint type, nint pixels);
     public abstract void TexParameteri(uint target, uint pname, uint arg);
+    public abstract void TextureParameteri(uint target, uint pname, uint arg);
     public abstract void GetTexImage(uint target, int level, uint format, uint type, nint pixels);
     public abstract void PointSize(float size);
     public abstract void LineWidth(float width);
@@ -160,4 +166,8 @@ public abstract class GlApi
     public abstract int GetError();
     public abstract void DeleteBuffer(uint uvbo);
     public abstract int GetIntegerv(uint target);
+    public abstract void DeleteFramebuffer(uint fb);
+    public abstract void BufferSubData(uint target, uint offset, uint size, nint data);
+    public abstract void BindBufferBase(uint target, uint index, uint buffer);
+    public abstract void DrawElementsBaseVertex(uint mode, uint count, uint type, nint indices, uint basevertex);
 }

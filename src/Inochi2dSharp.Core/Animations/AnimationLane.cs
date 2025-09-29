@@ -165,9 +165,9 @@ public class AnimationLane
         return 0;
     }
 
-    public void Reconstruct(Puppet puppet) 
-    { 
-    
+    public void Reconstruct(Puppet puppet)
+    {
+
     }
 
     public void Finalized(Puppet puppet)

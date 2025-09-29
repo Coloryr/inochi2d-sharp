@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Inochi2dSharp.Core.Math;
 
 namespace Inochi2dSharp.Core;
@@ -75,7 +70,7 @@ public sealed record Mesh
         {
             _vtx[i] = new VtxData
             {
-                Vtx = new Vector3(_vto[i], 0),
+                Vtx = _vto[i],
                 Uv = meshData.Uvs[i]
             };
         }
@@ -154,7 +149,7 @@ public sealed record Mesh
         };
         for (int i = 0; i < mesh.Vertices.Length; i++)
         {
-            data.Vertices[i] = mesh.Vertices[i].Vtx.GetXY();
+            data.Vertices[i] = mesh.Vertices[i].Vtx;
             data.Uvs[i] = mesh.Vertices[i].Uv;
         }
         return data;

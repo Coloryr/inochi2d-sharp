@@ -18,28 +18,28 @@ public static class Inochi2d
     {
         ScreenSpaceMesh ??= Mesh.FromMeshData(new MeshData()
         {
-            Vertices = 
+            Vertices =
             [
                 new Vector2(-1, -1),
                 new Vector2(-1,  1),
                 new Vector2(1,  -1),
                 new Vector2(1,   1)
             ],
-            Uvs = 
+            Uvs =
             [
                 new Vector2(0, 0),
                 new Vector2(0, 1),
                 new Vector2(1, 0),
                 new Vector2(1, 1)
             ],
-            Indices = 
+            Indices =
             [
                 0, 1, 2,
                 2, 1, 3
             ]
         });
     }
-    
+
     public static void InCleanupComposite()
     {
         ScreenSpaceMesh = null!;

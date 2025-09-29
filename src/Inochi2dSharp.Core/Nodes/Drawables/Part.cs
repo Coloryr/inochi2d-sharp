@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Render;
@@ -340,18 +341,17 @@ public class Part : Drawable
         base.PreUpdate(drawList);
     }
 
-    public override void Draw(float delta, DrawList drawList)
+    public override unsafe void Draw(float delta, DrawList drawList)
     {
         if (!RenderEnabled)
             return;
 
-        var vars = new PartVars
-        {
-            tint = Tint * OffsetTint,
-            screenTint = ScreenTint * OffsetScreenTint,
-            opacity = Opacity * OffsetOpacity,
-            emissionStrength = EmissionStrength * OffsetEmissionStrength
-        };
+        PartVars* vars = stackalloc PartVars[1];
+
+        vars->Tint = Tint * OffsetTint;
+        vars->ScreenTint = ScreenTint * OffsetScreenTint;
+        vars->Opacity = Opacity * OffsetOpacity;
+        vars->EmissionStrength = EmissionStrength * OffsetEmissionStrength;
 
         if (Masks.Count > 0)
         {
@@ -362,7 +362,7 @@ public class Part : Drawable
 
             base.Draw(delta, drawList);
             drawList.SetDrawState(DrawState.MaskedDraw);
-            drawList.SetVariables(Nid, vars);
+            drawList.SetVariables(Nid, vars, PartVarsHelper.Size);
             drawList.SetBlending(BlendingMode);
             drawList.SetSources(Textures);
             drawList.Next();
@@ -372,7 +372,7 @@ public class Part : Drawable
         base.Draw(delta, drawList);
         drawList.SetSources(Textures);
         drawList.SetBlending(BlendingMode);
-        drawList.SetVariables(Nid, vars);
+        drawList.SetVariables(Nid, vars, PartVarsHelper.Size);
         drawList.Next();
     }
 

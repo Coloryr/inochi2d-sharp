@@ -130,7 +130,7 @@ public enum BlendMode
 }
 
 public static class BlendModeHelper
-{ 
+{
     public static BlendMode ToBlendMode(this string name)
     {
         return name switch

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Inochi2dSharp.Core.Nodes.Drawables;
@@ -311,27 +312,26 @@ public class Composite : Node
 
         // Avoid over allocating a single screenspace
         // rect.
-        if (_screenSpaceAlloc!=null)
+        if (_screenSpaceAlloc != null)
             _screenSpaceAlloc = drawList.Allocate(Inochi2d.ScreenSpaceMesh.Vertices, Inochi2d.ScreenSpaceMesh.Indices);
     }
 
-    public override void Draw(float delta, DrawList drawList)
+    public override unsafe void Draw(float delta, DrawList drawList)
     {
         if (!RenderEnabled || ToRender.Count == 0)
             return;
 
-        var compositeVars = new CompositeVars
-        { 
-            Tint = _tint * OffsetTint,
-            ScreenTint = _screenTint * OffsetScreenTint,
-           Opacity =  _opacity *OffsetOpacity
-        };
+        CompositeVars* compositeVars = stackalloc CompositeVars[1];
+
+        compositeVars->Tint = _tint * OffsetTint;
+        compositeVars->ScreenTint = _screenTint * OffsetScreenTint;
+        compositeVars->Opacity = _opacity * OffsetOpacity;
 
         SelfSort();
 
         // Push sub render area.
         drawList.BeginComposite();
-        foreach (var  child in ToRender) 
+        foreach (var child in ToRender)
         {
             child.Draw(delta, drawList);
         }
@@ -339,14 +339,14 @@ public class Composite : Node
 
         if (_masks.Count > 0)
         {
-            foreach (var  mask in _masks) 
+            foreach (var mask in _masks)
             {
                 mask.MaskSrc.DrawAsMask(delta, drawList, mask.Mode);
             }
         }
 
         // Then blit it to the main framebuffer
-        drawList.SetVariables(Nid, compositeVars);
+        drawList.SetVariables(Nid, compositeVars, CompositeVarsHelper.Size);
         drawList.SetMesh(_screenSpaceAlloc);
         drawList.SetDrawState(DrawState.CompositeBlit);
         drawList.SetBlending(_blendingMode);

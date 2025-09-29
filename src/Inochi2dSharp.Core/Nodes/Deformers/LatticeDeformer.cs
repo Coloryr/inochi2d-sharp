@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
+﻿using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Inochi2dSharp.Core.Render;
 
 namespace Inochi2dSharp.Core.Nodes.Deformers;
@@ -28,7 +23,7 @@ public class LatticeDeformer : Deformer
     /// </summary>
     public Vector2 Size
     {
-        get 
+        get
         {
             return size_;
         }
@@ -44,7 +39,7 @@ public class LatticeDeformer : Deformer
     /// </summary>
     public int Subdivisions
     {
-        get 
+        get
         {
             return subdivs;
         }
@@ -78,8 +73,8 @@ public class LatticeDeformer : Deformer
     /// </summary>
     /// <param name="parent"></param>
     public LatticeDeformer(Node? parent = null) : base(parent)
-    { 
-        
+    {
+
     }
 
     /// <summary>
@@ -88,8 +83,8 @@ public class LatticeDeformer : Deformer
     /// <param name="delta"></param>
     /// <param name="drawList"></param>
     public override void Update(float delta, DrawList drawList)
-    { 
-        
+    {
+
     }
 
     /// <summary>
@@ -132,7 +127,7 @@ public class LatticeDeformer : Deformer
         Array.Clear(latticeInitial);
 
         var iter = new Vector2(size_.X / subdivs, size_.Y / subdivs);
-        for (int i= 0;i< lattice.Length;i++) 
+        for (int i = 0; i < lattice.Length; i++)
         {
             float x = i % (float)subdivs;
             float y = i / (float)subdivs;
