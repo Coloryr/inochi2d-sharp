@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35507.96
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp", "Inochi2dSharp\Inochi2dSharp.csproj", "{F10B4919-0BFF-4557-8070-2E84075A3295}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Core", "Inochi2dSharp.Core\Inochi2dSharp.Core.csproj", "{F10B4919-0BFF-4557-8070-2E84075A3295}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
@@ -13,6 +13,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.View", "Inochi2dSharp.View\Inochi2dSharp.View.csproj", "{F943CC20-766C-449F-81C5-0CA67494C748}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Silk", "Inochi2dSharp.Silk\Inochi2dSharp.Silk.csproj", "{4E32059C-17CB-4106-831B-CD792088B57B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Opengl", "Inochi2dSharp.Opengl\Inochi2dSharp.Opengl.csproj", "{F329E6E3-C7A4-4761-B62C-99A5B583701E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inochi2dSharp.Core.Test", "Inochi2dSharp.Core.Test\Inochi2dSharp.Core.Test.csproj", "{B4859992-F955-4E32-A6C8-C038770B549D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +36,14 @@ Global
 		{4E32059C-17CB-4106-831B-CD792088B57B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E32059C-17CB-4106-831B-CD792088B57B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E32059C-17CB-4106-831B-CD792088B57B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F329E6E3-C7A4-4761-B62C-99A5B583701E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F329E6E3-C7A4-4761-B62C-99A5B583701E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F329E6E3-C7A4-4761-B62C-99A5B583701E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F329E6E3-C7A4-4761-B62C-99A5B583701E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4859992-F955-4E32-A6C8-C038770B549D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4859992-F955-4E32-A6C8-C038770B549D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4859992-F955-4E32-A6C8-C038770B549D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4859992-F955-4E32-A6C8-C038770B549D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
