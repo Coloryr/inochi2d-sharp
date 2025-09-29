@@ -464,7 +464,7 @@ public abstract class ParameterBindingImpl<T> : ParameterBinding
             else
             {
                 //debug writefln("set (%d, %d) -> %s", maj, min, val);
-                if (valid[min][maj])
+                if (valid[maj][min])
                 {
                     throw new Exception("valid error");
                 }

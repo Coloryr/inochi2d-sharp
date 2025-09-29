@@ -55,7 +55,8 @@ public class ParameterTests
                     PrintArray(expect);
                     Console.WriteLine("Output:");
                     PrintArray(bind.Values);
-                    Assert.Pass(description);
+                    Console.WriteLine(description);
+                    Assert.Fail();
                 }
             }
         }
@@ -94,7 +95,7 @@ public class ParameterTests
 
     }
 
-    private readonly float x = default;
+    private readonly float x = float.NaN;
 
     [Test]
     public void Test1()
