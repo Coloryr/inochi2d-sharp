@@ -302,7 +302,8 @@ public class SimplePhysics : Driver
         }
         else
         {
-            Matrix4x4.Invert(Transform().Matrix, out var temp);
+            var temp1 = Transform().Matrix;
+            var res = Matrix4x4.Invert(temp1, out var temp);
             localPos4 = temp.Multiply(new Vector4(Output.X, Output.Y, 0, 1));
         }
         var localAngle = Vector2.Normalize(new Vector2(localPos4.X, localPos4.Y));

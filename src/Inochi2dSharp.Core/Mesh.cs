@@ -73,6 +73,11 @@ public sealed record Mesh
                 Vtx = _vto[i],
                 Uv = meshData.Uvs[i]
             };
+
+            if (float.IsNaN(_vtx[i].Vtx.X) || float.IsNaN(_vtx[i].Vtx.Y))
+            {
+
+            }
         }
     }
 

@@ -358,10 +358,10 @@ public class Composite : Node
     /// </summary>
     public void ScanParts()
     {
-        _subParts.Clear();
-        if (Children.Count > 0)
+        ToRender.Clear();
+        foreach (var item in Children)
         {
-            ScanPartsRecurse(Children[0].Parent!);
+            ScanPartsRecurse(item);
         }
     }
 }

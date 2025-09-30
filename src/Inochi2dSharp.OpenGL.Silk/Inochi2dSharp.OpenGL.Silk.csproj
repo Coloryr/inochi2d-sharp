@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Inochi2dSharp.OpenGL\Inochi2dSharp.OpenGL.csproj" />
     <ProjectReference Include="..\Inochi2dSharp.View\Inochi2dSharp.View.csproj" />
   </ItemGroup>
 

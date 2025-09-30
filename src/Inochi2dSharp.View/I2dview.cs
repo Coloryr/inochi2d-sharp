@@ -1,43 +1,56 @@
-﻿namespace Inochi2dSharp.View;
+﻿using System.Numerics;
+using Inochi2dSharp.Core.Format.Inp;
+using Inochi2dSharp.Core.Math;
+
+namespace Inochi2dSharp.View;
 
 public partial class I2dView : IDisposable
 {
     private readonly List<I2dModel> _models = [];
 
-    public I2dView()
-    {
-        _gl = gl;
+    private readonly Camera2D _cam;
+    private readonly IRender _render;
 
-        _core = new(gl, null);
-        _core.InCamera.Scale = new(0.1f);
-    }
-
-    public void SetView(int width, int height)
+    public I2dView(IRender render, int width, int height, float scale)
     {
-        _core.InSetViewport(width, height);
+        _render = render;
+        _render.SetSize(width, height);
+        _cam = new Camera2D()
+        {
+            Scale = scale,
+            Size = new Vector2((uint)width, (uint)height)
+        };
+        _cam.Update();
     }
 
     public I2dModel LoadModel(string file)
     {
-        var model = new I2dModel(file, _core.InLoadPuppet(file));
+        var model = new I2dModel(file, BinFmt.InLoadPuppet(file));
         _models.Add(model);
-
+        _render.AddPuppet(model.Model);
         return model;
     }
 
-    public void Tick(float delta)
+    public void SetSize(int width, int height)
     {
-        _core.TickTime(delta);
-        _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT | GlApi.GL_DEPTH_BUFFER_BIT);
-        _core.InBeginScene();
+        _cam.Size = new Vector2((uint)width, (uint)height);
+        _cam.Update();
+        _render.SetSize(width, height);
+    }
+
+    public void Tick(float delta, uint fb)
+    {
+        _render.PreRender();
+
         foreach (var item in _models)
         {
             item.Update(delta);
-            item.Draw();
+            item.Draw(delta);
+
+            _render.Render(item.Model, _cam);
         }
-        _core.InEndScene();
-        _core.InGetViewport(out var width, out var height);
-        _core.InDrawScene(new(0, 0, width, height));
+
+        _render.PostRender(fb);
     }
 
     public void Dispose()
@@ -47,6 +60,5 @@ public partial class I2dView : IDisposable
             item.Dispose();
         }
         _models.Clear();
-        _core.Dispose();
     }
 }

@@ -37,7 +37,7 @@ public class Node : IDisposable
     /// <summary>
     /// The offset to the transform to apply
     /// </summary>
-    protected Transform TransformOffset;
+    protected Transform TransformOffset = new();
 
     /// <summary>
     /// The offset to apply to sorting
@@ -199,7 +199,7 @@ public class Node : IDisposable
     /// <param name="parent"></param>
     public Node(Guid guid, Node? parent = null)
     {
-        _parent = parent;
+        Parent = parent;
         _guid = guid;
     }
 
@@ -693,7 +693,7 @@ public class Node : IDisposable
             }
             else if (item.Name == "enabled" && item.Value.ValueKind != JsonValueKind.Null)
             {
-                enabled = item.Value.GetBoolean(); ;
+                enabled = item.Value.GetBoolean();
             }
             else if (item.Name == "zsort" && item.Value.ValueKind != JsonValueKind.Null)
             {

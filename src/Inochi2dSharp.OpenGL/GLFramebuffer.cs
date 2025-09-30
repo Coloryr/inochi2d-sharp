@@ -4,14 +4,14 @@ public record GLFramebuffer : IDisposable
 {
     private readonly GlApi _gl;
 
-    private uint _width;
-    private uint _height;
+    private int _width;
+    private int _height;
 
     public uint Fb;
 
     public readonly List<GLTexture> Textures = [];
 
-    public unsafe GLFramebuffer(GlApi gl, uint width, uint height)
+    public unsafe GLFramebuffer(GlApi gl, int width, int height)
     {
         _gl = gl;
         _width = width;
@@ -20,7 +20,7 @@ public record GLFramebuffer : IDisposable
         Fb = gl.GenFramebuffer();
     }
 
-    public void Resize(uint width, uint height)
+    public void Resize(int width, int height)
     {
         if (_width == width && _height == height)
             return;

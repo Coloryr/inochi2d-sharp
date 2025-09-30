@@ -1,13 +1,14 @@
 ﻿using System.Numerics;
 using Inochi2dSharp.Core;
 using Inochi2dSharp.Core.Animations;
+using Inochi2dSharp.Core.Math;
 using Inochi2dSharp.Core.Nodes;
 
 namespace Inochi2dSharp.View;
 
 public class I2dModel : IDisposable
 {
-    private readonly Puppet _model;
+    internal readonly Puppet Model;
 
     private readonly AnimationPlayer _animation;
 
@@ -48,7 +49,7 @@ public class I2dModel : IDisposable
 
     public I2dModel(string file, Puppet model)
     {
-        _model = model;
+        Model = model;
         _animation = new(model)
         {
             AnimStop = OnStopAnimation
@@ -75,7 +76,7 @@ public class I2dModel : IDisposable
         Console.WriteLine(model.GetParametersString());
         Console.WriteLine();
         Console.WriteLine("Textures:");
-        foreach (var item in model.TextureSlots)
+        foreach (var item in model.TextureCache.Cache)
         {
             Console.WriteLine($"    Id: {item.Id} Width: {item.Width} Height: {item.Height}");
         }
@@ -87,9 +88,9 @@ public class I2dModel : IDisposable
         return new()
         {
             Name = node.Name,
-            UUID = node.UUID,
+            Guid = node.Guid,
             ZSort = node.ZSort,
-            Type = node.TypeId(),
+            Type = node.TypeId.Sid,
             Children = GetParts(node.Children)
         };
     }
@@ -97,7 +98,7 @@ public class I2dModel : IDisposable
     public List<ModelAnimation> GetAnimations()
     {
         var list = new List<ModelAnimation>();
-        foreach (var item in _model.Animations)
+        foreach (var item in Model.GetAnimations())
         {
             list.Add(new()
             {
@@ -135,19 +136,19 @@ public class I2dModel : IDisposable
 
     public ModelPart GetParts()
     {
-        return GenInfo(_model.Root);
+        return GenInfo(Model.Root);
     }
 
     public List<ModelParameter> GetParameters()
     {
         var list = new List<ModelParameter>();
-        for (int a = 0; a < _model.Parameters.Count; a++)
+        for (int a = 0; a < Model.Parameters.Count; a++)
         {
-            var item = _model.Parameters[a];
+            var item = Model.Parameters[a];
             list.Add(new()
             {
                 Index = a,
-                UUID = item.UUID,
+                Guid = item.Guid,
                 Name = item.Name,
                 Min = item.Min,
                 Max = item.Max,
@@ -162,7 +163,7 @@ public class I2dModel : IDisposable
 
     public void SetParameter(ModelParameter parameter)
     {
-        var par = _model.Parameters[parameter.Index];
+        var par = Model.Parameters[parameter.Index];
         if (MathHelper.Contains(par.Min, par.Max, parameter.Value))
         {
             par.Value = parameter.Value;
@@ -171,16 +172,16 @@ public class I2dModel : IDisposable
 
     public void SetParameter(int index, Vector2 value)
     {
-        var par = _model.Parameters[index];
+        var par = Model.Parameters[index];
         if (MathHelper.Contains(par.Min, par.Max, value))
         {
             par.Value = value;
         }
     }
 
-    public void SetParameter(uint uuid, Vector2 value)
+    public void SetParameter(Guid guid, Vector2 value)
     {
-        var par = _model.FindParameter(uuid);
+        var par = Model.FindParameter(guid);
         if (par == null)
         {
             return;
@@ -193,7 +194,7 @@ public class I2dModel : IDisposable
 
     public void ResetParameter(ModelParameter parameter)
     {
-        var par = _model.Parameters[parameter.Index];
+        var par = Model.Parameters[parameter.Index];
         if (par == null)
         {
             return;
@@ -201,9 +202,9 @@ public class I2dModel : IDisposable
         par.Value = par.Defaults;
     }
 
-    public void ResetParameter(uint uuid)
+    public void ResetParameter(Guid guid)
     {
-        var par = _model.FindParameter(uuid);
+        var par = Model.FindParameter(guid);
         if (par == null)
         {
             return;
@@ -213,7 +214,7 @@ public class I2dModel : IDisposable
 
     public void ResetParameter(int index)
     {
-        var par = _model.Parameters[index];
+        var par = Model.Parameters[index];
         if (par == null)
         {
             return;
@@ -223,7 +224,7 @@ public class I2dModel : IDisposable
 
     public void PlayAnimation(string name)
     {
-        if (_model.Animations.TryGetValue(name, out var animation))
+        if (Model.GetAnimations().TryGetValue(name, out var animation))
         {
             _animation.Play(name, animation);
             OnPlayAnimation(name);
@@ -247,8 +248,7 @@ public class I2dModel : IDisposable
 
     public void AddCustomAnimation(CustomAnimation animation)
     {
-        if (_customAnimations.ContainsKey(animation.Name)
-            || _model.Animations.ContainsKey(animation.Name))
+        if (_customAnimations.ContainsKey(animation.Name))
         {
             throw new Exception($"Animation name: {animation.Name} is exist");
         }
@@ -265,13 +265,13 @@ public class I2dModel : IDisposable
 
     public void Update(float delta)
     {
-        _model.Update();
-        _animation.Update(delta);
+        Model.Update(delta);
+        //_animation.Update(delta);
     }
 
-    public void Draw()
+    public void Draw(float delta)
     {
-        _model.Draw();
+        Model.Draw(delta);
     }
 
     private void OnPlayAnimation(string name)
@@ -314,6 +314,6 @@ public class I2dModel : IDisposable
     {
         _animation.StopAll(true);
         _animation.Dispose();
-        _model.Dispose();
+        Model.Dispose();
     }
 }

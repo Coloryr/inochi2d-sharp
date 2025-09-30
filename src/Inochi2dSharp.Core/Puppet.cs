@@ -145,9 +145,12 @@ public class Puppet : IDisposable
         if (node is Driver part)
         {
             _drivers.Add(part);
-            foreach (Parameter param in part.AffectedParameters)
+            if (part.AffectedParameters != null)
             {
-                _drivenParameters[param] = part;
+                foreach (Parameter param in part.AffectedParameters)
+                {
+                    _drivenParameters[param] = part;
+                }
             }
         }
         else if (!driversOnly)
@@ -289,7 +292,6 @@ public class Puppet : IDisposable
         }
         Meta = new();
         Physics = new();
-        Root = new();
         foreach (var item in data.EnumerateObject())
         {
             if (item.Name == "meta" && item.Value.ValueKind == JsonValueKind.Object)

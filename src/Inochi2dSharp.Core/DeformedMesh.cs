@@ -91,6 +91,11 @@ public class DeformedMesh
 
             deformed_[i].Vtx.X = delta_[i].X;
             deformed_[i].Vtx.Y = delta_[i].Y;
+
+            if (float.IsNaN(deformed_[i].Vtx.X) || float.IsNaN(deformed_[i].Vtx.Y))
+            { 
+                
+            }
         }
     }
     /// <summary>
@@ -106,6 +111,11 @@ public class DeformedMesh
         delta_[offset] += by;
         deformed_[offset].Vtx.X = delta_[offset].X;
         deformed_[offset].Vtx.Y = delta_[offset].Y;
+
+        if (float.IsNaN(deformed_[offset].Vtx.X) || float.IsNaN(deformed_[offset].Vtx.Y))
+        {
+
+        }
     }
 
     /// <summary>
@@ -122,6 +132,11 @@ public class DeformedMesh
 
             deformed_[i].Vtx.X = delta_[i].X;
             deformed_[i].Vtx.Y = delta_[i].Y;
+
+            if (float.IsNaN(deformed_[i].Vtx.X) || float.IsNaN(deformed_[i].Vtx.Y))
+            {
+
+            }
         }
     }
 

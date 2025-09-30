@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace Inochi2dSharp.OpenGL;
 
 public record GLShader : IDisposable
 {
     private readonly GlApi _gl;
-    private uint _prog;
+
+    private uint _prog = uint.MaxValue;
 
     public unsafe GLShader(GlApi gl, string vertex, string fragment)
     {
@@ -114,6 +110,10 @@ public record GLShader : IDisposable
 
     public void Dispose()
     {
-        _gl.DeleteProgram(_prog);
+        if (_prog != uint.MinValue)
+        {
+            _gl.DeleteProgram(_prog);
+            _prog = uint.MaxValue;
+        }
     }
 }

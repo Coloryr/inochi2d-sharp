@@ -93,11 +93,12 @@ public record MeshData
             else if (item.Name is "indices" && item.Value.ValueKind is JsonValueKind.Array)
             {
                 var list1 = item.Value.EnumerateArray().ToArray();
-                int index = 0;
+                var list = new List<uint>();
                 foreach (var indiceData in list1)
                 {
-                    Indices[index++] = indiceData.GetUInt32();
+                    list.Add(indiceData.GetUInt32());
                 }
+                Indices = [.. list];
             }
         }
         if (data.TryGetProperty("origin", out var temp) && temp.ValueKind is JsonValueKind.Array)

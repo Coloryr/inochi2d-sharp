@@ -45,6 +45,7 @@ public class Camera2D : Camera
         projection = MathHelper.Orthographic(0f, Size.X, Size.Y, 0, 0, ushort.MaxValue)
             * MathHelper.Translation(origin.X, origin.Y, 0)
             * MathHelper.ZRotation(Rotation)
+            * MathHelper.Scaling(Scale, Scale, 0)
             * MathHelper.Translation(pos);
     }
 }

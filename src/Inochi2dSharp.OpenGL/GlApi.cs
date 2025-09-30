@@ -144,8 +144,8 @@ public abstract class GlApi
     public abstract void Flush();
     public abstract void Disablei(uint target, int index);
     public abstract void GenerateMipmap(uint target);
-    public abstract void BlitFramebuffer(uint srcX0, uint srcY0, uint srcX1, uint srcY1, uint dstX0, uint dstY0, uint dstX1, uint dstY1, uint mask, uint filter);
-    public abstract void TexImage2D(uint target, int level, uint internalformat, uint width, uint height, int border, uint format, uint type, nint pixels);
+    public abstract void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, uint mask, uint filter);
+    public abstract void TexImage2D(uint target, int level, int internalformat, int width, int height, int border, int format, uint type, nint data);
     public abstract void TexParameteri(uint target, uint pname, uint arg);
     public abstract void TextureParameteri(uint target, uint pname, uint arg);
     public abstract void GetTexImage(uint target, int level, uint format, uint type, nint pixels);
@@ -169,5 +169,5 @@ public abstract class GlApi
     public abstract void DeleteFramebuffer(uint fb);
     public abstract void BufferSubData(uint target, uint offset, uint size, nint data);
     public abstract void BindBufferBase(uint target, uint index, uint buffer);
-    public abstract void DrawElementsBaseVertex(uint mode, uint count, uint type, nint indices, uint basevertex);
+    public abstract void DrawElementsBaseVertex(uint mode, uint count, uint type, nint indices, int basevertex);
 }

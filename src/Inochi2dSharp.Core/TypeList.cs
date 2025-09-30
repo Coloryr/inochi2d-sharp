@@ -14,6 +14,11 @@ public static class TypeList
     private static readonly Dictionary<string, Func<Node?, Node>> s_nodeFactoryStoreS = [];
     private static readonly Dictionary<uint, Func<Node?, Node>> s_nodeFactoryStoreN = [];
 
+    static TypeList()
+    {
+        Init();
+    }
+
     public static Node InstantiateNode(string guid, Node? parent = null)
     {
         if (s_nodeFactoryStoreS.TryGetValue(guid, out var factory))

@@ -1,39 +1,39 @@
 ﻿using System.Numerics;
-using System.Runtime.InteropServices;
 using Inochi2dSharp.Core;
 using Inochi2dSharp.Core.Math;
+using Inochi2dSharp.Core.Nodes.Drawables;
 using Inochi2dSharp.Core.Render;
+using Inochi2dSharp.View;
 
 namespace Inochi2dSharp.OpenGL;
 
-public static class Inochi2dGL
+public class Inochi2dGL : IRender
 {
-    private static GlApi _gl;
-    private static readonly List<Puppet> _puppets = [];
+    private readonly GlApi _gl;
 
-    private static GLFramebuffer _maskFB, _mainFB;
-    private static GLShader _maskShader, _mainShader;
-    private static uint _sceneWidth, _sceneHeight;
+    private readonly GLFramebuffer _maskFB;
+    private readonly GLFramebuffer _mainFB;
+    private readonly GLShader _maskShader;
+    private readonly GLShader _mainShader;
 
-    private static int _maskModelViewMatrix, _maskMode;
-    private static int _mainModelViewMatrix, _mainOpacity;
+    private readonly int _maskModelViewMatrix;
+    private readonly int _maskMode;
+    private readonly int _mainModelViewMatrix;
+    private readonly int _mainOpacity;
+    private readonly List<GLFramebuffer> _compFBs = [];
 
-    private static readonly List<GLFramebuffer> _compFBs = [];
-    private static GLFramebuffer _activeFB;
+    private readonly uint _vao;
+    private readonly uint[] _buffers;
+    private readonly uint _ubo;
 
-    private static uint _vao;
-    private static uint[] _buffers;
-    private static uint _ubo;
+    private int _sceneWidth, _sceneHeight;
+    private GLFramebuffer _activeFB;
 
-    private static Camera2D _cam;
-
-    private readonly static int _size = Marshal.SizeOf<VtxData>();
-
-    public static void Init(GlApi gl, int width, int height)
+    public Inochi2dGL(GlApi gl, int width, int height)
     {
         _gl = gl;
-        _sceneWidth = (uint)width;
-        _sceneHeight = (uint)height;
+        _sceneWidth = width;
+        _sceneHeight = height;
         _maskFB = new GLFramebuffer(gl, _sceneWidth, _sceneHeight);
         _maskFB.Attach(new GLTexture(gl, GlApi.GL_RED, _sceneWidth, _sceneHeight));
 
@@ -58,9 +58,9 @@ public static class Inochi2dGL
         gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, _buffers[0]);
 
         gl.EnableVertexAttribArray(0);
-        gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, _size, 0);
+        gl.VertexAttribPointer(0, 2, GlApi.GL_FLOAT, false, VtxDataHelper.Size, 0);
         gl.EnableVertexAttribArray(1);
-        gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, _size, 8);
+        gl.VertexAttribPointer(1, 2, GlApi.GL_FLOAT, false, VtxDataHelper.Size, 8);
 
         gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, _buffers[1]);
 
@@ -68,28 +68,16 @@ public static class Inochi2dGL
         gl.BindBuffer(GlApi.GL_UNIFORM_BUFFER, _ubo);
         gl.BufferData(GlApi.GL_UNIFORM_BUFFER, 64, 0, GlApi.GL_DYNAMIC_DRAW);
 
-        _cam = new Camera2D()
-        {
-            Scale = 0.25f
-        };
-        _cam.Update();
-
         gl.Disable(GlApi.GL_CULL_FACE);
         gl.Disable(GlApi.GL_DEPTH_TEST);
         gl.Disable(GlApi.GL_STENCIL_TEST);
         gl.Enable(GlApi.GL_BLEND);
     }
 
-    public static unsafe void Render(float deltaTime, int width, int height, uint fb)
+    public void SetSize(int width, int height)
     {
-        _sceneWidth = (uint)width;
-        _sceneHeight = (uint)height;
-
-        _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
-        _gl.Viewport(0, 0, width, height);
-
-        _cam.Size = new Vector2(_sceneWidth, _sceneHeight);
-        _cam.Update();
+        _sceneWidth = width;
+        _sceneHeight = height;
 
         _mainFB.Resize(_sceneWidth, _sceneHeight);
         _maskFB.Resize(_sceneWidth, _sceneHeight);
@@ -97,194 +85,204 @@ public static class Inochi2dGL
         {
             comp.Resize(_sceneWidth, _sceneHeight);
         }
+    }
+
+    public void PreRender()
+    {
+        _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
+        _gl.Viewport(0, 0, _sceneWidth, _sceneHeight);
 
         _activeFB = _mainFB;
+    }
 
-        foreach (var puppet in _puppets)
+    public unsafe void Render(Puppet puppet, Camera2D cam)
+    {
+        _gl.BindBuffer(GlApi.GL_ARRAY_BUFFER, _buffers[0]);
+        fixed (void* ptr = puppet.DrawList.Vertices)
+            _gl.BufferData(GlApi.GL_ARRAY_BUFFER, puppet.DrawList.Vertices.Length * VtxDataHelper.Size, new IntPtr(ptr), GlApi.GL_DYNAMIC_DRAW);
+        _gl.BindBuffer(GlApi.GL_ELEMENT_ARRAY_BUFFER, _buffers[1]);
+        fixed (void* ptr = puppet.DrawList.Indices)
+            _gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, puppet.DrawList.Indices.Length * sizeof(uint), new IntPtr(ptr), GlApi.GL_DYNAMIC_DRAW);
+
+        // Clear Mask
+        _maskFB.Use();
+        _maskShader.Use();
+        _gl.ClearColor(1, 1, 1, 1);
+        _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
+
+        _activeFB.Use();
+        _mainShader.Use();
+        _gl.ClearColor(0, 0, 0, 0);
+        _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
+
+        uint maskStep = 0;
+        int compositeDepth = 0;
+        foreach (var cmd in puppet.DrawList.Commands)
         {
-            puppet.Update(deltaTime);
-            puppet.Draw(deltaTime);
+            var temp = (PartVars*)cmd.Variables;
+            _gl.BindBuffer(GlApi.GL_UNIFORM_BUFFER, _ubo);
+            //_gl.BufferSubData(_ubo, 0, 64, cmd.Variables);
+            _gl.BufferData(GlApi.GL_UNIFORM_BUFFER, 64, cmd.Variables, GlApi.GL_DYNAMIC_DRAW);
+            _gl.BindBufferBase(GlApi.GL_UNIFORM_BUFFER, 0, _ubo);
 
-            fixed (void* ptr = puppet.DrawList.Vertices)
-                _gl.BufferData(GlApi.GL_ARRAY_BUFFER, puppet.DrawList.Vertices.Length * _size, new IntPtr(ptr), GlApi.GL_DYNAMIC_DRAW);
-            fixed (void* ptr = puppet.DrawList.Indices)
-                _gl.BufferData(GlApi.GL_ELEMENT_ARRAY_BUFFER, puppet.DrawList.Indices.Length * sizeof(uint), new IntPtr(ptr), GlApi.GL_DYNAMIC_DRAW);
-
-            // Clear Mask
-            _maskFB.Use();
-            _maskShader.Use();
-            _gl.ClearColor(1, 1, 1, 1);
-            _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
-
-            _activeFB.Use();
-            _mainShader.Use();
-            _gl.ClearColor(0, 0, 0, 0);
-            _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
-
-            uint maskStep = 0;
-            int compositeDepth = 0;
-            foreach (var cmd in puppet.DrawList.Commands)
+            switch (cmd.State)
             {
-                _gl.BufferSubData(_ubo, 0, 64, cmd.Variables);
-                _gl.BindBufferBase(GlApi.GL_UNIFORM_BUFFER, 0, _ubo);
+                case DrawState.Normal:
+                    if (maskStep > 0)
+                    {
+                        maskStep = 0;
 
-                switch (cmd.State)
-                {
-                    case DrawState.Normal:
-                        if (maskStep > 0)
-                        {
-                            maskStep = 0;
-
-                            // Disable masking.
-                            _maskFB.Use();
-                            _gl.ClearColor(1, 1, 1, 1);
-                            _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
-                            _gl.ClearColor(0, 0, 0, 0);
-
-                            // Re-enable main FB.
-                            _activeFB.Use();
-                            _mainShader.Use();
-                        }
-
-                        _mainShader.SetUniform(_mainModelViewMatrix, _cam.Matrix);
-                        _maskFB.Textures[0].Bind(0);
-                        uint i = 0;
-                        foreach (var src in cmd.Sources) 
-                        {
-                            if (src != null && src.Id is GLTexture tex1)
-                            {
-                                tex1.Bind(i + 1);
-                            }
-                            i++;
-                        }
-
-                        InSetBlendModeLegacy(cmd.BlendMode);
-                        _gl.DrawElementsBaseVertex(
-                            GlApi.GL_TRIANGLES,
-                            (uint)cmd.ElemCount,
-                            GlApi.GL_UNSIGNED_INT,
-                            cmd.IdxOffset * 4,
-                            (uint)cmd.VtxOffset
-                        );
-                        break;
-
-                    case DrawState.DefineMask:
-                        if (maskStep != 1)
-                        {
-                            maskStep = 1;
-
-                            // Start mask FB
-                            _maskFB.Use();
-                            _maskShader.Use();
-
-                            // Clear mask buffer and set blend mode.
-                            _gl.ClearColor(0, 0, 0, 0);
-                            _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
-                            _gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE);
-                        }
-
-                        _maskShader.SetUniform(_maskModelViewMatrix, _cam.Matrix);
-                        _maskShader.SetUniform(_maskMode, cmd.MaskMode == MaskingMode.Mask);
-                        (cmd.Sources[0].Id as GLTexture)?.Bind(0);
-
-                        _gl.DrawElementsBaseVertex(
-                            GlApi.GL_TRIANGLES,
-                            (uint)cmd.ElemCount,
-                            GlApi.GL_UNSIGNED_INT,
-                            cmd.IdxOffset * 4,
-                            (uint)cmd.VtxOffset
-                        );
-                        break;
-
-                    case DrawState.MaskedDraw:
-                        if (maskStep == 0)
-                            continue;
-
-                        // Start main FB
-                        if (maskStep == 1)
-                        {
-                            maskStep = 2;
-                            _activeFB.Use();
-                            _mainShader.Use();
-                        }
-
-                        _mainShader.SetUniform(_mainModelViewMatrix, _cam.Matrix);
-                        _maskFB.Textures[0].Bind(0);
-                        i = 0;
-                        foreach (var src in cmd.Sources) {
-                            if (src != null && src.Id is GLTexture tex)
-                            {
-                                tex.Bind(i + 1);
-                            }
-                        }
-
-                        InSetBlendModeLegacy(cmd.BlendMode);
-                        _gl.DrawElementsBaseVertex(
-                            GlApi.GL_TRIANGLES,
-                            (uint)cmd.ElemCount,
-                            GlApi.GL_UNSIGNED_INT,
-                            cmd.IdxOffset * 4,
-                            (uint)cmd.VtxOffset
-                        );
-                        break;
-
-                    case DrawState.CompositeBegin:
-                        compositeDepth++;
-                        if (compositeDepth >= _compFBs.Count)
-                        {
-                            _compFBs.Add(new GLFramebuffer(_gl, _sceneWidth, _sceneHeight));
-                            for (int j = 0; j < 4; j++)
-                            {
-                                _compFBs[^1].Attach(new GLTexture(_gl, GlApi.GL_RGBA, _sceneWidth, _sceneHeight));
-                            }
-                        }
-
-                        _activeFB = _compFBs[compositeDepth - 1];
-                        _activeFB.Use();
+                        // Disable masking.
+                        _maskFB.Use();
+                        _gl.ClearColor(1, 1, 1, 1);
                         _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
-                        break;
+                        _gl.ClearColor(0, 0, 0, 0);
 
-                    case DrawState.CompositeEnd:
-                        compositeDepth--;
-                        _activeFB = compositeDepth > 0 ? _compFBs[compositeDepth - 1] : _mainFB;
-                        _activeFB.Use();
-                        break;
-
-                    case DrawState.CompositeBlit:
-                        _maskFB.Textures[0].Bind(0);
-                        _compFBs[compositeDepth].BindAsTarget(1);
-
+                        // Re-enable main FB.
                         _activeFB.Use();
                         _mainShader.Use();
-                        _mainShader.SetUniform(_mainModelViewMatrix, Matrix4x4.Identity);
-                        InSetBlendModeLegacy(cmd.BlendMode);
-                        _gl.DrawElementsBaseVertex(
-                            GlApi.GL_TRIANGLES,
-                            (uint)cmd.ElemCount,
-                            GlApi.GL_UNSIGNED_INT,
-                            cmd.IdxOffset * 4,
-                            (uint)cmd.VtxOffset
-                        );
-                        break;
-                }
+                    }
+
+                    _mainShader.SetUniform(_mainModelViewMatrix, cam.Matrix);
+                    _maskFB.Textures[0].Bind(0);
+                    uint i = 0;
+                    foreach (var src in cmd.Sources)
+                    {
+                        if (src != null && src.Id is GLTexture tex1)
+                        {
+                            tex1.Bind(i + 1);
+                        }
+                        i++;
+                    }
+
+                    InSetBlendModeLegacy(cmd.BlendMode);
+                    _gl.DrawElementsBaseVertex(
+                        GlApi.GL_TRIANGLES,
+                        (uint)cmd.ElemCount,
+                        GlApi.GL_UNSIGNED_INT,
+                        cmd.IdxOffset * 4,
+                        cmd.VtxOffset
+                    );
+                    break;
+
+                case DrawState.DefineMask:
+                    if (maskStep != 1)
+                    {
+                        maskStep = 1;
+
+                        // Start mask FB
+                        _maskFB.Use();
+                        _maskShader.Use();
+
+                        // Clear mask buffer and set blend mode.
+                        _gl.ClearColor(0, 0, 0, 0);
+                        _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
+                        _gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE);
+                    }
+
+                    _maskShader.SetUniform(_maskModelViewMatrix, cam.Matrix);
+                    _maskShader.SetUniform(_maskMode, cmd.MaskMode == MaskingMode.Mask);
+                    (cmd.Sources[0].Id as GLTexture)?.Bind(0);
+
+                    _gl.DrawElementsBaseVertex(
+                        GlApi.GL_TRIANGLES,
+                        (uint)cmd.ElemCount,
+                        GlApi.GL_UNSIGNED_INT,
+                        cmd.IdxOffset * 4,
+                        cmd.VtxOffset
+                    );
+                    break;
+
+                case DrawState.MaskedDraw:
+                    if (maskStep == 0)
+                        continue;
+
+                    // Start main FB
+                    if (maskStep == 1)
+                    {
+                        maskStep = 2;
+                        _activeFB.Use();
+                        _mainShader.Use();
+                    }
+
+                    _mainShader.SetUniform(_mainModelViewMatrix, cam.Matrix);
+                    _maskFB.Textures[0].Bind(0);
+                    i = 0;
+                    foreach (var src in cmd.Sources)
+                    {
+                        if (src != null && src.Id is GLTexture tex)
+                        {
+                            tex.Bind(i + 1);
+                        }
+                    }
+
+                    InSetBlendModeLegacy(cmd.BlendMode);
+                    _gl.DrawElementsBaseVertex(
+                        GlApi.GL_TRIANGLES,
+                        (uint)cmd.ElemCount,
+                        GlApi.GL_UNSIGNED_INT,
+                        cmd.IdxOffset * 4,
+                        cmd.VtxOffset
+                    );
+                    break;
+
+                case DrawState.CompositeBegin:
+                    compositeDepth++;
+                    if (compositeDepth >= _compFBs.Count)
+                    {
+                        _compFBs.Add(new GLFramebuffer(_gl, _sceneWidth, _sceneHeight));
+                        for (int j = 0; j < 4; j++)
+                        {
+                            _compFBs[^1].Attach(new GLTexture(_gl, GlApi.GL_RGBA, _sceneWidth, _sceneHeight));
+                        }
+                    }
+
+                    _activeFB = _compFBs[compositeDepth - 1];
+                    _activeFB.Use();
+                    _gl.Clear(GlApi.GL_COLOR_BUFFER_BIT);
+                    break;
+
+                case DrawState.CompositeEnd:
+                    compositeDepth--;
+                    _activeFB = compositeDepth > 0 ? _compFBs[compositeDepth - 1] : _mainFB;
+                    _activeFB.Use();
+                    break;
+
+                case DrawState.CompositeBlit:
+                    _maskFB.Textures[0].Bind(0);
+                    _compFBs[compositeDepth].BindAsTarget(1);
+
+                    _activeFB.Use();
+                    _mainShader.Use();
+                    _mainShader.SetUniform(_mainModelViewMatrix, Matrix4x4.Identity);
+                    InSetBlendModeLegacy(cmd.BlendMode);
+                    _gl.DrawElementsBaseVertex(
+                        GlApi.GL_TRIANGLES,
+                        (uint)cmd.ElemCount,
+                        GlApi.GL_UNSIGNED_INT,
+                        cmd.IdxOffset * 4,
+                        cmd.VtxOffset
+                    );
+                    break;
             }
         }
+    }
 
+    public void PostRender(uint fb)
+    {
         _gl.BlendFunc(GlApi.GL_ONE, GlApi.GL_ONE_MINUS_SRC_ALPHA);
         _mainFB.BlitTo(fb);
     }
 
-    public static void AddPuppet(Puppet puppet)
+    public void AddPuppet(Puppet puppet)
     {
-        _puppets.Add(puppet);
-
-        foreach (var tex in puppet.TextureCache.Cache) 
+        foreach (var tex in puppet.TextureCache.Cache)
         {
-            tex.Id = new GLTexture(_gl, GlApi.GL_RGBA, (uint)tex.Width, (uint)tex.Height, tex.Pixels);
+            tex.Id = new GLTexture(_gl, GlApi.GL_RGBA, tex.Width, tex.Height, tex.Pixels);
         }
     }
 
-    internal static void InSetBlendModeLegacy(BlendMode blendingMode)
+    internal void InSetBlendModeLegacy(BlendMode blendingMode)
     {
         switch (blendingMode)
         {

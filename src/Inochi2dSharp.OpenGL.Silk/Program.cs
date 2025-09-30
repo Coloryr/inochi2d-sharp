@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.KHR;
 using Silk.NET.Windowing;
 
-namespace Inochi2dSharp.Silk;
+namespace Inochi2dSharp.OpenGL.Silk;
 
 internal class Program
 {
@@ -18,7 +18,7 @@ internal class Program
             {
                 Flags = ContextFlags.ForwardCompatible,
                 Profile = ContextProfile.Compatability,
-                Version = new APIVersion(4, 2)
+                Version = new APIVersion(4, 6)
             }
         });
 
@@ -34,12 +34,12 @@ internal class Program
         {
             khr = new KhrBlendEquationAdvanced(window.GLContext);
             gl = window.CreateOpenGL();
-            view = new I2dView(new SilkApi(gl, khr));
-            view.SetView(window.Size.X, window.Size.Y);
+            var render = new Inochi2dGL(new SilkApi(gl, khr), window.Size.X, window.Size.Y);
+            view = new I2dView(render, window.Size.X, window.Size.Y, 0.1f);
             model = view.LoadModel("E:\\temp_code\\example-models\\Aka.inx");
-            var parts = model.GetParts();
-            var pars = model.GetParameters();
-            var anima = model.GetAnimations();
+            //var parts = model.GetParts();
+            //var pars = model.GetParameters();
+            //var anima = model.GetAnimations();
             //var par = pars.First();
             //model.SetParameter(par.Index, new(1, 0));
 
@@ -52,13 +52,13 @@ internal class Program
             // Adjust the viewport to the new window size
             gl?.Viewport(s);
 
-            view?.SetView(s.X, s.Y);
+            view?.SetSize(s.X, s.Y);
         };
 
         // The render function
         window.Render += delta =>
         {
-            view?.Tick((float)delta);
+            view?.Tick((float)delta, 0);
         };
 
         // The closing function

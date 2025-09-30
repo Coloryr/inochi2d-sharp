@@ -150,11 +150,6 @@ public static class BinFmt
     /// <returns></returns>
     public static Puppet InLoadINPPuppet(Stream stream)
     {
-        if (!InVerifyMagicBytes(stream))
-        {
-            throw new Exception("Invalid data format for INP puppet");
-        }
-
         // Find the puppet data
         var buffer = new byte[4];
         stream.ReadExactly(buffer);

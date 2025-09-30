@@ -1,7 +1,7 @@
 ﻿using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.KHR;
 
-namespace Inochi2dSharp.Silk;
+namespace Inochi2dSharp.OpenGL.Silk;
 
 public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
 {
@@ -153,9 +153,9 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         }
     }
 
-    public override unsafe void DrawElements(uint mode, int count, uint type, nint indices)
+    public override void DrawElements(uint mode, int count, uint type, nint indices)
     {
-        gl.DrawElements((GLEnum)mode, (uint)count, (GLEnum)type, (void*)indices);
+        gl.DrawElements((GLEnum)mode, (uint)count, (GLEnum)type, in indices);
     }
 
     public override void Enable(uint cap)
@@ -298,9 +298,9 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.StencilOp((GLEnum)fail, (GLEnum)zfail, (GLEnum)zpass);
     }
 
-    public override unsafe void TexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels)
+    public override unsafe void TexImage2D(uint target, int level, int internalformat, int width, int height, int border, int format, uint type, nint data)
     {
-        gl.TexImage2D((GLEnum)target, level, (int)internalformat, (uint)width, (uint)height, border, (GLEnum)format, (GLEnum)type, (void*)pixels);
+        gl.TexImage2D((GLEnum)target, level, internalformat, (uint)width, (uint)height, border, (GLEnum)format, (GLEnum)type, (void*)data);
     }
 
     public override void TexParameterf(uint target, uint pname, float param)
@@ -313,7 +313,7 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
         gl.TexParameter((GLEnum)target, (GLEnum)pname, arg);
     }
 
-    public override unsafe void TexParameteri(uint target, uint pname, uint arg)
+    public override void TexParameteri(uint target, uint pname, uint arg)
     {
         gl.TexParameter((GLEnum)target, (GLEnum)pname, (int)arg);
     }
@@ -376,5 +376,30 @@ public class SilkApi(GL gl, KhrBlendEquationAdvanced khr) : GlApi
     public override int GetIntegerv(uint target)
     {
         return gl.GetInteger((GLEnum)target);
+    }
+
+    public override void TextureParameteri(uint target, uint pname, uint arg)
+    {
+        gl.TextureParameterI(target, (GLEnum)pname, ref arg);
+    }
+
+    public override void DeleteFramebuffer(uint fb)
+    {
+        gl.DeleteFramebuffer(fb);
+    }
+
+    public override unsafe void BufferSubData(uint target, uint offset, uint size, nint data)
+    {
+        gl.BufferSubData((GLEnum)target, (nint)offset, size, (void*)data);
+    }
+
+    public override void BindBufferBase(uint target, uint index, uint buffer)
+    {
+        gl.BindBufferBase((GLEnum)target, index, buffer);
+    }
+
+    public override unsafe void DrawElementsBaseVertex(uint mode, uint count, uint type, nint indices, int basevertex)
+    {
+        gl.DrawElementsBaseVertex((GLEnum)mode, count, (GLEnum)type, (void*) indices, basevertex);
     }
 }

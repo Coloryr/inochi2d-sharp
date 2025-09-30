@@ -12,3 +12,8 @@ public struct VtxData
     public Vector2 Vtx;
     public Vector2 Uv;
 }
+
+public static class VtxDataHelper
+{
+    public readonly static int Size = Marshal.SizeOf<VtxData>();
+}

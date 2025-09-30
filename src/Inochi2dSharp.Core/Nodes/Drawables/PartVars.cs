@@ -3,13 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace Inochi2dSharp.Core.Nodes.Drawables;
 
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Explicit)]
 public struct PartVars
 {
-    public Vector3 Tint;
-    public Vector3 ScreenTint;
-    public float Opacity;
-    public float EmissionStrength;
+    [FieldOffset(0)] public Vector3 Tint;
+    [FieldOffset(16)] public Vector3 ScreenTint;
+    [FieldOffset(28)] public float Opacity;
+    [FieldOffset(36)] public float EmissionStrength;
 }
 
 public static class PartVarsHelper
