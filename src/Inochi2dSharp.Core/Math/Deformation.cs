@@ -5,6 +5,9 @@ using System.Text.Json.Nodes;
 
 namespace Inochi2dSharp.Core.Math;
 
+/// <summary>
+/// A deformation
+/// </summary>
 public record Deformation
 {
     public Vector2[] VertexOffsets;

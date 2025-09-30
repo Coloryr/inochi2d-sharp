@@ -15,9 +15,9 @@ namespace Inochi2dSharp.Core.Nodes.Drawables;
 [TypeId("Drawable", 0x0001, true)]
 public abstract class Drawable : Node, IDeformable
 {
-    private Mesh mesh_;
-    private DeformedMesh deformed_;
-    private DeformedMesh base_;
+    private Mesh _mesh;
+    private DeformedMesh _deformed;
+    private DeformedMesh _base;
 
     /// <summary>
     /// The current active draw list slot for this drawable.
@@ -31,15 +31,15 @@ public abstract class Drawable : Node, IDeformable
     {
         get
         {
-            return mesh_;
+            return _mesh;
         }
         set
         {
-            if (value == mesh_)
+            if (value == _mesh)
                 return;
-            mesh_ = value;
-            deformed_.Parent = value;
-            base_.Parent = value;
+            _mesh = value;
+            _deformed.Parent = value;
+            _base.Parent = value;
         }
     }
 
@@ -54,11 +54,11 @@ public abstract class Drawable : Node, IDeformable
     /// <summary>
     /// The base position of the deformable's points.
     /// </summary>
-    public Vector2[] BasePoints => base_.Points;
+    public Vector2[] BasePoints => _base.Points;
     /// <summary>
     /// The points which may be deformed by the deformer.
     /// </summary>
-    public Vector2[] DeformPoints => deformed_.Points;
+    public Vector2[] DeformPoints => _deformed.Points;
 
     /// <summary>
     /// Constructs a new drawable surface
@@ -87,8 +87,8 @@ public abstract class Drawable : Node, IDeformable
     /// <param name="parent"></param>
     public Drawable(MeshData data, Guid guid, Node? parent = null) : base(guid, parent)
     {
-        deformed_ = new DeformedMesh();
-        base_ = new DeformedMesh();
+        _deformed = new DeformedMesh();
+        _base = new DeformedMesh();
         Mesh = Mesh.FromMeshData(data);
     }
 
@@ -99,7 +99,7 @@ public abstract class Drawable : Node, IDeformable
     /// <param name="absolute">Whether the deformation is absolute, replacing the original deformation.</param>
     public void Deform(Vector2[] deformed, bool absolute = false)
     {
-        deformed_.Deform(deformed);
+        _deformed.Deform(deformed);
     }
 
     /// <summary>
@@ -110,7 +110,7 @@ public abstract class Drawable : Node, IDeformable
     /// <param name="absolute">Whether the deformation is absolute, replacing the original deformation.</param>
     public void Deform(int offset, Vector2 deform, bool absolute = false)
     {
-        deformed_.Deform(offset, deform);
+        _deformed.Deform(offset, deform);
     }
 
     /// <summary>
@@ -127,10 +127,10 @@ public abstract class Drawable : Node, IDeformable
     /// </summary>
     public void ResetDeform()
     {
-        deformed_.Reset();
+        _deformed.Reset();
 
-        base_.Reset();
-        base_.PushMatrix(BaseTransform.Matrix);
+        _base.Reset();
+        _base.PushMatrix(BaseTransform.Matrix);
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public abstract class Drawable : Node, IDeformable
     public override void Update(float delta, DrawList drawList)
     {
         base.Update(delta, drawList);
-        deformed_.PushMatrix(Transform().Matrix);
+        _deformed.PushMatrix(Transform().Matrix);
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public abstract class Drawable : Node, IDeformable
     public override void PostUpdate(DrawList drawList)
     {
         base.PostUpdate(drawList);
-        drawListSlot = drawList.Allocate(deformed_.Vertices, deformed_.Indices);
+        drawListSlot = drawList.Allocate(_deformed.Vertices, _deformed.Indices);
     }
 
     /// <summary>
@@ -194,7 +194,7 @@ public abstract class Drawable : Node, IDeformable
     {
         base.Serialize(obj, recursive);
 
-        MeshData data = mesh_.ToMeshData();
+        MeshData data = _mesh.ToMeshData();
         var obj1 = new JsonObject();
         data.Serialize(obj1);
         obj["mesh"] = obj1;
@@ -204,8 +204,8 @@ public abstract class Drawable : Node, IDeformable
     {
         base.Deserialize(data);
 
-        deformed_ = new DeformedMesh();
-        base_ = new DeformedMesh();
+        _deformed = new DeformedMesh();
+        _base = new DeformedMesh();
 
         if (data.TryGetProperty("mesh", out var item) && item.ValueKind != JsonValueKind.Null)
         {

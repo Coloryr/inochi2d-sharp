@@ -62,9 +62,9 @@ public struct Transform
     /// </summary>
     public void Update()
     {
-        trs = Matrix4x4.CreateTranslation(Translation) *
-            Quaternion.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z).ToMatrix() *
-            Matrix4x4.CreateScale(Scale.X, Scale.Y, 1);
+        trs = MathHelper.Translation(Translation) *
+            MathHelper.EulerRotation(Rotation.X, Rotation.Y, Rotation.Z).ToMatrix() *
+            MathHelper.Scaling(Scale.X, Scale.Y, 1);
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public struct Transform
 
         var res = strs.Multiply(new Vector4(1, 1, 1, 1));
 
-        var tnew = new Transform
+        return new Transform
         {
             // TRANSLATION
             Translation = new Vector3(res.X, res.Y, res.Z),
@@ -139,6 +139,5 @@ public struct Transform
             Scale = v.Scale * other.Scale,
             trs = strs
         };
-        return tnew;
     }
 }

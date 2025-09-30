@@ -117,24 +117,24 @@ public static class MathHelper
         return ret;
     }
 
-    //public static Quaternion EulerRotation(float roll, float pitch, float yaw)
-    //{
-    //    var ret = new Quaternion();
+    public static Quaternion EulerRotation(float roll, float pitch, float yaw)
+    {
+        var ret = new Quaternion();
 
-    //    float cr = MathF.Cos(roll / 2.0f);
-    //    float cp = MathF.Cos(pitch / 2.0f);
-    //    float cy = MathF.Cos(yaw / 2.0f);
-    //    float sr = MathF.Sin(roll / 2.0f);
-    //    float sp = MathF.Sin(pitch / 2.0f);
-    //    float sy = MathF.Sin(yaw / 2.0f);
+        float cr = MathF.Cos(roll / 2.0f);
+        float cp = MathF.Cos(pitch / 2.0f);
+        float cy = MathF.Cos(yaw / 2.0f);
+        float sr = MathF.Sin(roll / 2.0f);
+        float sp = MathF.Sin(pitch / 2.0f);
+        float sy = MathF.Sin(yaw / 2.0f);
 
-    //    ret.W = cr * cp * cy + sr * sp * sy;
-    //    ret.X = sr * cp * cy - cr * sp * sy;
-    //    ret.Y = cr * sp * cy + sr * cp * sy;
-    //    ret.Z = cr * cp * sy - sr * sp * cy;
+        ret.W = cr * cp * cy + sr * sp * sy;
+        ret.X = sr * cp * cy - cr * sp * sy;
+        ret.Y = cr * sp * cy + sr * cp * sy;
+        ret.Z = cr * cp * sy - sr * sp * cy;
 
-    //    return ret;
-    //}
+        return ret;
+    }
 
     public static Matrix4x4 ToMatrix(this Quaternion quaternion)
     {
